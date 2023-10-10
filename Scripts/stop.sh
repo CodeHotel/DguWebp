@@ -5,5 +5,5 @@ APACHE_BIN_PATH=$PROJ_PATH/AkoMarket/apache8/bin
 
 
 cd $APACHE_BIN_PATH
-./shutdown.sh
+sudo -u TomcatRuntime ./shutdown.sh
 
