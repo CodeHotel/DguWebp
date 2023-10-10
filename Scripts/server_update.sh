@@ -11,6 +11,8 @@ function ch_owner()
   echo "Now changing ownership of the project foler.."
   sudo chown -R $PROJ_USER $PROJ_PATH && sudo chmod -R 770 $PROJ_PATH
   echo "Successfully changed ownership of the project path"
+  sudo chcon -R -t bin_t $PROJ_PATH
+  echo "Successfully changed file type of the project path to bin_t"
 }
 
 function try_pull()
