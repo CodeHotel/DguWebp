@@ -5,5 +5,5 @@ APACHE_BIN_PATH=$PROJ_PATH/AkoMarket/apache8/bin
 
 
 cd $APACHE_BIN_PATH
-./startup.sh
+sudo -u TomcatRuntime ./startup.sh
 
