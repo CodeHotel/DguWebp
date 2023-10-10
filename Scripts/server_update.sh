@@ -2,7 +2,7 @@
 
 SSH_KEY_PATH=/home/github_key/AkoMarket
 PROJ_USER=TomcatRuntime:AkoMarket_Admin
-PROJ_PATH=/home/Server_Repo/DguWebp
+PROJ_PATH=/usr/local/Server_Repo/DguWebp
 
 
 function ch_owner()
