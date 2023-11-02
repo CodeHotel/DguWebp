@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="content-language" content="ko">
+    <title>v1</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("button[type='reg_submit']").click(function(event) {
+                event.preventDefault();
+                $.ajax({
+                    type: "POST",
+                    url: "/register",
+                    data: {
+                        reg_id: $("input[name='reg_id']").val(),
+                        reg_pw: $("input[name='reg_pw']").val()
+                    },
+                    success: function(response) {
+                        alert(response.message);
+                    },
+                    error: function(error) {
+                        alert("Registration failed!");
+                    }
+                });
+            });
+
+            $("button[type='login_submit']").click(function(event) {
+                event.preventDefault();
+                $.ajax({
+                    type: "POST",
+                    url: "/login",
+                    data: {
+                        login_id: $("input[name='login_id']").val(),
+                        login_pw: $("input[name='login_pw']").val()
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            alert("Login successful!");
+                            //window.location.href = '/dashboard'; // or wherever you want to redirect after successful login
+                        } else {
+                            alert("Login failed: " + response.message);
+                        }
+                    },
+                    error: function(error) {
+                        alert("Login failed!");
+                    }
+                });
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <form>
+        <fieldset>
+            <legend>회원가입</legend>
+            <p>id: <input type="text" name="reg_id" value="2020112028" /></p>
+            <p>PW : <input type="password" name="reg_pw" value="" /></p>
+        </fieldset>
+        <p><button type="reg_submit">가입</button></p>
+    </form>
+    <form>
+        <fieldset>
+            <legend>로그인</legend>
+            <p>id: <input type="text" name="login_id" value="2020112028" /></p>
+            <p>PW : <input type="password" name="login_pw" value="" /></p>
+        </fieldset>
+        <p><button type="login_submit">로그인</button></p>
+    </form>
+</body>
+
+</html>
