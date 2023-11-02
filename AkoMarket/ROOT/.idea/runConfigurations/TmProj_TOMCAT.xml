@@ -9,7 +9,7 @@
       </artifact>
     </deployment>
     <server-settings>
-      <option name="BASE_DIRECTORY_NAME" value="fe184fa9-97e5-4169-a5e2-b2e574cba518" />
+      <option name="BASE_DIRECTORY_NAME" value="$PROJECT_DIR$/../apache8" />
     </server-settings>
     <log_file alias="Tomcat Manager Log" path="%IDEA_RUN:CATALINA_BASE%/logs/manager.*" />
     <log_file alias="Tomcat Host Manager Log" path="%IDEA_RUN:CATALINA_BASE%/logs/host-manager.*" />
