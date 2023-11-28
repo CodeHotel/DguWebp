@@ -28,6 +28,4 @@
     color: #F2F4F4;
     font-family: 'BaeMinHanna', system-ui;
 }
-#loginCell:hover #loginMenu {
-    display: block;
-}
+
