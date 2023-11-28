@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>아코마켓</title>
+  <meta charset="UTF-8">
+  <title>아코마켓-회원가입</title>
   <link rel="stylesheet" type="text/css" href="resources/css/ako-main.css">
   <style>
   </style>
@@ -42,38 +42,34 @@
     </tr>
   </table>
 </div>
-<div style="position: relative; width: 100%; background-image: url('resources/images/TitleBackground.png'); background-size: 100% auto; background-repeat: no-repeat; padding-top: 56.25%;">
+<div style="position: relative; padding-top: 8.25%;">
   <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    <div style="font-family: BaeMinJua, system-ui; font-size: 6em;">아 코 마 켓</div><br>
-    <div style="font-family: BaeMinJua, system-ui; font-size: 1.5em; color: #0000FF;">#멀리_찾지_말고 &nbsp;&nbsp;&nbsp;#학교에서_거래해</div>
-    <form method="post" action="" style="width: 100%; text-align: center;">
-      <input type="text" name="searchKeyWord" style="width: 55%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746" placeholder="#교과서 #공대 #겨울옷">
-      <input type="submit" value="G O !" style="width: 8%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; font-family: BaeMinJua, system-ui; font-size: 1.1em; color: white; background-color: #D35400">
-    </form>
+
   </div>
 </div>
+<form method="post" action="" style="width: 100%; text-align:left;padding-left:1em">
+  <h1>회원가입</h1>
+  <div style="width:100%">
+    <br>
+    아이디: <input type="text" name="regId" style="border-radius:0.5em;border:solid 1px gray;width:6em">
+    <input type="button" name="checkId" value="중복확인" style="border-radius:0.5em;border:solid 1px gray;width:6em">
+    <br>
+    비밀번호: <input type="password" name="regPw" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
+    비밀번호 확인: <input type="password" name="regPwCheck" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
+    캠퍼스: <input type="checkbox" name="regCampus" value="SEOUL">서울캠퍼스
+    <input type="checkbox" name="regCampus" value="BIO">고양캠퍼스
+    <input type="checkbox" name="regCampus" value="WISE">WISE캠퍼스<br>
+    학과: <input type="text" name="regMajor" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
+    구분: <input type="radio" name="regType" value="student" onclick="document.getElementById('regStudentId').disabled=false;">학부생
+    <input type="radio" name="regType" value="grad" onclick="document.getElementById('regStudentId').disabled=false;">대학원생
+    <input type="radio" name="regType" value="professor" onclick="document.getElementById('regStudentId').disabled=true;">교직원<br>
+    학번: <input disabled="true" id="regStudentId" type="number" name="regStudentId" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
+    전화번호: <input type="tel" name="regPhone" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
+    학생증/교원증 인증 <input type="file" name="regIdCard"><br>
+    <input type="submit" value="가입신청" style="border-radius:0.5em;border:solid 1px gray;width:6em">
+  </div>
+</form>
 <center>
-  <div style="font-family: BaeMinHanna, system-ui; font-size: 3em; color: #4FC3F7;"><br>#인기상품 #핫한상품</div>
-  <table style="width:80%">
-    <tr>
-      <td style="padding:2%">
-        <table>
-          <tr>
-            <td></td>
-          </tr>
-          <tr>
-
-          </tr>
-        </table>
-      </td>
-      <td>
-
-      </td>
-      <td>
-
-      </td>
-    </tr>
-  </table>
   <br><br>
   <hr>
   동국대학교

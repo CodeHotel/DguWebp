@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>아코마켓</title>
+  <meta charset="UTF-8">
+  <title>아코마켓-검색</title>
   <link rel="stylesheet" type="text/css" href="resources/css/ako-main.css">
   <style>
   </style>
@@ -42,38 +42,25 @@
     </tr>
   </table>
 </div>
-<div style="position: relative; width: 100%; background-image: url('resources/images/TitleBackground.png'); background-size: 100% auto; background-repeat: no-repeat; padding-top: 56.25%;">
+<div style="position: relative; padding-top: 8.25%;">
   <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-    <div style="font-family: BaeMinJua, system-ui; font-size: 6em;">아 코 마 켓</div><br>
-    <div style="font-family: BaeMinJua, system-ui; font-size: 1.5em; color: #0000FF;">#멀리_찾지_말고 &nbsp;&nbsp;&nbsp;#학교에서_거래해</div>
-    <form method="post" action="" style="width: 100%; text-align: center;">
-      <input type="text" name="searchKeyWord" style="width: 55%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746" placeholder="#교과서 #공대 #겨울옷">
-      <input type="submit" value="G O !" style="width: 8%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; font-family: BaeMinJua, system-ui; font-size: 1.1em; color: white; background-color: #D35400">
-    </form>
+
   </div>
 </div>
+<form method="post" action="" style="width: 100%; text-align: center;">
+  <input type="text" name="searchKeyWord" style="width: 55%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746" placeholder="#교과서 #공대 #겨울옷">
+  <input type="submit" value="G O !" style="width: 8%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; font-family: BaeMinJua, system-ui; font-size: 1.1em; color: white; background-color: #D35400">
+  <div style="width:100%">
+    <br>
+    <input type="radio" name="orderOption" value="high">높은가격순
+    <input type="radio" name="orderOption" value="old">낮은가격순
+    <input type="radio" name="orderOption" value="new">최신등록순
+    <input type="checkbox" name="seeAvailOnly">거래가능 상품만 보기
+    <br>
+    가격범위 설정: \<input type="number" name="lowLimit" style="border-radius:0.5em;border:solid 1px gray;width:6em"> ~ \<input type="number" name="highLimit" style="border-radius:0.5em;border:solid 1px gray;width:6em">
+  </div>
+</form>
 <center>
-  <div style="font-family: BaeMinHanna, system-ui; font-size: 3em; color: #4FC3F7;"><br>#인기상품 #핫한상품</div>
-  <table style="width:80%">
-    <tr>
-      <td style="padding:2%">
-        <table>
-          <tr>
-            <td></td>
-          </tr>
-          <tr>
-
-          </tr>
-        </table>
-      </td>
-      <td>
-
-      </td>
-      <td>
-
-      </td>
-    </tr>
-  </table>
   <br><br>
   <hr>
   동국대학교
