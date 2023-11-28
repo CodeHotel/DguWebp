@@ -1,0 +1,33 @@
+:root {
+    --topMenu-height: 2em; /* Master height variable */
+}
+
+@font-face {
+    font-family: 'BaeMinHanna';
+    src: url('../fonts/BMHANNA_11yrs_ttf.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'BaeMinJua';
+    src: url('../fonts/BMJUA_ttf.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.topMenu {
+    position: fixed;
+    font-size: calc(var(--topMenu-height) * 0.6);
+    z-index: 1000;
+    width: 100%;
+    height: var(--topMenu-height);
+    padding: calc(var(--topMenu-height) * 0.05);
+    border-bottom: solid 0.1em #EB984E;
+    background-color: #D35400;
+    color: #F2F4F4;
+    font-family: 'BaeMinHanna', system-ui;
+}
+#loginCell:hover #loginMenu {
+    display: block;
+}
