@@ -27,7 +27,7 @@
   </servlet-mapping>
   
 <welcome-file-list>
-    <welcome-file>poc.html</welcome-file>
+    <welcome-file>Title.html</welcome-file>
 </welcome-file-list>
 
 </web-app>
