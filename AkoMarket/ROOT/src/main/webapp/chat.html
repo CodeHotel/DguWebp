@@ -79,5 +79,33 @@
     동국대학교
     Copyright © 2023 · All Rights Reserved
 </center>
+
+<script>
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+    const chatMessages = document.getElementById('chat-messages');
+
+    sendButton.addEventListener('click', () => {
+        sendMessage();
+    });
+
+    function sendMessage() {
+        const messageText = messageInput.value.trim();
+        if (messageText !== '') {
+            displayMessage(messageText, 'self');
+            messageInput.value = '';
+        }
+    }
+
+    function displayMessage(message, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', sender);
+        const messageText = document.createElement('p');
+        messageText.classList.add('message-text');
+        messageText.innerText = message;
+        messageDiv.appendChild(messageText);
+        chatMessages.appendChild(messageDiv);
+    }
+</script>
 </body>
 </html>
