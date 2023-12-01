@@ -1,0 +1,45 @@
+.message {
+    background-color: #f2f2f2;
+    padding: 8px 12px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    word-wrap: break-word;
+    max-width: 70%;
+    align-self: flex-start;
+    text-align: left;
+}
+.message.self {
+    background-color: #ffe0b2;
+    align-self: flex-end;
+}
+.message-text {
+    margin: 0;
+}
+.message-text p {
+    margin: 5px 0;
+}
+.message-input {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #f9f9f9;
+}
+.message-input input {
+    flex: 1;
+    padding: 8px;
+    margin-right: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+.message-input button {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 5px;
+    background-color: #D35400;
+    color: white;
+    cursor: pointer;
+}
+.message-input button:hover {
+    background-color: orangered;
+}
