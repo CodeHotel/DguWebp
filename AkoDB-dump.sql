@@ -32,6 +32,7 @@ ALTER TABLE IF EXISTS ONLY public.hashtag DROP CONSTRAINT IF EXISTS hashtag_prod
 ALTER TABLE IF EXISTS ONLY public.product DROP CONSTRAINT IF EXISTS fk_uid;
 ALTER TABLE IF EXISTS ONLY public.chat DROP CONSTRAINT IF EXISTS chat_ibfk_1;
 ALTER TABLE IF EXISTS ONLY public.authentication DROP CONSTRAINT IF EXISTS authentication_akouser_uid_fk;
+DROP TRIGGER IF EXISTS on_update ON public.list_chat;
 DROP INDEX IF EXISTS public.user2;
 DROP INDEX IF EXISTS public.user1;
 DROP INDEX IF EXISTS public.list_wish_user_uid_fk2;
@@ -64,6 +65,7 @@ DROP TABLE IF EXISTS public.hashtag;
 DROP TABLE IF EXISTS public.chat;
 DROP TABLE IF EXISTS public.authentication;
 DROP TABLE IF EXISTS public.akouser;
+DROP FUNCTION IF EXISTS public.on_update();
 DROP TYPE IF EXISTS public.rating_t;
 DROP TYPE IF EXISTS public.progress_t;
 DROP TYPE IF EXISTS public.degree_t;
@@ -120,6 +122,22 @@ CREATE TYPE public.rating_t AS (
 
 
 ALTER TYPE public.rating_t OWNER TO akomarket;
+
+--
+-- Name: on_update(); Type: FUNCTION; Schema: public; Owner: akomarket
+--
+
+CREATE FUNCTION public.on_update() RETURNS trigger
+    LANGUAGE plpgsql
+    AS $$
+BEGIN
+NEW.updated_at := now();
+RETURN NEW;
+END;
+$$;
+
+
+ALTER FUNCTION public.on_update() OWNER TO akomarket;
 
 SET default_tablespace = '';
 
@@ -242,12 +260,13 @@ ALTER TABLE public.hashtag OWNER TO akomarket;
 
 CREATE TABLE public.list_chat (
     id bigint NOT NULL,
-    user1 integer,
-    user2 integer,
+    user1 integer NOT NULL,
+    user2 integer NOT NULL,
     user1_read bigint DEFAULT 0 NOT NULL,
     user2_read bigint DEFAULT 0 NOT NULL,
     last_chat character varying(200) DEFAULT NULL::character varying,
     last_time timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    last_chat_idx integer DEFAULT (0)::bigint NOT NULL,
     CONSTRAINT list_chat_id_check CHECK ((id > 0)),
     CONSTRAINT list_chat_user1_check CHECK ((user1 > 0)),
     CONSTRAINT list_chat_user2_check CHECK ((user2 > 0))
@@ -416,6 +435,7 @@ CREATE TABLE public.product (
     description character varying(1200) DEFAULT NULL::character varying,
     views bigint DEFAULT '0'::bigint NOT NULL,
     owner_id integer,
+    title character varying(200) DEFAULT NULL::character varying,
     CONSTRAINT product_owner_id_check CHECK ((owner_id > 0)),
     CONSTRAINT product_pid_check CHECK ((id > 0)),
     CONSTRAINT product_price_check CHECK ((price > 0))
@@ -593,6 +613,13 @@ CREATE INDEX user1 ON public.list_chat USING btree (user1);
 --
 
 CREATE INDEX user2 ON public.list_chat USING btree (user2);
+
+
+--
+-- Name: list_chat on_update; Type: TRIGGER; Schema: public; Owner: akomarket
+--
+
+CREATE TRIGGER on_update BEFORE UPDATE ON public.list_chat FOR EACH ROW EXECUTE FUNCTION public.on_update();
 
 
 --
