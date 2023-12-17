@@ -3,7 +3,7 @@
 --
 
 -- Dumped from database version 15.4
--- Dumped by pg_dump version 15.5 (Ubuntu 15.5-0ubuntu0.23.10.1)
+-- Dumped by pg_dump version 15.5 (Ubuntu 15.5-0ubuntu0.23.04.1)
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -31,6 +31,7 @@ ALTER TABLE IF EXISTS ONLY public.list_chat DROP CONSTRAINT IF EXISTS list_chat_
 ALTER TABLE IF EXISTS ONLY public.hashtag DROP CONSTRAINT IF EXISTS hashtag_product_id_fk;
 ALTER TABLE IF EXISTS ONLY public.product DROP CONSTRAINT IF EXISTS fk_uid;
 ALTER TABLE IF EXISTS ONLY public.chat DROP CONSTRAINT IF EXISTS chat_ibfk_1;
+ALTER TABLE IF EXISTS ONLY public.chat DROP CONSTRAINT IF EXISTS chat_akouser_id_fk;
 ALTER TABLE IF EXISTS ONLY public.authentication DROP CONSTRAINT IF EXISTS authentication_akouser_uid_fk;
 DROP TRIGGER IF EXISTS on_update ON public.list_chat;
 DROP INDEX IF EXISTS public.user2;
@@ -131,7 +132,7 @@ CREATE FUNCTION public.on_update() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
 BEGIN
-NEW.updated_at := now();
+NEW.last_time := now();
 RETURN NEW;
 END;
 $$;
@@ -217,7 +218,7 @@ CREATE TABLE public.chat (
     id bigint NOT NULL,
     idx bigint NOT NULL,
     message character varying(200) NOT NULL,
-    sender smallint NOT NULL,
+    sender integer NOT NULL,
     "time" timestamp(0) without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL,
     system boolean DEFAULT false NOT NULL,
     CONSTRAINT chat_chat_id_check CHECK ((id > 0)),
@@ -404,7 +405,8 @@ CREATE TABLE public.payment (
     credit character varying(50) DEFAULT NULL::character varying,
     phone character varying(50) DEFAULT NULL::character varying,
     user_id integer NOT NULL,
-    CONSTRAINT payment_payment_id_check CHECK ((id > 0))
+    CONSTRAINT payment_payment_id_check CHECK ((id > 0)),
+    CONSTRAINT payment_point CHECK ((point >= 0))
 );
 
 
@@ -628,6 +630,14 @@ CREATE TRIGGER on_update BEFORE UPDATE ON public.list_chat FOR EACH ROW EXECUTE 
 
 ALTER TABLE ONLY public.authentication
     ADD CONSTRAINT authentication_akouser_uid_fk FOREIGN KEY (user_id) REFERENCES public.akouser(id) ON DELETE CASCADE;
+
+
+--
+-- Name: chat chat_akouser_id_fk; Type: FK CONSTRAINT; Schema: public; Owner: akomarket
+--
+
+ALTER TABLE ONLY public.chat
+    ADD CONSTRAINT chat_akouser_id_fk FOREIGN KEY (sender) REFERENCES public.akouser(id) ON DELETE SET NULL;
 
 
 --
