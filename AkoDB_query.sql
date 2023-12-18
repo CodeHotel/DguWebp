@@ -110,11 +110,28 @@ SELECT akouser.id FROM akouser WHERE login_id='testid' AND login_pw='1234';
 WITH product_info AS (
     INSERT INTO product(title, price, image, description, owner_id) 
     VALUES ('camera', 100000, 'img', 'desc', 1)
-    RETURNING id
+    RETURNING *
+), 
+hashtags AS (
+    SELECT * FROM UNNEST(string_to_array('camera,polaroid,trip,image', ','))
+),
+n_hashtag AS (
+    INSERT INTO hashtag(tag, product_id)
+    SELECT x, (SELECT id FROM product_info)
+    FROM hashtags x
 )
-INSERT INTO hashtag(tag, product_id)
-SELECT x, (SELECT id FROM product_info)
-FROM UNNEST(string_to_array('camera,polaroid,trip,image', ',')) x;
+SELECT json_build_object(
+    'id', (SELECT id FROM product_info),
+    'title', (SELECT title FROM product_info),
+    'price', (SELECT price FROM product_info),
+    'image', (SELECT image FROM product_info),
+    'description', (SELECT description FROM product_info),
+    'views', (SELECT views FROM product_info),
+    'progress', null,
+    'hashtags', array_to_json(array(
+        SELECT * FROM hashtags
+    ))
+);
 
 
 
@@ -124,23 +141,26 @@ FROM UNNEST(string_to_array('camera,polaroid,trip,image', ',')) x;
 
 -- modifyProduct(product_id, title, price, image, description, string_array(hashtag))
 WITH product_info AS (
-    UPDATE product SET title='dummy', price=100000, image='book.png', description='real shit' 
-    WHERE product.id=13
+    UPDATE product SET title='dummy', price=100, image='book.png', description='for real' 
+    WHERE product.id=4
     RETURNING id
-)
-, tags AS (
+), 
+tags AS (
     SELECT * FROM UNNEST(string_to_array('book,phone,laptop', ','))
-)
-, del AS (
+), 
+del AS (
     DELETE FROM hashtag 
     WHERE 
         product_id=(SELECT id FROM product_info) AND
         tag NOT IN (SELECT * FROM tags)
+),
+n_tags AS (
+    INSERT INTO hashtag(tag, product_id)
+    SELECT tags.* , (SELECT id FROM product_info)
+    FROM tags 
+    ON CONFLICT DO NOTHING
 )
-INSERT INTO hashtag(tag, product_id)
-SELECT tags.* , (SELECT id FROM product_info)
-FROM tags 
-ON CONFLICT DO NOTHING;
+SELECT id FROM product_info;
 
 
 
@@ -165,6 +185,8 @@ product_list AS (
 )
 SELECT json_build_object(
     'id', (SELECT id FROM user_info),
+    'login_id', (SELECT login_id FROM user_info),
+    'nickname', (SELECT nickname FROM user_info),
     'image', (SELECT image FROM user_info),
     'campus', (SELECT campus FROM user_info),
     'deparment', (SELECT deparment FROM user_info),

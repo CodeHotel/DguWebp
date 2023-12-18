@@ -2,6 +2,7 @@ package DataBeans;
 
 import java.sql.*;
 import java.util.StringJoiner;
+import java.lang.StringBuilder;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -42,16 +43,17 @@ public class PostgreInterface {
             if (rs.next()) {
                 JSONObject jsonObject = new JSONObject(rs.getString(1));
                 return new User(
-                        jsonObject.getString("login_id"),
-                        jsonObject.getString("login_pw"),
-                        jsonObject.getString("nickname"),
-                        jsonObject.getString("image"),
-                        Campus.valueOf(jsonObject.getString("campus")),
-                        jsonObject.getString("department"),
-                        Degree.valueOf(jsonObject.getString("degree")),
-                        jsonObject.getString("student_id").toCharArray(),
-                        null, // Assuming rating is not part of the return data
-                        false // Assuming isAdmin is not part of the return data
+                    jsonObject.getInt("id"),
+                    jsonObject.getString("login_id"),
+                    jsonObject.getString("login_pw"),
+                    jsonObject.getString("nickname"),
+                    jsonObject.getString("image"),
+                    Campus.valueOf(jsonObject.getString("campus")),
+                    jsonObject.getString("department"),
+                    Degree.valueOf(jsonObject.getString("degree")),
+                    jsonObject.getString("student_id").toCharArray(),
+                    null, // Assuming rating is not part of the return data
+                    false // Assuming isAdmin is not part of the return data
                 );
             }
         } catch (SQLException e) {
@@ -86,16 +88,16 @@ public class PostgreInterface {
             if (rs.next()) {
                 JSONObject jsonObject = new JSONObject(rs.getString(1));
                 return new User(
-                        jsonObject.optString("login_id", null),
-                        jsonObject.optString("login_pw", null),
-                        jsonObject.optString("nickname", null),
-                        jsonObject.optString("image", null),
-                        jsonObject.has("campus") ? Campus.valueOf(jsonObject.getString("campus")) : null,
-                        jsonObject.optString("department", null),
-                        jsonObject.has("degree") ? Degree.valueOf(jsonObject.getString("degree")) : null,
-                        jsonObject.optString("student_id", "").toCharArray(),
+                        jsonObject.getInt("id"),
+                        jsonObject.getString("login_id"),
+                        jsonObject.getString("login_pw"),
+                        jsonObject.getString("nickname"),
+                        null,
+                        null,
+                        null,
+                        null,
                         null, // Assuming rating is not part of the return data
-                        jsonObject.optBoolean("isAdmin", false)
+                        jsonObject.optBoolean("isAdmin", true)
                 );
             }
         } catch (SQLException e) {
@@ -136,18 +138,21 @@ public class PostgreInterface {
             if (rs.next()) {
                 JSONObject jsonObject = new JSONObject(rs.getString(1));
                 JSONArray ratingsJsonArray = jsonObject.optJSONArray("rating");
-                double[] ratings = null;
+                Rating[] ratings = null;
 
                 if (ratingsJsonArray != null) {
-                    ratings = new double[ratingsJsonArray.length()];
+                    ratings = new Rating[ratingsJsonArray.length()];
                     for (int i = 0; i < ratingsJsonArray.length(); i++) {
                         JSONObject ratingObj = ratingsJsonArray.getJSONObject(i);
-                        double ratingValue = ratingObj.optDouble("rating");
-                        ratings[i] = ratingValue;
+                        ratings[i] = new Rating(
+                                ratingObj.getDouble("rating");
+                                ratingObj.getInt("user_id");
+                        );
                     }
                 }
 
                 return new User(
+                        jsonObject.optInt("id", null),
                         jsonObject.optString("login_id", null),
                         jsonObject.optString("login_pw", null),
                         jsonObject.optString("nickname", null),
@@ -202,145 +207,134 @@ public class PostgreInterface {
 
     // Method to add a new product and associated hashtags
     public static Product addProduct(String title, int price, String image, String description, int ownerId, String[] hashtags) {
-        String sqlProduct = "INSERT INTO product(title, price, image, description, owner_id) " +
-                "VALUES (?, ?, ?, ?, ?) RETURNING id;";
-        String sqlHashtag = "INSERT INTO hashtag(tag, product_id) VALUES (?, ?);";
+        String sql = "WITH product_info AS (" +
+                "    INSERT INTO product(title, price, image, description, owner_id) " +
+                "    VALUES (?, ?, ?, ?, ?) " +
+                "    RETURNING * " +
+                "), " +
+                "user_info AS (" +
+                "    SELECT u.id, u.nickname, u.image, u.campus, u.deparment, u.degree, u.student_id " +
+                "    FROM akouser u WHERE u.id=(SELECT owner_id FROM product_info) " +
+                "), " +
+                "hashtags AS ( " +
+                "    SELECT * FROM UNNEST(string_to_array(?, ',')) " +
+                "), " +
+                "n_hashtag AS (" +
+                "    INSERT INTO hashtag(tag, product_id) " +
+                "    SELECT x, (SELECT id FROM product_info) " +
+                "    FROM hashtags x " +
+                ")" +
+                "SELECT json_build_object(" +
+                "    'id', (SELECT id FROM product_info), " +
+                "    'title', (SELECT title FROM product_info), " +
+                "    'price', (SELECT price FROM product_info), " +
+                "    'image', (SELECT image FROM product_info), " +
+                "    'description', (SELECT description FROM product_info), " +
+                "    'views', (SELECT views FROM product_info), " +
+                "    'progress', (SELECT progress FROM prog), " +
+                "    'user_info', (SELECT row_to_json(user_info) FROM user_info), " +
+                "    'hashtags', array_to_json(array( " +
+                "        SELECT * FROM hashtags " +
+                "    ))" +
+                ");"
 
-        ResultSet rs = null;
-        Product product = null;
-        Connection conn = null;
+        StringBuilder hashtags = "";
+        for (var tag in hashtags) {
+            hashtags.append(tag + ',');
+        }
 
-        try {
-            conn = PostgreConnect.getStmt().getConnection();
-            PreparedStatement pstmtProduct = conn.prepareStatement(sqlProduct, PreparedStatement.RETURN_GENERATED_KEYS);
-            PreparedStatement pstmtHashtag = conn.prepareStatement(sqlHashtag);
-
-            // Disable auto-commit mode
-            conn.setAutoCommit(false);
-
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);) {
+        
             // Insert product
-            pstmtProduct.setString(1, title);
-            pstmtProduct.setInt(2, price);
-            pstmtProduct.setString(3, image);
-            pstmtProduct.setString(4, description);
-            pstmtProduct.setInt(5, ownerId);
-            pstmtProduct.executeUpdate();
+            pstmt.setString(1, title);
+            pstmt.setInt(2, price);
+            pstmt.setString(3, image);
+            pstmt.setString(4, description);
+            pstmt.setInt(5, ownerId);
+            pstmt.setString(6, hashtags.toString());
 
-            // Retrieve the generated product ID
-            rs = pstmtProduct.getGeneratedKeys();
-            int productId = 0;
+            ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                productId = rs.getInt(1);
+                JSONObject jsonObject = new JSONObjct(rs.getString(1));
+                JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
+                String[] hashtags = null;
+
+                if (hashtagJson != null) {
+                    hashtags = new String[hashtagJson.length()];
+                    for (int i = 0; i < hashtagJson.length(); ++i) {
+                        JSONObject hashtagObj = hashtagJson.getJSONObject(i);
+                        hashtags[i] = hashtagObj.get(0);
+                    }
+                }
+
+                return new Product(
+                        jsonObject.getInt("id"),
+                        jsonObject.getString("title"),
+                        jsonObject.getInt("price"),
+                        jsonObject.getString("image"),
+                        jsonObject.getString("description"),
+                        jsonObject.getLong("views"),
+                        jsonObject.getInt("owner_id"),
+                        hashtags
+                );
             }
-
-            // Insert hashtags
-            for (String tag : hashtags) {
-                pstmtHashtag.setString(1, tag);
-                pstmtHashtag.setInt(2, productId);
-                pstmtHashtag.addBatch();
-            }
-            pstmtHashtag.executeBatch();
-
-            // Commit changes
-            conn.commit();
-
-            // Create a product object to return
-            product = new Product(productId, price, image, description, 0, ownerId);
-
-            pstmtProduct.close();
-            pstmtHashtag.close();
 
         } catch (SQLException e) {
             e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback(); // Rollback on error
-                } catch (SQLException exRollback) {
-                    exRollback.printStackTrace();
-                }
-            }
-        } finally {
-            if (rs != null) {
-                try {
-                    rs.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
         }
-
-        return product;
+        return null;
     }
 
     public static boolean modifyProduct(int productId, String title, int price, String image, String description, String[] hashtags) {
-        Connection conn = null;
-        boolean success = false;
+        String sql = "WITH product_info AS (" +
+                "    UPDATE product SET title=?, price=?, image=?, description=? " +
+                "    WHERE product.id=? " +
+                "    RETURNING id " +
+                "), " +
+                "tags AS ( " +
+                "    SELECT * FROM UNNEST(string_to_array(?, ',')) " +
+                "), " +
+                "del AS ( " +
+                "    DELETE FROM hashtag " +
+                "    WHERE " +
+                "        product_id=(SELECT id FROM product_info) AND " +
+                "        tag NOT IN (SELECT * FROM tags) " +
+                "), " +
+                "n_tags AS (" +
+                "   INSERT INTO hashtag(tag, product_id) " +
+                "   SELECT tags.* , (SELECT id FROM product_info) " +
+                "   FROM tags " +
+                "   ON CONFLICT DO NOTHING" +
+                ") " +
+                "SELECT id FROM product_info;";
 
-        String updateProductSql = "UPDATE product SET title = ?, price = ?, image = ?, description = ? WHERE id = ? RETURNING id;";
-        String deleteHashtagsSql = "DELETE FROM hashtag WHERE product_id = ? AND tag NOT IN (SELECT unnest(?::varchar[]));";
-        String insertHashtagsSql = "INSERT INTO hashtag(tag, product_id) SELECT unnest(?::varchar[]), ? ON CONFLICT (tag, product_id) DO NOTHING;";
-
-        try {
-            conn = PostgreConnect.getStmt().getConnection();
-            conn.setAutoCommit(false); // Start transaction
-
-            // Update product details
-            try (PreparedStatement pstmtUpdateProduct = conn.prepareStatement(updateProductSql)) {
-                pstmtUpdateProduct.setString(1, title);
-                pstmtUpdateProduct.setInt(2, price);
-                pstmtUpdateProduct.setString(3, image);
-                pstmtUpdateProduct.setString(4, description);
-                pstmtUpdateProduct.setInt(5, productId);
-                pstmtUpdateProduct.execute();
-            }
-
-            // Convert hashtags to a PostgreSQL array representation
-            String[] tagArray = hashtags;
-            Array tagSqlArray = conn.createArrayOf("varchar", tagArray);
-
-            // Delete old hashtags not present in the new list
-            try (PreparedStatement pstmtDeleteHashtags = conn.prepareStatement(deleteHashtagsSql)) {
-                pstmtDeleteHashtags.setInt(1, productId);
-                pstmtDeleteHashtags.setArray(2, tagSqlArray);
-                pstmtDeleteHashtags.execute();
-            }
-
-            // Insert new hashtags, ignoring conflicts
-            try (PreparedStatement pstmtInsertHashtags = conn.prepareStatement(insertHashtagsSql)) {
-                pstmtInsertHashtags.setArray(1, tagSqlArray);
-                pstmtInsertHashtags.setInt(2, productId);
-                pstmtInsertHashtags.execute();
-            }
-
-            conn.commit(); // Commit transaction
-            success = true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException exRollback) {
-                    exRollback.printStackTrace();
-                }
-            }
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
+        StringBuilder hashtags = "";
+        for (var tag in hashtags) {
+            hashtags.append(tag + ',');
         }
 
-        return success;
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql);) {
+
+            pstmt.setInt(5, productId);
+            pstmt.setString(1, title);
+            pstmt.setInt(2, price);
+            pstmt.setString(3, image);
+            pstmt.setString(4, description);
+            pstmt.setString(6, hashtags);
+
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                if (rs.getInt("id") == productId) {
+                    return true;
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     // Method to delete a product by its ID
@@ -351,27 +345,34 @@ public class PostgreInterface {
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, productId);
-            int affectedRows = pstmt.executeUpdate();
-
-            // If affectedRows is 1, the delete operation was successful.
-            return affectedRows == 1;
-
+            return pstmt.executeUpdate() == 1;
         } catch (SQLException e) {
             e.printStackTrace();
-            return false;
         }
+        return false;
     }
 
     public static User getBriefUserData(int userId) {
-        String sql = "WITH user_info AS (" +
-                "    SELECT * FROM akouser WHERE akouser.id = ?" +
+        String sql = "WITH user_info AS ( " +
+                "    SELECT * FROM akouser WHERE akouser.id=? " +
                 "), " +
-                "product_list AS (" +
+                "product_list AS ( " +
                 "    SELECT p.id, p.price, p.image, p.description, p.views " +
-                "    FROM product p WHERE p.owner_id = (SELECT id FROM user_info)" +
-                ")" +
-                "SELECT json_build_object(" +
-                // ... Rest of the SQL
+                "    FROM product p WHERE p.owner_id=(SELECT id FROM user_info) " +
+                ") " +
+                "SELECT json_build_object( " +
+                "    'id', (SELECT id FROM user_info), " +
+                "    'login_id', (SELECT login_id FROM user_info), " +
+                "    'nickname', (SELECT nickname FROM user_info), " +
+                "    'image', (SELECT image FROM user_info), " +
+                "    'campus', (SELECT campus FROM user_info), " +
+                "    'deparment', (SELECT deparment FROM user_info), " +
+                "    'degree', (SELECT degree FROM user_info), " +
+                "    'student_id', (SELECT student_id FROM user_info), " +
+                "    'rating', array_to_json((SELECT rating FROM user_info)), " +
+                "    'products', array_to_json(array(" +
+                "        SELECT row_to_json(product_list) FROM product_list " +
+                "    )) " +
                 ");";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
@@ -383,19 +384,18 @@ public class PostgreInterface {
             if (rs.next()) {
                 JSONObject jsonObject = new JSONObject(rs.getString(1));
 
-                // Create a new User object and set the fields from the JSON object
                 return new User(
-                        jsonObject.optString("login_id", null),
+                        jsonObject.getString("id", null),
+                        jsonObject.getString("login_id")
                         null, // Password hash is not returned in brief data
-                        jsonObject.optString("nickname", null),
-                        jsonObject.optString("image", null),
+                        jsonObject.getString("nickname"),
+                        jsonObject.getString("image"),
                         jsonObject.has("campus") ? Campus.valueOf(jsonObject.getString("campus")) : null,
-                        jsonObject.optString("department", null),
+                        jsonObject.getString("department"),
                         jsonObject.has("degree") ? Degree.valueOf(jsonObject.getString("degree")) : null,
-                        jsonObject.optString("student_id", "").toCharArray(),
+                        jsonObject.getString("student_id"),
                         null, // Ratings are not returned in brief data
                         false // isAdmin is not part of brief data
-                        // Additional fields can be added as per the User class definition
                 );
             }
         } catch (SQLException e) {
@@ -404,7 +404,7 @@ public class PostgreInterface {
         return null;
     }
 
-    public static JSONObject getProductData(int productId) {
+    public static Product getProductData(int productId) {
         String sql = "WITH product_info AS (" +
                 "    SELECT p.id, p.title, p.price, p.image, p.description, p.views, p.owner_id" +
                 "    FROM product p WHERE p.id = ?" +
@@ -442,8 +442,64 @@ public class PostgreInterface {
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                String resultString = rs.getString(1);
-                return new JSONObject(resultString);
+                JSONObject jsonObject = new JSONObject(rs.getString(1));
+                JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
+                String[] hashtags = null;
+
+                if (hashtagJson != null) {
+                    hashtags = new String[hashtagJson.length()];
+                    for (int i = 0; i < hashtags.length(); i++) {
+                        JSONObject hashtagObj = hashtagJson.getJSONObject(i);
+                        hashtags[i] = hashtagObj.get(0);
+                    }
+                }
+
+
+                Product product = new Product(
+                        jsonObject.getInt("id"),
+                        jsonObject.getString("title"),
+                        jsonObject.getInt("price"),
+                        jsonObject.getString("image"),
+                        jsonObject.getString("description"),
+                        jsonObject.getLong("views"),
+                        jsonObject.getInt("owner_id"),
+                        hashtags
+                );
+
+                JSONObject userJson = new JSONObject(jsonObject.getString("user_info"));
+                JSONArray ratingsJson = jsonObject.optJSONArray("rating");
+                Rating[] ratings = null;
+
+                if (ratingsJson != null) {
+                    ratings = new Rating[ratingsJson.length()];
+                    for (int i = 0; i < ratingsJson.length(); i++) {
+                        JSONObject ratingObj = ratingsJson.getJSONObject(i);
+                        ratings[i] = new Rating(
+                                ratingObj.getDouble("rating");
+                                ratingObj.getInt("user_id");
+                        );
+                    }
+                }
+
+                User user = new User(
+                        userJson.getInt("id"),
+                        null,
+                        null,
+                        userJson.getString("nickname"),
+                        userJson.getString("image"),
+                        Campus.valueOf(jsonObject.getString("campus")),
+                        jsonObject.getString("department"),
+                        Degree.valueOf(jsonObject.getString("degree")),
+                        jsonObject.getString("student_id"),
+                        ratings,
+                        false
+                );
+
+
+                return new ProductData(
+                        product,
+                        user
+                );
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -484,7 +540,7 @@ public class PostgreInterface {
     }
 
     // Method to get a list of products on the user's wishlist
-    public static JSONArray getWishList(int userId) {
+    public static Wishlist[] getWishList(int userId) {
         String sql = "WITH products AS (" +
                 "    SELECT p.* FROM product p " +
                 "    WHERE p.id = ANY (" +
@@ -515,7 +571,6 @@ public class PostgreInterface {
                 "    ) FROM products p" +
                 "));";
 
-        JSONArray wishlist = new JSONArray();
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -523,108 +578,130 @@ public class PostgreInterface {
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                String resultString = rs.getString(1);
-                wishlist = new JSONArray(resultString);
+                JSONObject resultObject = new JSONObject(rs.getString(1));
+                JSONArray jsonArray = resultObject.optJSONArray(jsonObject);
+                Wishlist[] wishlists = new Wishlist[];
+
+                for (int i = 0; i < jsonArray.length(); ++i) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
+                    String[] hashtags = null;
+
+                    if (hashtagJson != null) {
+                        hashtags = new String[hashtagJson.length()];
+                        for (int i = 0; i < hashtags.length(); i++) {
+                            JSONObject hashtagObj = hashtagJson.getJSONObject(i);
+                            hashtags[i] = hashtagObj.get(0);
+                        }
+                    }
+
+
+                    Product product = new Product(
+                            jsonObject.getInt("id"),
+                            jsonObject.getString("title"),
+                            jsonObject.getInt("price"),
+                            jsonObject.getString("image"),
+                            jsonObject.getString("description"),
+                            jsonObject.getLong("views"),
+                            null,
+                            hashtags
+                    );
+
+                    JSONObject userJson = new JSONObject(jsonObject.getString("user_info"));
+                    User user = new User(
+                            userJson.getInt("id"),
+                            null,
+                            null,
+                            userJson.getString("nickname"),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false
+                    );
+
+                    wishlists[i] = new Wishlist(
+                            product,
+                            user,
+                            Progress.valueOf(jsonObject.getString("progress"))
+                    )
+                }
+
+                return wishlists;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return wishlist;
+        return null;
     }
 
     public static JSONObject buyRequest(int userId, int productId) {
-        JSONObject chatObject = new JSONObject();
-        Connection conn = null;
+        String sql = "WITH info AS (" +
+                "    SELECT p.id, p.price, p.owner_id, u.id AS buyer_id" +
+                "    FROM product p, akouser u " +
+                "    WHERE p.id=? AND u.id=? " +
+                "), " +
+                "n_progress AS ( " +
+                "    INSERT INTO list_progress(owner_id, buyer_id, product_id, progress) " +
+                "    SELECT " +
+                "        (SELECT owner_id FROM info), " +
+                "        (SELECT buyer_id FROM info), " +
+                "        (SELECT id FROM info)," +
+                "        'applied' " +
+                "    WHERE NOT EXISTS (" +
+                "        SELECT id FROM list_progress p " +
+                "        WHERE " +
+                "            p.product_id=(SELECT id FROM info) AND " +
+                "            p.buyer_id=(SELECT buyer_id FROM info)" +
+                "    )" +
+                "    RETURNING * " +
+                ")," +
+                "user_pay AS (" +
+                "    UPDATE payment SET point=payment.point-(SELECT price FROM info) " +
+                "    WHERE payment.user_id=(SELECT buyer_id FROM info) " +
+                ")," +
+                "del_wish AS (" +
+                "    DELETE FROM list_wish w" +
+                "    WHERE " +
+                "        w.buyer_id=(SELECT buyer_id FROM n_progress) AND " +
+                "        w.product_id=(SELECT product_id FROM n_progress)" +
+                ")," +
+                "n_chat AS (" +
+                "    INSERT INTO list_chat(user1, user2)" +
+                "    VALUES (" +
+                "        (SELECT owner_id FROM n_progress)," +
+                "        (SELECT buyer_id FROM n_progress)" +
+                "    )" +
+                "    RETURNING *" +
+                ") " +
+                "SELECT json_build_object(" +
+                "    'id', (SELECT id FROM n_chat)," +
+                "    'user1', (SELECT user1 FROM n_chat)," +
+                "    'user2', (SELECT user2 FROM n_chat)," +
+                "    'last_time', (SELECT last_time FROM n_chat) " +
+                ");";
 
-        try {
-            conn = PostgreConnect.getStmt().getConnection();
-            conn.setAutoCommit(false); // Begin transaction
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Check if the operation can proceed (user and product exist and no prior progress)
-            String checkSql = "SELECT p.id, p.price, p.owner_id, u.id AS buyer_id " +
-                    "FROM product p, akouser u " +
-                    "WHERE p.id = ? AND u.id = ?";
-            PreparedStatement checkStmt = conn.prepareStatement(checkSql);
-            checkStmt.setInt(1, productId);
-            checkStmt.setInt(2, userId);
-            ResultSet checkRs = checkStmt.executeQuery();
-            if (!checkRs.next()) {
-                throw new SQLException("Product or user does not exist or buy request already made.");
+            pstmt.setInt(1, productId);
+            pstmt.setInt(2, userId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                JSONObject jsonObject = new JSONObject(rs.getString(1));
+                return new Chatlist(
+                        jsonObject.getInt("id"),
+                        jsonObject.getInt("user1"),
+                        jsonObject.getInt("user2"),
+                        jsonObject.getString("time")
+                );
             }
-            int price = checkRs.getInt("price");
-            int ownerId = checkRs.getInt("owner_id");
-            checkRs.close();
-            checkStmt.close();
-
-            // Insert into list_progress
-            String progressSql = "INSERT INTO list_progress (owner_id, buyer_id, product_id, progress) " +
-                    "VALUES (?, ?, ?, 'applied') RETURNING *";
-            PreparedStatement progressStmt = conn.prepareStatement(progressSql);
-            progressStmt.setInt(1, ownerId);
-            progressStmt.setInt(2, userId);
-            progressStmt.setInt(3, productId);
-            ResultSet progressRs = progressStmt.executeQuery();
-            if (!progressRs.next()) {
-                throw new SQLException("Unable to insert into list_progress.");
-            }
-            progressRs.close();
-            progressStmt.close();
-
-            // Update payment information
-            String paymentSql = "UPDATE payment SET point = point - ? WHERE user_id = ?";
-            PreparedStatement paymentStmt = conn.prepareStatement(paymentSql);
-            paymentStmt.setInt(1, price);
-            paymentStmt.setInt(2, userId);
-            paymentStmt.executeUpdate();
-            paymentStmt.close();
-
-            // Remove from list_wish if present
-            String wishSql = "DELETE FROM list_wish WHERE buyer_id = ? AND product_id = ?";
-            PreparedStatement wishStmt = conn.prepareStatement(wishSql);
-            wishStmt.setInt(1, userId);
-            wishStmt.setInt(2, productId);
-            wishStmt.executeUpdate();
-            wishStmt.close();
-
-            // Insert into list_chat and return chat details
-            String chatSql = "INSERT INTO list_chat (user1, user2) VALUES (?, ?) RETURNING *";
-            PreparedStatement chatStmt = conn.prepareStatement(chatSql);
-            chatStmt.setInt(1, ownerId);
-            chatStmt.setInt(2, userId);
-            ResultSet chatRs = chatStmt.executeQuery();
-            if (chatRs.next()) {
-                chatObject.put("id", chatRs.getInt("id"));
-                chatObject.put("user1", chatRs.getInt("user1"));
-                chatObject.put("user2", chatRs.getInt("user2"));
-                chatObject.put("last_time", chatRs.getTimestamp("last_time"));
-            } else {
-                throw new SQLException("Unable to insert into list_chat.");
-            }
-            chatRs.close();
-            chatStmt.close();
-
-            conn.commit(); // Commit all changes
-
         } catch (SQLException e) {
             e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback(); // Rollback transaction on error
-                } catch (SQLException exRollback) {
-                    exRollback.printStackTrace();
-                }
-            }
-            return null;
-        } finally {
-            if (conn != null) {
-                try {
-                    conn.setAutoCommit(true); // Reset auto-commit
-                    conn.close();
-                } catch (SQLException e) {
-                    e.printStackTrace();
-                }
-            }
         }
 
         return chatObject;

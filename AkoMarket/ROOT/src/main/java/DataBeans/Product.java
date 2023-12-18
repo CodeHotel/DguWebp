@@ -2,23 +2,27 @@ package DataBeans;
 
 public class Product {
     private int id;
+    private String title;
     private int price;
     private String image;
     private String description;
     private long views;
     private int ownerId;
+    private String[] hashtags;
 
-    public Product(){}
-    public Product(int id, int price, String image, String description, long views, int ownerId){
-        this.id=id; this.price=price; this.image=image; this.description=description;
-        this.views=views; this.ownerId=ownerId;
-    }
-    public Product(int price, String image, String description, long views, int ownerId){
-        this.price=price; this.image=image; this.description=description;
-        this.views=views; this.ownerId=ownerId;
+    public Product(int id, String title, int price, String image, String description, long views, int ownerId, String[] hashtags){
+        this.id = id;
+        this.title = title;
+        this.price = price;
+        this.image = image;
+        this.description=description;
+        this.views = views;
+        this.ownerId = ownerId;
+        this.hashtags = hashtags;
     }
 
     public int getId() {return id;}
+    public String getTitle() {return title;}
     public int getPrice() {return price;}
     public void setPrice(int newPrice) {price = newPrice;}
     public String getDescription() {return description;}
@@ -29,4 +33,6 @@ public class Product {
     public void setViews(long newViews) {views = newViews;}
     public int getOwnerId() {return ownerId;}
     public void setOwnerId(int newOwnerId) {ownerId = newOwnerId;}
+    public String[] getHashtags() {return hashtags;}
+    public void setHashtags(String[] hashtags) {this.hashtags = hashtags;}
 }
