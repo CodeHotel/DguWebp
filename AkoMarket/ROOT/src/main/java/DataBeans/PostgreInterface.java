@@ -550,7 +550,7 @@ public class PostgreInterface {
 
                 JSONObject userJson = jsonObject.getJSONObject("user_info");
                 JSONArray ratingsJson = jsonObject.optJSONArray("rating", null);
-                Rating[] ratings = null;
+                Rating[] ratings = new Rating[0];
 
                 if (ratingsJson != null) {
                     ratings = new Rating[ratingsJson.length()];
@@ -569,10 +569,10 @@ public class PostgreInterface {
                         null,
                         userJson.getString("nickname"),
                         userJson.getString("image"),
-                        Campus.valueOf(jsonObject.getString("campus")),
-                        jsonObject.getString("department"),
-                        Degree.valueOf(jsonObject.getString("degree")),
-                        jsonObject.getString("student_id").toCharArray(),
+                        Campus.valueOf(userJson.getString("campus")),
+                        userJson.getString("department"),
+                        Degree.valueOf(userJson.getString("degree")),
+                        userJson.getString("student_id").toCharArray(),
                         ratings,
                         false
                 );
