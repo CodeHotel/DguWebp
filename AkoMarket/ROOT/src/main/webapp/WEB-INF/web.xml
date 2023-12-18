@@ -2,14 +2,6 @@
 <web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://xmlns.jcp.org/xml/ns/javaee" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd" id="WebApp_ID" version="3.1">
   <display-name>ROOT</display-name>
   <servlet>
-    <servlet-name>RegisterServlet</servlet-name>
-    <servlet-class>RegisterServlet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>RegisterServlet</servlet-name>
-    <url-pattern>/register</url-pattern>
-  </servlet-mapping>
-  <servlet>
     <servlet-name>LoginServlet</servlet-name>
     <servlet-class>LoginServlet</servlet-class>
   </servlet>
