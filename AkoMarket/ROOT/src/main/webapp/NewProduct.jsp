@@ -1,5 +1,6 @@
 <%@ page import="DataBeans.User" %>
-<%@ page import="DataBeans.PostgreInterface" %><%--
+<%@ page import="DataBeans.PostgreInterface" %>
+<%@ page import="DataBeans.ProductData" %><%--
   Created by IntelliJ IDEA.
   User: mh7cp
   Date: 2023-12-19
@@ -7,7 +8,6 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" session="true"%>
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -55,7 +55,7 @@
             </td>
             <td style="width:12%;margin:0;padding: 0;color:#4FC3F7;" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
             <td style="width:10%;margin:0;padding: 0" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
-            <td style="width:10%;margin:0;padding: 0">중고판매</td>
+            <td style="width:10%;margin:0;padding: 0"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
             <td></td>
             <td id="loginCell" style="width:7%;margin:0;padding: 0" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
                 onmouseleave=" document.getElementById('loginMenu').style.display = 'none';">
@@ -131,7 +131,7 @@
     </div>
 </div>
 <h1 style="width: 100%; text-align:left;padding-left:1em"> 상품 등록</h1>
-<form action="/submit_product" method="post" enctype="multipart/form-data" style="width: 100%; text-align:left;padding-left:1em">
+<form action="/newproduct" method="post" enctype="multipart/form-data" style="width: 100%; text-align:left;padding-left:1em">
     이미지:<input type="file" name="image" accept="image/*"><br><br>
     상품명:<input type="text" name="title"><br><br>
     해시태그:<input type="text" name="tag"><br><br>
