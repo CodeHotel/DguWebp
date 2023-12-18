@@ -15,6 +15,24 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
   <script>
+    function registerSubmit() {
+      // Prevent the default form submission
+      event.preventDefault();
+
+      // Hash the password using SHA-256
+      var hashedPassword = CryptoJS.SHA256($("#regPw").val()).toString();
+
+      // Replace the plain text password with the hashed password
+      $("#regPw").val(hashedPassword);
+
+      // If you also want to hash the password confirmation field
+      var hashedPasswordCheck = CryptoJS.SHA256($("#regPwCheck").val()).toString();
+      $("#regPwCheck").val(hashedPasswordCheck);
+
+      // Submit the form
+      $("#registrationForm").submit();
+    }
+
     function loginSubmit() {
       event.preventDefault();
 
@@ -124,7 +142,7 @@
 
   </div>
 </div>
-<form method="post" action="/register" style="width: 100%; text-align:left;padding-left:1em" enctype="multipart/form-data">
+<form method="post" id="registrationForm" action="/register" style="width: 100%; text-align:left;padding-left:1em" enctype="multipart/form-data">
   <h1>회원가입</h1>
   <div style="width:100%">
     <br>
@@ -146,7 +164,7 @@
     전화번호: <input type="tel" name="regPhone" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
     학생증/교원증 인증 <input type="file" name="regIdCard"><br>
     프로필 사진 업로드 <input type="file" name="regPicture"><br>
-    <input type="submit" value="가입신청" style="border-radius:0.5em;border:solid 1px gray;width:6em">
+    <input type="submit" value="가입신청" onclick="registerSubmit()" style="border-radius:0.5em;border:solid 1px gray;width:6em">
   </div>
 </form>
 <center>
