@@ -9,13 +9,13 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 public class ImageDB {
-    private static final String DB_URL = "localhost:2580";
+    private static final String DB_URL = "http://www.아코마켓.com:2580";
     private static final String UPLOAD_DIRECTORY = "/usr/local/Server_Repo/ImageDB/";
     private static final String KEY = "akoImage";
 
     // Method to get the image URL
     public static String getImageUrl(String fileName){
-        String token = urlResponse(DB_URL + "imageToken?masterkey=" + KEY + "&imageName=" + fileName);
+        String token = urlResponse(DB_URL + "/imageToken?masterkey=" + KEY + "&imageName=" + fileName);
         return DB_URL + "/imageRequest?token=" + token;
     }
 
