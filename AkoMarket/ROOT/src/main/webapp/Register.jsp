@@ -151,8 +151,8 @@
     닉네임: <input type="text" name="regNickname" style="border-radius:0.5em;border:solid 1px gray;width:6em">
     <input type="button" name="checkNickname" value="중복확인" style="border-radius:0.5em;border:solid 1px gray;width:6em">
     <br>
-    비밀번호: <input type="password" name="regPw" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
-    비밀번호 확인: <input type="password" name="regPwCheck" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
+    비밀번호: <input type="password" id="regPw" name="regPw" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
+    비밀번호 확인: <input type="password" id="regPwCheck" name="regPwCheck" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
     캠퍼스: <input type="checkbox" name="regCampus" value="seoul">서울캠퍼스
     <input type="checkbox" name="regCampus" value="goyang">고양캠퍼스
     <input type="checkbox" name="regCampus" value="WISE">WISE캠퍼스<br>
