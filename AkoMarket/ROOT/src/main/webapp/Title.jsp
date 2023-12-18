@@ -6,45 +6,46 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" session="true"%>
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <title>아코마켓</title>
     <link rel="stylesheet" type="text/css" href="resources/css/ako-main.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-</head>
-<body style="margin:0px;">
-<script>
-    $(document).ready(function() {
-        $("#loginForm").submit(function(event) {
-            event.preventDefault(); // Prevent the form from submitting via the browser.
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <script>
+        function loginSubmit() {
+            event.preventDefault();
 
-            var loginId = $("#loginId").val();
-            var loginPw = $("#loginPw").val();
+            // Hash the password using SHA-256
+            var hashedPassword = CryptoJS.SHA256($("#loginPw").val()).toString();
 
             $.ajax({
-                url: 'path/to/your/login/endpoint', // Replace with your endpoint URL.
-                type: 'POST',
-                data: {loginId: loginId, loginPw: loginPw},
+                type: "POST",
+                url: "/login",
+                data: {
+                    loginId: $("#loginId").val(),
+                    loginPw: $("#loginPw").val()
+                },
                 success: function(response) {
-                    // Handle success. If response is not null, set session and refresh.
-                    if(response !== null) {
-                        // Set session and refresh page logic here.
-                        window.location.reload(); // Example of a page refresh.
+                    if (response=="success") {
+                        window.location.reload();
                     } else {
-                        // Handle login failure.
-                        alert("Invalid credentials");
+                        alert("로그인 실패!");
                     }
                 },
-                error: function() {
-                    // Handle error.
-                    alert("Error in login");
+                error: function(error) {
+                    alert("로그인 실패!");
                 }
             });
-        });
-    });
-</script>
+        }
+    </script>
+
+</head>
+<body style="margin:0px;">
+
 <div id="topMenuBar" class="topMenu">
     <table style="width:100%;height:100%;table-layout: fixed">
         <tr>
@@ -56,7 +57,21 @@
             <td style="width:10%;margin:0;padding: 0">중고판매</td>
             <td></td>
             <td id="loginCell" style="width:7%;margin:0;padding: 0" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
-                onmouseleave=" document.getElementById('loginMenu').style.display = 'none';">로그인
+                onmouseleave=" document.getElementById('loginMenu').style.display = 'none';">
+                <%
+                    // Check if the user is logged in by looking for a session attribute
+                    Integer userId = (Integer) session.getAttribute("userId");
+                    if (userId != null) {
+                        // User is logged in
+                %>
+                <%= userId %>
+                <%
+                } else {
+                %>
+                로그인
+                <%
+                    }
+                %>
                 <div id="loginMenu" style="display:none; position:absolute; right:1em; background-color:white; padding:0.5em; width:12%;border-radius:1em;background-color: #D35400;border:solid 1px white">
                     <center>
                         <form id="loginForm" method="post" style="width:100%; font-size:0.8em;font-family:'BaeMinHanna', system-ui ;color:white">
@@ -70,8 +85,8 @@
                                     <td><input type="password" id="loginPw" name="loginPw" style="width:100%;border-radius:0.5em;border:solid 1px white"></td>
                                 </tr>
                             </table>
-                            <input type="submit" value="로그인" style="padding:0.2em; width:40%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white">
-                            <input type="button" value="회원가입" style="padding:0.2em; width:55%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white">
+                            <input id="loginSubmit" type="button" value="로그인" style="padding:0.2em; width:40%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white">
+                            <input type="button" value="회원가입" style="padding:0.2em; width:55%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white" onclick="window.location.href = '${pageContext.request.contextPath}/Register.html';">
                         </form>
                     </center>
                 </div>
@@ -157,5 +172,11 @@
     동국대학교
     Copyright © 2023 · All Rights Reserved
 </center>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("loginSubmit").addEventListener("click", loginSubmit);
+    });
+
+</script>
 </body>
 </html>

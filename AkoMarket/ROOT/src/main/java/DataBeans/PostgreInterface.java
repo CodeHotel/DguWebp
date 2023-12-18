@@ -180,7 +180,7 @@ public class PostgreInterface {
         }
     }
 
-    public static Integer userAuth(String loginId, String loginPw) {
+    public static int userAuth(String loginId, String loginPw) {
         String sql = "SELECT id FROM akouser WHERE login_id = ? AND login_pw = ?;";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
@@ -197,7 +197,7 @@ public class PostgreInterface {
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null;
+        return -1;
     }
 
     // Method to add a new product and associated hashtags
