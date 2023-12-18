@@ -1,4 +1,5 @@
-<%--
+<%@ page import="DataBeans.User" %>
+<%@ page import="DataBeans.PostgreInterface" %><%--
   Created by IntelliJ IDEA.
   User: mh7cp
   Date: 2023-12-18
@@ -26,7 +27,7 @@
                 url: "/login",
                 data: {
                     loginId: $("#loginId").val(),
-                    loginPw: $("#loginPw").val()
+                    loginPw: hashedPassword
                 },
                 success: function(response) {
                     if (response=="success") {
@@ -68,7 +69,10 @@
                     <center style="width:100%; font-size:0.8em;font-family:'BaeMinHanna', system-ui ;color:white">
                         <table>
                             <tr style="width:90%">
-                                <%=userId%>님 환영합니다
+                                <%
+                                    User t = PostgreInterface.getBriefUserData(userId);
+                                %>
+                                <%=t.getNickName()%>님 환영합니다
 
                             </tr><br>
                             <tr style="width:90%">

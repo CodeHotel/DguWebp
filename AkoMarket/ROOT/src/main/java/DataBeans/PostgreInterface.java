@@ -157,6 +157,7 @@ public class PostgreInterface {
         }
     }
 
+
     // getFullUserData method
     public static User getFullUserData(String loginId) {
         String sql = "WITH result AS (" +

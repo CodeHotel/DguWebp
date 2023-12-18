@@ -1,4 +1,4 @@
-<%--
+<%@ page import="DataBeans.*" %><%--
   Created by IntelliJ IDEA.
   User: mh7cp
   Date: 2023-12-18
@@ -26,7 +26,7 @@
                 url: "/login",
                 data: {
                     loginId: $("#loginId").val(),
-                    loginPw: $("#loginPw").val()
+                    loginPw: hashedPassword
                 },
                 success: function(response) {
                     if (response=="success") {
@@ -68,7 +68,10 @@
                     <center style="width:100%; font-size:0.8em;font-family:'BaeMinHanna', system-ui ;color:white">
                         <table>
                             <tr style="width:90%">
-                                <%=userId%>님 환영합니다
+                                <%
+                                    User t = PostgreInterface.getBriefUserData(userId);
+                                %>
+                                <%=t.getNickName()%>님 환영합니다
 
                             </tr><br>
                             <tr style="width:90%">
@@ -124,6 +127,9 @@
 
     </div>
 </div>
+<%
+    ProductData product = PostgreInterface.getProductData(Integer.parseInt(request.getParameter("product")));
+%>
 <center>
     <table style="width:70%;">
         <tr style="text-align:center; height:600px;border:0px;">
@@ -132,29 +138,40 @@
             </td>
             <td style="padding-left:5%;vertical-align:top;text-align: left">
                 <br><br>
-                <h1 style = "font-family: BaeMinHanna, system-ui;text-align: left">상품 이름</h1>
+                <h1 style = "font-family: BaeMinHanna, system-ui;text-align: left"><%=product.prodcut.getTitle()%>></h1>
                 <br>
-                <h3 style = "font-family: BaeMinHanna, system-ui;text-align: left">2000 원</h3>
+                <h3 style = "font-family: BaeMinHanna, system-ui;text-align: left"><%=product.prodcut.getPrice()%> 원</h3>
                 <br>
                 <p style="font-family: BaeMinJua, system-ui;text-align: left">
-                    상품 설명입니다<br>상품설명입니다.<br>description<br>상품설명<br><br>
+                    <%=product.prodcut.getDescription()%>
                 </p>
-                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
+                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="">구매하기</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
             </td>
 
         </tr>
     </table>
+    <%
+
+    %>
     <h2 style = "font-family: BaeMinHanna, system-ui;">판매자 정보</h2><br>
+    <%
+        Rating[] rate = product.user.getRating();
+        double rating = 0;
+        for(int t = 0; t<rate.length; t++){
+            rating+=rate[t].rating;
+        }
+        if(rate.length!=0) rating/=rate.length;
+    %>
     <table style = "width: 70%;">
         <tr style = "text-align: center; height: 200px; border: 1px solid #ddd;">
-            <td style = "border: 1px solid #ddd; width: 30%"><img style ="margin-top: 30px; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" src="resources/images/AkoFace.png" alt="Profile Picture">
-                <h2 style = "font-family: BaeMinHanna, system-ui; font-size: 20px;">김아코</h2>
-                <button style="border: 1px solid #D35400; background-color: transparent; color: #D35400; padding: 3px 8px; border-radius: 5px; vertical-align: middle;">방문하기</button>
-                <p style="font-family: BaeMinJua, system-ui;">별점: ☆☆☆☆☆</p>
+            <td style = "border: 1px solid #ddd; width: 30%"><img style ="margin-top: 30px; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" src="<%=ImageDB.getImageUrl(product.user.getImage())%>" alt="resource/images/AkoFace.png">
+                <h2 style = "font-family: BaeMinHanna, system-ui; font-size: 20px;"><%=product.user.getNickName()%></h2>
+                <button style="border: 1px solid #D35400; background-color: transparent; color: #D35400; padding: 3px 8px; border-radius: 5px; vertical-align: middle;" onclick="window.location.href = '${pageContext.request.contextPath}/Seller.jsp?user=<%=product.user.getLoginId()%>';">방문하기</button>
+                <p style="font-family: BaeMinJua, system-ui;">평점: <%=rating%></p>
             </td>
             <td style = "border: 1px solid #ddd;">
-                <p style="font-family: BaeMinJua, system-ui;">캠퍼스: </p>
-                <p style="font-family: BaeMinJua, system-ui;">학과: </p>
+                <p style="font-family: BaeMinJua, system-ui;">캠퍼스: <%=product.user.getCampus()%></p>
+                <p style="font-family: BaeMinJua, system-ui;">학과: <%=product.user.getDepartment()%></p>
             </td>
         </tr>
     </table>
