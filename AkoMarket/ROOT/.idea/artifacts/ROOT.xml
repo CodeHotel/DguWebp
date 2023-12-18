@@ -3,6 +3,11 @@
     <output-path>$PROJECT_DIR$/../apache8/webapps</output-path>
     <root id="archive" name="ROOT.war">
       <element id="artifact" artifact-name="ROOT_TEST" />
+      <element id="directory" name="WEB-INF">
+        <element id="directory" name="lib">
+          <element id="library" level="project" name="postgresql-42.7.1" />
+        </element>
+      </element>
     </root>
   </artifact>
 </component>
