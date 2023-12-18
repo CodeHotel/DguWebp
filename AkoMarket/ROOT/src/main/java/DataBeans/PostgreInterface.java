@@ -543,7 +543,7 @@ public class PostgreInterface {
                         jsonObject.optString("image", null),
                         jsonObject.optString("description", null),
                         jsonObject.getLong("views"),
-                        jsonObject.getInt("owner_id"),
+                        -1,
                         hashtags,
                         Progress.valueOf(jsonObject.getString("progress"))
                 );
