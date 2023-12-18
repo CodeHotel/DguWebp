@@ -532,26 +532,24 @@ public class PostgreInterface {
                 if (hashtagJson != null) {
                     hashtags = new String[hashtagJson.length()];
                     for (int i = 0; i < hashtags.length; i++) {
-                        JSONObject hashtagObj = hashtagJson.getJSONObject(i);
-                        hashtags[i] = hashtagObj.toString();
+                        hashtags[i] = hashtagJson.getString(i);
                     }
                 }
-
 
                 Product product = new Product(
                         jsonObject.getInt("id"),
                         jsonObject.getString("title"),
                         jsonObject.getInt("price"),
-                        jsonObject.getString("image"),
-                        jsonObject.getString("description"),
+                        jsonObject.optString("image", null),
+                        jsonObject.optString("description", null),
                         jsonObject.getLong("views"),
                         jsonObject.getInt("owner_id"),
                         hashtags,
                         Progress.valueOf(jsonObject.getString("progress"))
                 );
 
-                JSONObject userJson = new JSONObject(jsonObject.getString("user_info"));
-                JSONArray ratingsJson = jsonObject.optJSONArray("rating");
+                JSONObject userJson = jsonObject.getJSONObject("user_info");
+                JSONArray ratingsJson = jsonObject.optJSONArray("rating", null);
                 Rating[] ratings = null;
 
                 if (ratingsJson != null) {
@@ -578,8 +576,7 @@ public class PostgreInterface {
                         ratings,
                         false
                 );
-
-
+                
                 return new ProductData(
                         product,
                         user
@@ -1272,25 +1269,23 @@ public class PostgreInterface {
                 if (hashtagJson != null) {
                     hashtags = new String[hashtagJson.length()];
                     for (int j = 0; j < hashtags.length; j++) {
-                        JSONObject hashtagObj = hashtagJson.getJSONObject(j);
-                        hashtags[j] = hashtagObj.toString();
+                        hashtags[j] = hashtagJson.getString(j);
                     }
                 }
-
 
                 Product product = new Product(
                         jsonObject.getInt("id"),
                         jsonObject.getString("title"),
                         jsonObject.getInt("price"),
-                        jsonObject.getString("image"),
-                        jsonObject.getString("description"),
+                        jsonObject.optString("image", null),
+                        jsonObject.optString("description", null),
                         jsonObject.getLong("views"),
                         -1,
                         hashtags,
                         Progress.valueOf(jsonObject.getString("progress"))
                 );
 
-                JSONObject userJson = new JSONObject(jsonObject.getString("user_info"));
+                JSONObject userJson = jsonObject.getJSONObject("user_info");
                 User user = new User(
                         userJson.getInt("id"),
                         null,
@@ -1364,25 +1359,23 @@ public class PostgreInterface {
                     if (hashtagJson != null) {
                         hashtags = new String[hashtagJson.length()];
                         for (int j = 0; j < hashtags.length; j++) {
-                            JSONObject hashtagObj = hashtagJson.getJSONObject(j);
-                            hashtags[j] = hashtagObj.toString();
+                            hashtags[j] = hashtagJson.getString(j);
                         }
                     }
-
 
                     Product product = new Product(
                             jsonObject.getInt("id"),
                             jsonObject.getString("title"),
                             jsonObject.getInt("price"),
-                            jsonObject.getString("image"),
-                            jsonObject.getString("description"),
+                            jsonObject.optString("image", null),
+                            jsonObject.optString("description", null),
                             jsonObject.getLong("views"),
                             -1,
                             hashtags,
                             Progress.valueOf(jsonObject.getString("progress"))
                     );
 
-                    JSONObject userJson = new JSONObject(jsonObject.getString("user_info"));
+                    JSONObject userJson = jsonObject.getJSONObject("user_info");
                     User user = new User(
                             userJson.getInt("id"),
                             null,
