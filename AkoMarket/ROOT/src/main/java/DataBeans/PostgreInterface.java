@@ -97,7 +97,8 @@ public class PostgreInterface {
                         null,
                         null,
                         null, // Assuming rating is not part of the return data
-                        jsonObject.optBoolean("isAdmin", true)
+                        null,
+                        true
                 );
             }
         } catch (SQLException e) {
@@ -145,14 +146,14 @@ public class PostgreInterface {
                     for (int i = 0; i < ratingsJsonArray.length(); i++) {
                         JSONObject ratingObj = ratingsJsonArray.getJSONObject(i);
                         ratings[i] = new Rating(
-                                ratingObj.getDouble("rating");
-                                ratingObj.getInt("user_id");
+                                ratingObj.getDouble("rating"),
+                                ratingObj.getInt("user_id")
                         );
                     }
                 }
 
                 return new User(
-                        jsonObject.optInt("id", null),
+                        jsonObject.optInt("id", -1),
                         jsonObject.optString("login_id", null),
                         jsonObject.optString("login_pw", null),
                         jsonObject.optString("nickname", null),
@@ -236,15 +237,15 @@ public class PostgreInterface {
                 "    'hashtags', array_to_json(array( " +
                 "        SELECT * FROM hashtags " +
                 "    ))" +
-                ");"
+                ");";
 
-        StringBuilder hashtags = "";
-        for (var tag in hashtags) {
-            hashtags.append(tag + ',');
+        StringBuilder hashtagStr = new StringBuilder("");
+        for (int i = 0 ; i < hashtags.length; ++i) {
+            hashtagStr.append(hashtags[i] + ',');
         }
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql);) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
         
             // Insert product
             pstmt.setString(1, title);
@@ -256,15 +257,15 @@ public class PostgreInterface {
 
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
-                JSONObject jsonObject = new JSONObjct(rs.getString(1));
+                JSONObject jsonObject = new JSONObject(rs.getString(1));
                 JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
-                String[] hashtags = null;
+                String[] hashtagArr = null;
 
                 if (hashtagJson != null) {
-                    hashtags = new String[hashtagJson.length()];
+                    hashtagArr = new String[hashtagJson.length()];
                     for (int i = 0; i < hashtagJson.length(); ++i) {
                         JSONObject hashtagObj = hashtagJson.getJSONObject(i);
-                        hashtags[i] = hashtagObj.get(0);
+                        hashtagArr[i] = hashtagObj.toString();
                     }
                 }
 
@@ -276,7 +277,7 @@ public class PostgreInterface {
                         jsonObject.getString("description"),
                         jsonObject.getLong("views"),
                         jsonObject.getInt("owner_id"),
-                        hashtags
+                        hashtagArr
                 );
             }
 
@@ -309,9 +310,9 @@ public class PostgreInterface {
                 ") " +
                 "SELECT id FROM product_info;";
 
-        StringBuilder hashtags = "";
-        for (var tag in hashtags) {
-            hashtags.append(tag + ',');
+        StringBuilder hashtagStr = new StringBuilder("");
+        for (int i = 0 ; i < hashtags.length; ++i) {
+            hashtagStr.append(hashtags[i] + ',');
         }
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
@@ -322,7 +323,7 @@ public class PostgreInterface {
             pstmt.setInt(2, price);
             pstmt.setString(3, image);
             pstmt.setString(4, description);
-            pstmt.setString(6, hashtags);
+            pstmt.setString(6, hashtagStr.toString());
 
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
@@ -385,15 +386,15 @@ public class PostgreInterface {
                 JSONObject jsonObject = new JSONObject(rs.getString(1));
 
                 return new User(
-                        jsonObject.getString("id", null),
-                        jsonObject.getString("login_id")
+                        jsonObject.getInt("id"),
+                        jsonObject.getString("login_id"),
                         null, // Password hash is not returned in brief data
                         jsonObject.getString("nickname"),
                         jsonObject.getString("image"),
                         jsonObject.has("campus") ? Campus.valueOf(jsonObject.getString("campus")) : null,
                         jsonObject.getString("department"),
                         jsonObject.has("degree") ? Degree.valueOf(jsonObject.getString("degree")) : null,
-                        jsonObject.getString("student_id"),
+                        jsonObject.getString("student_id").toCharArray(),
                         null, // Ratings are not returned in brief data
                         false // isAdmin is not part of brief data
                 );
@@ -404,7 +405,7 @@ public class PostgreInterface {
         return null;
     }
 
-    public static Product getProductData(int productId) {
+    public static ProductData getProductData(int productId) {
         String sql = "WITH product_info AS (" +
                 "    SELECT p.id, p.title, p.price, p.image, p.description, p.views, p.owner_id" +
                 "    FROM product p WHERE p.id = ?" +
@@ -448,9 +449,9 @@ public class PostgreInterface {
 
                 if (hashtagJson != null) {
                     hashtags = new String[hashtagJson.length()];
-                    for (int i = 0; i < hashtags.length(); i++) {
+                    for (int i = 0; i < hashtags.length; i++) {
                         JSONObject hashtagObj = hashtagJson.getJSONObject(i);
-                        hashtags[i] = hashtagObj.get(0);
+                        hashtags[i] = hashtagObj.toString();
                     }
                 }
 
@@ -475,8 +476,8 @@ public class PostgreInterface {
                     for (int i = 0; i < ratingsJson.length(); i++) {
                         JSONObject ratingObj = ratingsJson.getJSONObject(i);
                         ratings[i] = new Rating(
-                                ratingObj.getDouble("rating");
-                                ratingObj.getInt("user_id");
+                                ratingObj.getDouble("rating"),
+                                ratingObj.getInt("user_id")
                         );
                     }
                 }
@@ -490,7 +491,7 @@ public class PostgreInterface {
                         Campus.valueOf(jsonObject.getString("campus")),
                         jsonObject.getString("department"),
                         Degree.valueOf(jsonObject.getString("degree")),
-                        jsonObject.getString("student_id"),
+                        jsonObject.getString("student_id").toCharArray(),
                         ratings,
                         false
                 );
@@ -578,9 +579,8 @@ public class PostgreInterface {
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                JSONObject resultObject = new JSONObject(rs.getString(1));
-                JSONArray jsonArray = resultObject.optJSONArray(jsonObject);
-                Wishlist[] wishlists = new Wishlist[];
+                JSONArray jsonArray = new JSONArray(rs.getString(1));
+                Wishlist[] wishlists = new Wishlist[jsonArray.length()];
 
                 for (int i = 0; i < jsonArray.length(); ++i) {
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
@@ -589,9 +589,9 @@ public class PostgreInterface {
 
                     if (hashtagJson != null) {
                         hashtags = new String[hashtagJson.length()];
-                        for (int i = 0; i < hashtags.length(); i++) {
-                            JSONObject hashtagObj = hashtagJson.getJSONObject(i);
-                            hashtags[i] = hashtagObj.get(0);
+                        for (int j = 0; j < hashtags.length; j++) {
+                            JSONObject hashtagObj = hashtagJson.getJSONObject(j);
+                            hashtags[j] = hashtagObj.toString();
                         }
                     }
 
@@ -603,7 +603,7 @@ public class PostgreInterface {
                             jsonObject.getString("image"),
                             jsonObject.getString("description"),
                             jsonObject.getLong("views"),
-                            null,
+                            -1,
                             hashtags
                     );
 
@@ -626,7 +626,7 @@ public class PostgreInterface {
                             product,
                             user,
                             Progress.valueOf(jsonObject.getString("progress"))
-                    )
+                    );
                 }
 
                 return wishlists;
@@ -638,7 +638,7 @@ public class PostgreInterface {
         return null;
     }
 
-    public static JSONObject buyRequest(int userId, int productId) {
+    public static Chatlist buyRequest(int userId, int productId) {
         String sql = "WITH info AS (" +
                 "    SELECT p.id, p.price, p.owner_id, u.id AS buyer_id" +
                 "    FROM product p, akouser u " +
@@ -704,7 +704,7 @@ public class PostgreInterface {
             e.printStackTrace();
         }
 
-        return chatObject;
+        return null;
     }
     public static JSONArray getBuyRequests(int userId) {
         String sql = "WITH requests AS (" +
