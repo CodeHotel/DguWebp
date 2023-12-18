@@ -1,4 +1,7 @@
-<%--
+<%@ page import="DataBeans.User" %>
+<%@ page import="DataBeans.PostgreInterface" %>
+<%@ page import="DataBeans.Rating" %>
+<%@ page import="DataBeans.ImageDB" %><%--
   Created by IntelliJ IDEA.
   User: mh7cp
   Date: 2023-12-18
@@ -26,7 +29,7 @@
                 url: "/login",
                 data: {
                     loginId: $("#loginId").val(),
-                    loginPw: $("#loginPw").val()
+                    loginPw: hashedPassword
                 },
                 success: function(response) {
                     if (response=="success") {
@@ -68,7 +71,10 @@
                     <center style="width:100%; font-size:0.8em;font-family:'BaeMinHanna', system-ui ;color:white">
                         <table>
                             <tr style="width:90%">
-                                <%=userId%>님 환영합니다
+                                <%
+                                    User t = PostgreInterface.getBriefUserData(userId);
+                                %>
+                                <%=t.getNickName()%>님 환영합니다
 
                             </tr><br>
                             <tr style="width:90%">
@@ -128,14 +134,23 @@
     <h2 style = "font-family: BaeMinHanna, system-ui;">MyPage</h2><br>
     <table style = "width: 70%;">
         <tr style = "text-align: center; height: 200px; border: 1px solid #ddd;">
-            <td style = "border: 1px solid #ddd; width: 30%"><img style ="margin-top: 30px; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" src="resources/images/AkoFace.png" alt="Profile Picture">
+            <%
+                User user = PostgreInterface.getFullUserData(userId);
+                Rating[] rate = user.getRating();
+                double rating = 0;
+                for(int t = 0; t<rate.length; t++){
+                    rating+=rate[t].rating;
+                }
+                if(rate.length!=0) rating/=rate.length;
+            %>
+            <td style = "border: 1px solid #ddd; width: 30%"><img style ="margin-top: 30px; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" src="<%=ImageDB.getImageUrl(user.getImage())%>" alt="resource/images/AkoFace.png">
                 <h2 style = "font-family: BaeMinHanna, system-ui; font-size: 20px;">내 정보</h2>
-                <button style="border: 1px solid #D35400; background-color: transparent; color: #D35400; padding: 3px 8px; border-radius: 5px; vertical-align: middle;">정보 수정</button>
-                <p style="font-family: BaeMinJua, system-ui;">별점: ☆☆☆☆☆</p>
+                <button style="border: 1px solid #D35400; background-color: transparent; color: #D35400; padding: 3px 8px; border-radius: 5px; vertical-align: middle;" onclick="window.location.href = '${pageContext.request.contextPath}/'">정보 수정</button>
+                <p style="font-family: BaeMinJua, system-ui;">평점: <%=rating%></p>
             </td>
             <td style = "border: 1px solid #ddd;">
-                <p style="font-family: BaeMinJua, system-ui;">캠퍼스: </p>
-                <p style="font-family: BaeMinJua, system-ui;">학과: </p>
+                <p style="font-family: BaeMinJua, system-ui;">캠퍼스: <%=user.getCampus()%></p>
+                <p style="font-family: BaeMinJua, system-ui;">학과: <%=user.getDepartment()%></p>
             </td>
         </tr>
     </table>
