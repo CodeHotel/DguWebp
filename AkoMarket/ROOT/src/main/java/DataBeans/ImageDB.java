@@ -9,7 +9,7 @@ import java.nio.file.Paths;
 import java.util.UUID;
 
 public class ImageDB {
-    private static final String DB_URL = "http://www.아코마켓.com:2580";
+    private static final String DB_URL = "http://www.xn--hz2b13sj0hnh.com:2580";
     private static final String UPLOAD_DIRECTORY = "/usr/local/Server_Repo/ImageDB/";
     private static final String KEY = "akoImage";
 
