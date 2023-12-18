@@ -1,17 +1,5 @@
 package DataBeans;
 
-enum Campus {
-    seoul, goyang, WISE
-}
-
-enum Degree {
-    undergraduate, postgraduate, professor, staff
-}
-
-enum Progress {
-    none, applied, inprogress, soldout, sellergive, buyergot
-}
-
 public class User {
     private int id;
     private String loginId;

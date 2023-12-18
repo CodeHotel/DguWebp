@@ -123,18 +123,18 @@ public class PostgreInterface {
     }
 
     // getFullUserData method
-    public static User getFullUserData(String nickname) {
+    public static User getFullUserData(String loginId) {
         String sql = "WITH result AS (" +
                 "    SELECT akouser.*, auth.id_card, auth.phone, auth.authorized, akouser.rating" +
                 "    FROM akouser, authentication auth" +
-                "    WHERE akouser.nickname = ? AND akouser.id = auth.user_id" +
+                "    WHERE akouser.login_id = ? AND akouser.id = auth.user_id" +
                 ")" +
                 "SELECT row_to_json(result) FROM result;";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, nickname);
+            pstmt.setString(1, loginId);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
