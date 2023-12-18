@@ -32,15 +32,15 @@ public class RegisterServlet extends HttpServlet {
         String studentId = request.getParameter("regStudentId");
         String phone = request.getParameter("regPhone");
         Part idPic = request.getPart("regIdCard");
-        String id_card = ImageDB.uploadFile(idPic);
-        //String id_card ="img";
+        //String id_card = ImageDB.uploadFile(idPic);
+        String id_card ="img";
         Part profilePic = request.getPart("regPicture");
-        String image = ImageDB.uploadFile(profilePic);
-        //String image ="img";
+        //String image = ImageDB.uploadFile(profilePic);
+        String image ="img";
         DataBeans.User res = registerUser(id, pw, nickname, image, id_card, phone, campus, major, degree, studentId);
 
         if(res!=null){
-            response.sendRedirect("RegisterComplete.jsp?success=true&nick="+res.getNickName());
+            response.sendRedirect("RegisterComplete.jsp?success=true&id="+res.getUid());
         }else{
             response.sendRedirect("RegisterComplete.jsp?success=false");
         }
