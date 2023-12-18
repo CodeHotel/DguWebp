@@ -29,7 +29,7 @@ public class ModifyProductServlet extends HttpServlet {
         Matcher matcher = pattern.matcher(tags);
 
         while (matcher.find()) {
-            tagList.add(matcher.group());
+            tagList.add(matcher.group().substring(1));
         }
 
         // Convert the list to an array
