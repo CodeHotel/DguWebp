@@ -42,7 +42,8 @@ public class ImageDB {
         return response.toString();
     }
 
-    public static String uploadFile(Part filePart, String masterKeyParam) throws IOException {
+    public static String uploadFile(Part filePart) throws IOException {
+        String masterKeyParam = KEY;
         // Check master key
         if (!KEY.equals(masterKeyParam)) {
             throw new IOException("Wrong master key");
