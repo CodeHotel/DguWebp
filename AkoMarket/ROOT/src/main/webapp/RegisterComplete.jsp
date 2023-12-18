@@ -134,7 +134,7 @@
   if(success){
 %>
 <center>
-  <h1><%=request.getParameter("nickname")%>님,</h1>
+  <h1><%=request.getParameter("nick")%>님,</h1>
   <h1>등록이 완료되었습니다.</h1>
   <h2>관리자 승인이 완료되면 이용하실 수 있습니다.</h2>
 </center>
