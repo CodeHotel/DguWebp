@@ -21,6 +21,7 @@ public class RegisterServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
     	System.out.println("Registration attempt...");
+        request.setCharacterEncoding("utf-8");
 
         String id = request.getParameter("regId");
         String pw = request.getParameter("regPw");

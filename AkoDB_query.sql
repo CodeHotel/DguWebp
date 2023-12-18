@@ -27,6 +27,13 @@ SELECT row_to_json(n_user) FROM n_user;
 
 
 
+-- check if id is duplicated
+
+-- isIdDuplicated(id)
+SELECT u.id FROM akouser u WHERE u.id=?;
+
+
+
 -- insert admin user to akouser 
 --   pw: SHA-256 hash value, varchar(256)
 
@@ -435,37 +442,21 @@ SELECT json_build_object(
 WITH requests AS (
     SELECT r.id, r.buyer_id, r.product_id, r.progress
     FROM list_progress r
-    WHERE r.owner_id=13
-),
-p_info AS (
-    SELECT p.id, p.title, p.price, p.image, p.description, p.views
-    FROM product p 
-    WHERE p.id IN (
-        SELECT r.product_id FROM requests r
-        WHERE r.progress='applied'
-    )
-)
-SELECT json_build_object(
-    'id', (SELECT id FROM requests),
-    'buyer_id', (SELECT buyer_id FROM requests),
-    'products', (SELECT row_to_json(p_info) FROM p_info)
-);
-
-
-WITH requests AS (
-    SELECT r.id, r.buyer_id, r.product_id, r.progress
-    FROM list_progress r
     WHERE r.owner_id=1 AND r.progress='applied'
 )
 SELECT array_to_json(array(
     SELECT json_build_object(
-        'id', (SELECT id FROM requests),
-        'buyer_id', (SELECT buyer_id FROM requests),
-        'products', (
+        'id', r.id,
+        'buyer', (
+            SELECT row_to_json(u) FROM akouser u
+            WHERE u.id=r.buyer_id
+        ),
+        'product', (
             SELECT row_to_json(p) FROM product p
-            WHERE p.id=(SELECT product_id FROM requests)
-        )
-    ) FROM requests
+            WHERE p.id=r.product_id
+        ),
+        'progress', r.progress
+    ) FROM requests r
 ));
 
 
