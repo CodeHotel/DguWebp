@@ -18,7 +18,7 @@ public class ImgServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         System.out.println("Uploading");
-        Part filePart = request.getPart("file"); // Retrieves <input type="file" name="file">
+        Part filePart = request.getPart("file1"); // Retrieves <input type="file" name="file1">
         String d = ImageDB.uploadFile(filePart);
         if(d!=null) {
             System.out.println("Uploaded at:" + d);
