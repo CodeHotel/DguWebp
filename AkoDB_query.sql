@@ -452,6 +452,22 @@ SELECT json_build_object(
 );
 
 
+WITH requests AS (
+    SELECT r.id, r.buyer_id, r.product_id, r.progress
+    FROM list_progress r
+    WHERE r.owner_id=1 AND r.progress='applied'
+)
+SELECT array_to_json(array(
+    SELECT json_build_object(
+        'id', (SELECT id FROM requests),
+        'buyer_id', (SELECT buyer_id FROM requests),
+        'products', (
+            SELECT row_to_json(p) FROM product p
+            WHERE p.id=(SELECT product_id FROM requests)
+        )
+    ) FROM requests
+));
+
 
 -- accept buy request
 --   user_id: user id (from DB)

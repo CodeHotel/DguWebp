@@ -4,6 +4,7 @@ import java.sql.*;
 import java.util.StringJoiner;
 import java.lang.StringBuilder;
 
+import org.apache.tomcat.util.http.ResponseUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -697,6 +698,10 @@ public class PostgreInterface {
                         jsonObject.getInt("id"),
                         jsonObject.getInt("user1"),
                         jsonObject.getInt("user2"),
+                        jsonObject.getInt("user1_read"),
+                        jsonObject.getInt("user2_read"),
+                        jsonObject.getString("last_chat"),
+                        jsonObject.getInt("last_chat_idx"),
                         jsonObject.getString("time")
                 );
             }
@@ -736,7 +741,8 @@ public class PostgreInterface {
 
             while (rs.next()) {
                 JSONObject buyRequest = new JSONObject(rs.getString(1));
-                buyRequests.put(buyRequest);
+
+
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -746,488 +752,450 @@ public class PostgreInterface {
     }
 
     public static boolean acceptBuyRequest(int userId, int productId, String message) {
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        boolean success = false;
+        String sql = "WITH req_user AS ( " +
+                "    SELECT u.* FROM akouser u WHERE u.id=? " +
+                "), " +
+                "req_product AS ( " +
+                "    SELECT p.* FROM product p WHERE p.id=? " +
+                "), " +
+                "prog AS ( " +
+                "    UPDATE list_progress AS p SET progress='inprogress' " +
+                "    WHERE  " +
+                "        p.owner_id=(SELECT owner_id FROM req_product) AND " +
+                "        p.buyer_id=(SELECT id FROM req_user) AND " +
+                "        p.product_id=(SELECT id FROM req_product) " +
+                "), " +
+                "l_chat AS ( " +
+                "    UPDATE list_chat AS c " +
+                "    SET  " +
+                "        last_chat_idx=c.last_chat_idx+1, " +
+                "        last_chat=?, " +
+                "        user1_read= " +
+                "            CASE WHEN user1=(SELECT id FROM req_user) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user1_read END, " +
+                "        user2_read= " +
+                "            CASE WHEN user2=(SELECT id FROM req_user) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user2_read END " +
+                "    WHERE " +
+                "        (c.user1=(SELECT id FROM req_user) AND c.user2=(SELECT owner_id FROM req_product)) OR " +
+                "        (c.user2=(SELECT id FROM req_user) AND c.user1=(SELECT owner_id FROM req_product)) " +
+                "    RETURNING * " +
+                ") " +
+                "INSERT INTO chat(id, idx, message, sender, system) " +
+                "VALUES (" +
+                "    (SELECT id FROM l_chat)," +
+                "    (SELECT last_chat_idx FROM l_chat)," +
+                "    (SELECT last_chat FROM l_chat)," +
+                "    (SELECT id FROM req_user)," +
+                "    true" +
+                ");";
 
-        try {
-            conn = PostgreConnect.getStmt().getConnection();
-            conn.setAutoCommit(false);
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement((sql))) {
 
-            // Update progress to 'inprogress'
-            String updateProgressQuery = "UPDATE list_progress SET progress = 'inprogress' WHERE owner_id = ? AND buyer_id = ? AND product_id = ?";
-            pstmt = conn.prepareStatement(updateProgressQuery);
             pstmt.setInt(1, userId);
             pstmt.setInt(2, productId);
-            pstmt.setInt(3, productId);
-            pstmt.executeUpdate();
-
-            // Update the last chat information in list_chat
-            String updateChatQuery = "UPDATE list_chat SET last_chat_idx = last_chat_idx + 1, last_chat = ?, user1_read = CASE WHEN user1 = ? THEN last_chat_idx + 1 ELSE user1_read END, user2_read = CASE WHEN user2 = ? THEN last_chat_idx + 1 ELSE user2_read END WHERE (user1 = ? AND user2 = ?) OR (user2 = ? AND user1 = ?) RETURNING id, last_chat_idx";
-            pstmt = conn.prepareStatement(updateChatQuery);
-            pstmt.setString(1, message);
-            pstmt.setInt(2, userId);
-            pstmt.setInt(3, userId);
-            pstmt.setInt(4, userId);
-            pstmt.setInt(5, productId);
-            pstmt.setInt(6, userId);
-            pstmt.setInt(7, productId);
-            rs = pstmt.executeQuery();
+            pstmt.setString(3, message);
+            ResultSet rs = pstmt.executeQuery();
 
             // Insert into chat table
             if (rs.next()) {
-                int chatId = rs.getInt("id");
-                int lastChatIdx = rs.getInt("last_chat_idx");
-                String insertChatQuery = "INSERT INTO chat (id, idx, message, sender, system) VALUES (?, ?, ?, ?, true)";
-                pstmt = conn.prepareStatement(insertChatQuery);
-                pstmt.setInt(1, chatId);
-                pstmt.setInt(2, lastChatIdx);
-                pstmt.setString(3, message);
-                pstmt.setInt(4, userId);
-                pstmt.executeUpdate();
+                return rs.getInt(0) > 0;
             }
-
-            conn.commit();
-            success = true;
         } catch (SQLException e) {
             e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException exRollback) {
-                    exRollback.printStackTrace();
-                }
-            }
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
         }
 
-        return success;
+        return false;
     }
 
-    public static boolean cancelBuyRequest(int userId, int productId) {
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        boolean success = false;
+    public static boolean cancelBuyRequest(int userId, int productId, String message) {
+        String sql = "WITH req AS (  " +
+                "    SELECT u.id, p.id AS product_id   " +
+                "    FROM akouser u, product p  " +
+                "    WHERE u.id=? AND p.id=?  " +
+                "),  " +
+                "prog AS (  " +
+                "    DELETE FROM list_progress p  " +
+                "    WHERE (  " +
+                "        p.owner_id=(SELECT id FROM req) OR   " +
+                "        p.buyer_id=(SELECT id FROM req)  " +
+                "        ) AND p.product_id=(SELECT product_id FROM req)  " +
+                "    RETURNING *  " +
+                "),   " +
+                "can_product AS (  " +
+                "    SELECT * FROM product p  " +
+                "    WHERE p.id=(SELECT product_id FROM prog)  " +
+                "),  " +
+                "buyer_pay AS (  " +
+                "    UPDATE payment SET point=payment.point+(SELECT price FROM can_product)  " +
+                "    WHERE payment.user_id=(SELECT buyer_id FROM prog)  " +
+                "),  " +
+                "l_chat AS (  " +
+                "    UPDATE list_chat AS c  " +
+                "    SET   " +
+                "        last_chat_idx=c.last_chat_idx+1,  " +
+                "        last_chat=?,  " +
+                "        user1_read=  " +
+                "            CASE WHEN user1=(SELECT id FROM req)  " +
+                "            THEN c.last_chat_idx+1  " +
+                "            ELSE user1_read END,  " +
+                "        user2_read=  " +
+                "            CASE WHEN user2=(SELECT id FROM req)  " +
+                "            THEN c.last_chat_idx+1  " +
+                "            ELSE user2_read END  " +
+                "    WHERE  " +
+                "        (c.user1=(SELECT owner_id FROM prog) AND c.user2=(SELECT buyer_id FROM prog)) OR  " +
+                "        (c.user2=(SELECT owner_id FROM prog) AND c.user1=(SELECT buyer_id FROM prog))  " +
+                "    RETURNING *  " +
+                ")  " +
+                "INSERT INTO chat(id, idx, message, sender, system)  " +
+                "VALUES (  " +
+                "    (SELECT id FROM l_chat),  " +
+                "    (SELECT last_chat_idx FROM l_chat),  " +
+                "    (SELECT last_chat FROM l_chat),  " +
+                "    (SELECT id FROM req),  " +
+                "    true  " +
+                ");";
 
-        try {
-            conn = PostgreConnect.getStmt().getConnection();
-            conn.setAutoCommit(false);
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Delete from list_progress
-            String deleteProgressQuery = "DELETE FROM list_progress WHERE (owner_id = ? OR buyer_id = ?) AND product_id = ? RETURNING *";
-            pstmt = conn.prepareStatement(deleteProgressQuery);
             pstmt.setInt(1, userId);
-            pstmt.setInt(2, userId);
-            pstmt.setInt(3, productId);
-            rs = pstmt.executeQuery();
+            pstmt.setInt(2, productId);
+            pstmt.setString(3, message);
+            ResultSet rs = pstmt.executeQuery();
 
-            // Process the result of the deletion
             if (rs.next()) {
-                int buyerId = rs.getInt("buyer_id");
-
-                // Update payment for the buyer
-                String updatePaymentQuery = "UPDATE payment SET point = point + (SELECT price FROM product WHERE id = ?) WHERE user_id = ?";
-                pstmt = conn.prepareStatement(updatePaymentQuery);
-                pstmt.setInt(1, productId);
-                pstmt.setInt(2, buyerId);
-                pstmt.executeUpdate();
-
-                // Update last chat information in list_chat
-                String updateChatQuery = "UPDATE list_chat SET last_chat_idx = last_chat_idx + 1, last_chat = 'User canceled your request', user1_read = CASE WHEN user1 = ? THEN last_chat_idx + 1 ELSE user1_read END, user2_read = CASE WHEN user2 = ? THEN last_chat_idx + 1 ELSE user2_read END WHERE (user1 = ? AND user2 = ?) OR (user2 = ? AND user1 = ?) RETURNING id, last_chat_idx";
-                pstmt = conn.prepareStatement(updateChatQuery);
-                pstmt.setInt(1, userId);
-                pstmt.setInt(2, userId);
-                pstmt.setInt(3, userId);
-                pstmt.setInt(4, productId);
-                pstmt.setInt(5, userId);
-                pstmt.setInt(6, productId);
-                rs = pstmt.executeQuery();
-
-                // Insert into chat table
-                if (rs.next()) {
-                    int chatId = rs.getInt("id");
-                    int lastChatIdx = rs.getInt("last_chat_idx");
-                    String insertChatQuery = "INSERT INTO chat (id, idx, message, sender, system) VALUES (?, ?, ?, ?, true)";
-                    pstmt = conn.prepareStatement(insertChatQuery);
-                    pstmt.setInt(1, chatId);
-                    pstmt.setInt(2, lastChatIdx);
-                    pstmt.setString(3, "User canceled your request");
-                    pstmt.setInt(4, userId);
-                    pstmt.executeUpdate();
-                }
+                return rs.getInt(1) > 0;
             }
-
-            conn.commit();
-            success = true;
         } catch (SQLException e) {
             e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException exRollback) {
-                    exRollback.printStackTrace();
-                }
-            }
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
         }
 
-        return success;
+        return false;
     }
 
     public static boolean confirmGive(int productId) {
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        boolean success = false;
+        String sql = "WITH req AS (  " +
+                "    UPDATE list_progress SET progress='soldout'  " +
+                "    WHERE progress='inprogress' AND product_id=?  " +
+                "    RETURNING *  " +
+                "),  " +
+                "l_chat AS (  " +
+                "    UPDATE list_chat AS c  " +
+                "    SET  " +
+                "        last_chat_idx=c.last_chat_idx+1,  " +
+                "        last_chat='Seller have confirmed that he(she) has given you the product',  " +
+                "        user1_read=  " +
+                "            CASE WHEN user1=(SELECT owner_id FROM req)  " +
+                "            THEN c.last_chat_idx+1  " +
+                "            ELSE user1_read END,  " +
+                "        user2_read=  " +
+                "            CASE WHEN user2=(SELECT owner_id FROM req)  " +
+                "            THEN c.last_chat_idx+1  " +
+                "            ELSE user2_read END  " +
+                "    WHERE c.user1=(SELECT owner_id FROM req) OR c.user2=(SELECT owner_id FROM req)  " +
+                "    RETURNING *  " +
+                ")  " +
+                "INSERT INTO chat(id, idx, message, sender, system)  " +
+                "VALUES (  " +
+                "    (SELECT id FROM l_chat),  " +
+                "    (SELECT last_chat_idx FROM l_chat),  " +
+                "    (SELECT last_chat FROM l_chat),  " +
+                "    (SELECT owner_id FROM req),  " +
+                "    true  " +
+                ");";
+        
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-        try {
-            conn = PostgreConnect.getStmt().getConnection();
-            conn.setAutoCommit(false);
-
-            // Update list_progress to 'soldout'
-            String updateProgressQuery = "UPDATE list_progress SET progress = 'soldout' WHERE progress = 'inprogress' AND product_id = ? RETURNING *";
-            pstmt = conn.prepareStatement(updateProgressQuery);
             pstmt.setInt(1, productId);
-            rs = pstmt.executeQuery();
+            ResultSet rs = pstmt.executeQuery();
 
-            // Process the result of the update
             if (rs.next()) {
-                int ownerId = rs.getInt("owner_id");
-
-                // Update last chat information in list_chat
-                String updateChatQuery = "UPDATE list_chat SET last_chat_idx = last_chat_idx + 1, last_chat = 'Seller have confirmed that he(she) has given you the product', user1_read = CASE WHEN user1 = ? THEN last_chat_idx + 1 ELSE user1_read END, user2_read = CASE WHEN user2 = ? THEN last_chat_idx + 1 ELSE user2_read END WHERE user1 = ? OR user2 = ? RETURNING id, last_chat_idx";
-                pstmt = conn.prepareStatement(updateChatQuery);
-                pstmt.setInt(1, ownerId);
-                pstmt.setInt(2, ownerId);
-                pstmt.setInt(3, ownerId);
-                pstmt.setInt(4, ownerId);
-                rs = pstmt.executeQuery();
-
-                // Insert into chat table
-                if (rs.next()) {
-                    int chatId = rs.getInt("id");
-                    int lastChatIdx = rs.getInt("last_chat_idx");
-                    String insertChatQuery = "INSERT INTO chat (id, idx, message, sender, system) VALUES (?, ?, ?, ?, true)";
-                    pstmt = conn.prepareStatement(insertChatQuery);
-                    pstmt.setInt(1, chatId);
-                    pstmt.setInt(2, lastChatIdx);
-                    pstmt.setString(3, "Seller have confirmed that he(she) has given you the product");
-                    pstmt.setInt(4, ownerId);
-                    pstmt.executeUpdate();
-                }
+                return rs.getInt(1) > 0;
             }
-
-            conn.commit();
-            success = true;
         } catch (SQLException e) {
             e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException exRollback) {
-                    exRollback.printStackTrace();
-                }
-            }
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
         }
 
-        return success;
+        return false;
     }
 
     public static boolean confirmGot(int productId) {
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        boolean success = false;
+        String sql = "WITH req AS (  " +
+                "    DELETE FROM list_progress s  " +
+                "    WHERE s.progress='soldout' AND s.product_id=?  " +
+                "    RETURNING *  " +
+                "),  " +
+                "n_trade AS (  " +
+                "    INSERT INTO list_trade(owner_id, buyer_id, product_id)  " +
+                "    VALUES (  " +
+                "        (SELECT owner_id FROM req),  " +
+                "        (SELECT buyer_id FROM req),  " +
+                "        (SELECT product_id FROM req)  " +
+                "    )  " +
+                "),  " +
+                "l_chat AS (  " +
+                "    UPDATE list_chat AS c  " +
+                "    SET  " +
+                "        last_chat_idx=c.last_chat_idx+1,  " +
+                "        last_chat='Seller have confirmed that he(she) has given you the product',  " +
+                "        user1_read=  " +
+                "            CASE WHEN user1=(SELECT buyer_id FROM req)  " +
+                "            THEN c.last_chat_idx+1  " +
+                "            ELSE user1_read END,  " +
+                "        user2_read=  " +
+                "            CASE WHEN user2=(SELECT buyer_id FROM req)  " +
+                "            THEN c.last_chat_idx+1  " +
+                "            ELSE user2_read END  " +
+                "    WHERE  " +
+                "        (c.user1=(SELECT owner_id FROM req) AND c.user2=(SELECT buyer_id FROM req)) OR  " +
+                "        (c.user2=(SELECT owner_id FROM req) AND c.user1=(SELECT buyer_id FROM req))  " +
+                "    RETURNING *  " +
+                ")  " +
+                "INSERT INTO chat(id, idx, message, sender, system)  " +
+                "VALUES (  " +
+                "    (SELECT id FROM l_chat),  " +
+                "    (SELECT last_chat_idx FROM l_chat),  " +
+                "    (SELECT last_chat FROM l_chat),  " +
+                "    (SELECT owner_id FROM req),  " +
+                "    true  " +
+                ");";
 
-        try {
-            conn = PostgreConnect.getStmt().getConnection();
-            conn.setAutoCommit(false);
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Delete from list_progress where progress is 'soldout'
-            String deleteProgressQuery = "DELETE FROM list_progress WHERE progress = 'soldout' AND product_id = ? RETURNING *";
-            pstmt = conn.prepareStatement(deleteProgressQuery);
             pstmt.setInt(1, productId);
-            rs = pstmt.executeQuery();
+            ResultSet rs = pstmt.executeQuery();
 
-            // Process the result of the deletion
             if (rs.next()) {
-                int ownerId = rs.getInt("owner_id");
-                int buyerId = rs.getInt("buyer_id");
-
-                // Insert into list_trade
-                String insertTradeQuery = "INSERT INTO list_trade (owner_id, buyer_id, product_id) VALUES (?, ?, ?)";
-                pstmt = conn.prepareStatement(insertTradeQuery);
-                pstmt.setInt(1, ownerId);
-                pstmt.setInt(2, buyerId);
-                pstmt.setInt(3, productId);
-                pstmt.executeUpdate();
-
-                // Update last chat information in list_chat
-                String updateChatQuery = "UPDATE list_chat SET last_chat_idx = last_chat_idx + 1, last_chat = 'Seller have confirmed that he(she) has given you the product', user1_read = CASE WHEN user1 = ? THEN last_chat_idx + 1 ELSE user1_read END, user2_read = CASE WHEN user2 = ? THEN last_chat_idx + 1 ELSE user2_read END WHERE (user1 = ? AND user2 = ?) OR (user2 = ? AND user1 = ?) RETURNING id, last_chat_idx";
-                pstmt = conn.prepareStatement(updateChatQuery);
-                pstmt.setInt(1, buyerId);
-                pstmt.setInt(2, buyerId);
-                pstmt.setInt(3, ownerId);
-                pstmt.setInt(4, buyerId);
-                pstmt.setInt(5, ownerId);
-                pstmt.setInt(6, buyerId);
-                rs = pstmt.executeQuery();
-
-                // Insert into chat table
-                if (rs.next()) {
-                    int chatId = rs.getInt("id");
-                    int lastChatIdx = rs.getInt("last_chat_idx");
-                    String insertChatQuery = "INSERT INTO chat (id, idx, message, sender, system) VALUES (?, ?, ?, ?, true)";
-                    pstmt = conn.prepareStatement(insertChatQuery);
-                    pstmt.setInt(1, chatId);
-                    pstmt.setInt(2, lastChatIdx);
-                    pstmt.setString(3, "Seller have confirmed that he(she) has given you the product");
-                    pstmt.setInt(4, ownerId);
-                    pstmt.executeUpdate();
-                }
+                return rs.getInt(1) > 0;
             }
-
-            conn.commit();
-            success = true;
         } catch (SQLException e) {
             e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException exRollback) {
-                    exRollback.printStackTrace();
-                }
-            }
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
         }
 
-        return success;
+        return false;
     }
 
-    public static JSONArray getChatPreview(int userId) {
-        JSONArray chatPreviews = new JSONArray();
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
+    public static Chatlist[] getChatPreview(int userId) {
+        String sql = "WITH l_chat AS (  " +
+                "    SELECT c.* FROM list_chat c  " +
+                "    WHERE c.user1=? OR c.user2=?  " +
+                ")  " +
+                "SELECT array_to_json(array(  " +
+                "    SELECT row_to_json(c) FROM l_chat c  " +
+                "));";
 
-        try {
-            conn = PostgreConnect.getStmt().getConnection();
-            String query = "SELECT * FROM list_chat WHERE user1 = ? OR user2 = ?";
-            pstmt = conn.prepareStatement(query);
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
             pstmt.setInt(1, userId);
             pstmt.setInt(2, userId);
-            rs = pstmt.executeQuery();
+            ResultSet rs = pstmt.executeQuery();
 
-            while (rs.next()) {
-                JSONObject chatPreview = new JSONObject();
-                // Add all necessary fields to JSON object
-                chatPreview.put("id", rs.getInt("id"));
-                chatPreview.put("user1", rs.getInt("user1"));
-                chatPreview.put("user2", rs.getInt("user2"));
-                // Add other fields as needed
-
-                chatPreviews.put(chatPreview);
+            JSONArray jsonArray = new JSONArray(rs.getString(1));
+            Chatlist[] chatlists = new Chatlist[jsonArray.length()];
+            for (int i = 0; i < jsonArray.length(); i++) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                chatlists[i] = new Chatlist(
+                        jsonObject.getInt("id"),
+                        jsonObject.getInt("user1"),
+                        jsonObject.getInt("user2"),
+                        jsonObject.getInt("user1_read"),
+                        jsonObject.getInt("user2_read"),
+                        jsonObject.getString("last_chat"),
+                        jsonObject.getInt("last_chat_idx"),
+                        jsonObject.getString("last_time")
+                );
             }
+
+            return chatlists;
+
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
         }
 
-        return chatPreviews;
+        return null;
     }
 
-    public static JSONArray getChat(int chatId) {
-        JSONArray chatMessages = new JSONArray();
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
+    public static Chat[] getChat(int chatId) {
+        String sql = "WITH l_chat AS (  " +
+                "    SELECT * FROM chat WHERE id=?  " +
+                ")  " +
+                "SELECT array_to_json(array(  " +
+                "    SELECT row_to_json(c) FROM l_chat c  " +
+                "));";
 
-        try {
-            conn = PostgreConnect.getStmt().getConnection();
-            String query = "SELECT * FROM chat WHERE id = ?";
-            pstmt = conn.prepareStatement(query);
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
             pstmt.setInt(1, chatId);
-            rs = pstmt.executeQuery();
+            ResultSet rs = pstmt.executeQuery();
 
-            while (rs.next()) {
-                JSONObject chatMessage = new JSONObject();
-                // Add all necessary fields to JSON object
-                chatMessage.put("idx", rs.getInt("idx"));
-                chatMessage.put("message", rs.getString("message"));
-                chatMessage.put("sender", rs.getInt("sender"));
-                // Add other fields as needed
+            JSONArray jsonArray = new JSONArray(rs.getString(1));
+            Chat[] chats = new Chat[jsonArray.length()];
 
-                chatMessages.put(chatMessage);
+            for (int i = 0; i < jsonArray.length(); ++i) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                chats[i] = new Chat(
+                        jsonObject.getInt("id"),
+                        jsonObject.getInt("idx"),
+                        jsonObject.getString("message"),
+                        jsonObject.getInt("sender"),
+                        jsonObject.getString("time"),
+                        jsonObject.getBoolean("System")
+                );
             }
+
+            return chats;
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
         }
 
-        return chatMessages;
+        return null;
     }
 
-    public static boolean sendChat(int userId, int chatId, String message) {
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-        boolean success = false;
+    public static ProductData[] search(double hWeight, double tWeight, double dWeight, String[] keywords, String pattern) {
+        String sql = "WITH search_result AS (  " +
+                "    WITH h_score AS (  " +
+                "        SELECT s.id, COUNT(s.id) AS score FROM (  " +
+                "            SELECT h.product_id AS id FROM hashtag h  " +
+                "            WHERE h.tag LIKE ANY(string_to_array(?, ','))  " +
+                "        ) s  " +
+                "        GROUP BY s.id  " +
+                "    ),  " +
+                "    t_score AS (  " +
+                "        SELECT id, 1 AS score FROM (  " +
+                "            SELECT p.id AS id FROM product p  " +
+                "            WHERE p.title ~ ANY(string_to_array(?, ','))  " +
+                "        ) t  " +
+                "    ),  " +
+                "    d_score AS (  " +
+                "        SELECT id, score FROM (  " +
+                "            SELECT ts_rank_cd(  " +
+                "                to_tsvector(p.description),   " +
+                "                to_tsquery(?)  " +
+                "            ) AS score, p.id   " +
+                "            FROM product p  " +
+                "        ) d  " +
+                "    ),  " +
+                "    product_ids AS (  " +
+                "        SELECT id FROM h_score UNION   " +
+                "        SELECT id FROM t_score UNION   " +
+                "        SELECT id FROM d_score  " +
+                "    )  " +
+                "    SELECT p.id, (  " +
+                "        (COALESCE((SELECT score FROM h_score WHERE h_score.id=p.id), 0) * ?) +  " +
+                "        (COALESCE((SELECT score FROM t_score WHERE t_score.id=p.id), 0) * ?) +  " +
+                "        (COALESCE((SELECT score FROM d_score WHERE d_score.id=p.id), 0) * ?)  " +
+                "    ) AS score FROM product_ids p  " +
+                "),  " +
+                "products AS (  " +
+                "    SELECT p.*, r.score FROM product p, search_result r  " +
+                "    WHERE p.id=ANY(SELECT id FROM search_result) AND p.id=r.id AND score > 0  " +
+                "    ORDER BY score DESC  " +
+                ")  " +
+                "SELECT array_to_json(array(  " +
+                "    SELECT json_build_object(  " +
+                "        'id', p.id,  " +
+                "        'title', p.title,  " +
+                "        'price', p.price,  " +
+                "        'image', p.image,  " +
+                "        'description', p.description,  " +
+                "        'views', p.views,  " +
+                "        'progress', (  " +
+                "            SELECT l.progress FROM list_progress l  " +
+                "            WHERE l.product_id=p.id  " +
+                "        ),  " +
+                "        'user_info', (  " +
+                "            SELECT row_to_json(user_info)   " +
+                "            FROM (  " +
+                "                SELECT u.id, u.nickname   " +
+                "                FROM akouser u WHERE u.id=p.owner_id  " +
+                "            ) AS user_info),  " +
+                "        'hashtags', (  " +
+                "            SELECT array_to_json(array(  " +
+                "                SELECT h.tag  " +
+                "                FROM hashtag h WHERE h.product_id=p.id  " +
+                "            )))   " +
+                "    ) FROM products p  " +
+                "));";
 
-        try {
-            conn = PostgreConnect.getStmt().getConnection();
-            conn.setAutoCommit(false);
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            // Update list_chat with the new message
-            String updateChatQuery = "UPDATE list_chat SET last_chat_idx = last_chat_idx + 1, last_chat = ?, user1_read = CASE WHEN user1 = ? THEN last_chat_idx + 1 ELSE user1_read END, user2_read = CASE WHEN user2 = ? THEN last_chat_idx + 1 ELSE user2_read END WHERE id = ? RETURNING last_chat_idx";
-            pstmt = conn.prepareStatement(updateChatQuery);
-            pstmt.setString(1, message);
-            pstmt.setInt(2, userId);
-            pstmt.setInt(3, userId);
-            pstmt.setInt(4, chatId);
-            rs = pstmt.executeQuery();
-
-            // Insert the new message into chat table
-            if (rs.next()) {
-                int lastChatIdx = rs.getInt("last_chat_idx");
-                String insertChatQuery = "INSERT INTO chat (id, idx, message, sender) VALUES (?, ?, ?, ?)";
-                pstmt = conn.prepareStatement(insertChatQuery);
-                pstmt.setInt(1, chatId);
-                pstmt.setInt(2, lastChatIdx);
-                pstmt.setString(3, message);
-                pstmt.setInt(4, userId);
-                pstmt.executeUpdate();
+            StringBuilder keywordStr = new StringBuilder();
+            for (int i = 0; i < keywords.length; ++i) {
+                keywordStr.append(keywords[i]).append(',');
             }
 
-            conn.commit();
-            success = true;
-        } catch (SQLException e) {
-            e.printStackTrace();
-            if (conn != null) {
-                try {
-                    conn.rollback();
-                } catch (SQLException exRollback) {
-                    exRollback.printStackTrace();
+            pattern = pattern.replace(' ', '|');
+
+            pstmt.setString(1, keywordStr.toString());
+            pstmt.setString(2, pattern);
+            pstmt.setDouble(3, hWeight);
+            pstmt.setDouble(4, tWeight);
+            pstmt.setDouble(5, dWeight);
+            ResultSet rs = pstmt.executeQuery();
+
+            JSONArray jsonArray = new JSONArray(rs.getString(1));
+            ProductData[] result = new ProductData[jsonArray.length()];
+            for (int i = 0; i < jsonArray.length(); ++i) {
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
+                String[] hashtags = null;
+
+                if (hashtagJson != null) {
+                    hashtags = new String[hashtagJson.length()];
+                    for (int j = 0; j < hashtags.length; j++) {
+                        JSONObject hashtagObj = hashtagJson.getJSONObject(j);
+                        hashtags[j] = hashtagObj.toString();
+                    }
                 }
+
+
+                Product product = new Product(
+                        jsonObject.getInt("id"),
+                        jsonObject.getString("title"),
+                        jsonObject.getInt("price"),
+                        jsonObject.getString("image"),
+                        jsonObject.getString("description"),
+                        jsonObject.getLong("views"),
+                        -1,
+                        hashtags
+                );
+
+                JSONObject userJson = new JSONObject(jsonObject.getString("user_info"));
+                User user = new User(
+                        userJson.getInt("id"),
+                        null,
+                        null,
+                        userJson.getString("nickname"),
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        false
+                );
+
+                result[i] = new ProductData(
+                        product,
+                        user
+                );
             }
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-        }
 
-        return success;
-    }
-
-    public static JSONArray search(double hWeight, double tWeight, double dWeight, String[] keywords, String pattern) {
-        JSONArray searchResults = new JSONArray();
-        Connection conn = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-
-        try {
-            conn = PostgreConnect.getStmt().getConnection();
-
-            StringJoiner keywordJoiner = new StringJoiner(",");
-            for (String keyword : keywords) {
-                keywordJoiner.add("'" + keyword + "'");
-            }
-
-            String query = "WITH h_score AS ( "
-                    + "SELECT s.id, COUNT(s.id) AS score FROM ( "
-                    + "SELECT h.product_id AS id FROM hashtag h "
-                    + "WHERE h.tag = ANY(ARRAY[" + keywordJoiner.toString() + "]) "
-                    + ") s GROUP BY s.id), "
-                    + "t_score AS (SELECT id, 1 AS score FROM ( "
-                    + "SELECT p.id AS id FROM product p "
-                    + "WHERE p.title LIKE '%" + pattern + "%') t), "
-                    + "d_score AS (SELECT id, score FROM ( "
-                    + "SELECT ts_rank_cd(to_tsvector(p.description), to_tsquery('" + pattern + "')) AS score, p.id "
-                    + "FROM product p) d), "
-                    + "product_ids AS (SELECT id FROM h_score UNION SELECT id FROM t_score UNION SELECT id FROM d_score) "
-                    + "SELECT p.id, p.title, p.price, p.image, p.description, p.views, p.owner_id, "
-                    + "((COALESCE((SELECT score FROM h_score WHERE h_score.id=p.id), 0) * " + hWeight + ") + "
-                    + "(COALESCE((SELECT score FROM t_score WHERE t_score.id=p.id), 0) * " + tWeight + ") + "
-                    + "(COALESCE((SELECT score FROM d_score WHERE d_score.id=p.id), 0) * " + dWeight + ")) AS score "
-                    + "FROM product p WHERE p.id=ANY(SELECT id FROM product_ids) "
-                    + "ORDER BY score DESC";
-
-            pstmt = conn.prepareStatement(query);
-            rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                JSONObject product = new JSONObject();
-                product.put("id", rs.getInt("id"));
-                product.put("title", rs.getString("title"));
-                product.put("price", rs.getInt("price"));
-                product.put("image", rs.getString("image"));
-                product.put("description", rs.getString("description"));
-                product.put("views", rs.getLong("views"));
-                product.put("owner_id", rs.getInt("owner_id"));
-                product.put("score", rs.getDouble("score"));
-
-                searchResults.put(product);
-            }
+            return result;
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmt != null) pstmt.close();
-                if (conn != null) conn.close();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
         }
 
-        return searchResults;
+        return null;
     }
 }

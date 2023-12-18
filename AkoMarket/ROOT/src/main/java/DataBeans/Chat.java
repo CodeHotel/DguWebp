@@ -5,13 +5,13 @@ import java.sql.Timestamp;
 public class Chat {
     private String message;
     private int sender;
-    private Timestamp time;
+    private String time;
     private boolean system;
     private int id;
     private int idx;
 
     // Full parameter constructor (excluding id and idx)
-    public Chat(int id, int idx, String message, int sender, Timestamp time, boolean system) {
+    public Chat(int id, int idx, String message, int sender, String time, boolean system) {
         this.id = id;
         this.idx = idx;
         this.message = message;
@@ -27,8 +27,8 @@ public class Chat {
     public int getSender() { return sender; }
     public void setSender(int sender) { this.sender = sender; }
 
-    public Timestamp getTime() { return time; }
-    public void setTime(Timestamp time) { this.time = time; }
+    public String getTime() { return time; }
+    public void setTime(String time) { this.time = time; }
 
     public boolean isSystem() { return system; }
     public void setSystem(boolean system) { this.system = system; }
