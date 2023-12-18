@@ -50,12 +50,14 @@ public class ImageDB {
         }
 
         String fileName = "NULL";
+        String submittedFileName = filePart.getSubmittedFileName();
+        String fileExtension = submittedFileName.substring(submittedFileName.lastIndexOf("."));
+        fileName = UUID.randomUUID().toString() + fileExtension; // Manual string for filename
         try (InputStream fileContent = filePart.getInputStream();
+
              FileOutputStream out = new FileOutputStream(new File(UPLOAD_DIRECTORY, fileName))) {
 
-            String submittedFileName = filePart.getSubmittedFileName();
-            String fileExtension = submittedFileName.substring(submittedFileName.lastIndexOf("."));
-            fileName = UUID.randomUUID().toString() + fileExtension; // Manual string for filename
+
 
             File uploadDir = new File(UPLOAD_DIRECTORY);
             if (!uploadDir.exists()) uploadDir.mkdir(); // Create upload directory if it doesn't exist
