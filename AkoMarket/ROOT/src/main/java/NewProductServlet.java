@@ -38,6 +38,7 @@ public class NewProductServlet extends HttpServlet {
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        request.setCharacterEncoding("utf-8");
         try {
             String title = request.getParameter("title");
             String tags = request.getParameter("tag");
