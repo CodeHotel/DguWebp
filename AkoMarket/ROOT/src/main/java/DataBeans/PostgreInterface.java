@@ -211,6 +211,56 @@ public class PostgreInterface {
         return null;
     }
 
+    public static User getFullUserData(int Id) {
+        String sql = "WITH result AS (" +
+                "    SELECT akouser.*, auth.id_card, auth.phone, auth.authorized, akouser.rating" +
+                "    FROM akouser, authentication auth" +
+                "    WHERE akouser.id = ? AND akouser.id = auth.user_id" +
+                ")" +
+                "SELECT row_to_json(result) FROM result;";
+
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, Id);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                JSONObject jsonObject = new JSONObject(rs.getString(1));
+                JSONArray ratingsJsonArray = jsonObject.optJSONArray("rating");
+                Rating[] ratings = null;
+
+                if (ratingsJsonArray != null) {
+                    ratings = new Rating[ratingsJsonArray.length()];
+                    for (int i = 0; i < ratingsJsonArray.length(); i++) {
+                        JSONObject ratingObj = ratingsJsonArray.getJSONObject(i);
+                        ratings[i] = new Rating(
+                                ratingObj.getDouble("rating"),
+                                ratingObj.getInt("user_id")
+                        );
+                    }
+                }
+
+                return new User(
+                        jsonObject.optInt("id", -1),
+                        jsonObject.optString("login_id", null),
+                        jsonObject.optString("login_pw", null),
+                        jsonObject.optString("nickname", null),
+                        jsonObject.optString("image", null),
+                        jsonObject.has("campus") ? Campus.valueOf(jsonObject.getString("campus")) : null,
+                        jsonObject.optString("department", null),
+                        jsonObject.has("degree") ? Degree.valueOf(jsonObject.getString("degree")) : null,
+                        jsonObject.optString("student_id", "").toCharArray(),
+                        ratings,
+                        jsonObject.optBoolean("isAdmin", false)
+                );
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
     public static void verifyUser(int userId) {
         String sql = "UPDATE authentication SET authorized = true WHERE user_id = ?;";
 
