@@ -163,7 +163,7 @@ public class PostgreInterface {
     // getFullUserData method
     public static User getFullUserData(String loginId) {
         String sql = "WITH result AS (" +
-                "    SELECT akouser.*, auth.id_card, auth.phone, auth.authorized, akouser.rating" +
+                "    SELECT akouser.*, auth.id_card, auth.phone, auth.authorized" +
                 "    FROM akouser, authentication auth" +
                 "    WHERE akouser.login_id = ? AND akouser.id = auth.user_id" +
                 ")" +
@@ -213,7 +213,7 @@ public class PostgreInterface {
 
     public static User getFullUserData(int Id) {
         String sql = "WITH result AS (" +
-                "    SELECT akouser.*, auth.id_card, auth.phone, auth.authorized, akouser.rating" +
+                "    SELECT akouser.*, auth.id_card, auth.phone, auth.authorized" +
                 "    FROM akouser, authentication auth" +
                 "    WHERE akouser.id = ? AND akouser.id = auth.user_id" +
                 ")" +
