@@ -12,9 +12,9 @@ public class PostgreInterface {
 
     public static User registerUser(String id, String pw, String nickname, String image, String id_card, String phone, String campus, String department, String degree, String studentId) {
         String sql = "WITH n_user AS (" +
-                "    INSERT INTO akouser (login_id, login_pw, nickname, image, campus, deparment, degree, student_id)" +
-                "    VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
-                "    RETURNING id, login_id, login_pw, nickname, image, campus, deparment, degree, student_id" +
+                "    INSERT INTO akouser (login_id, login_pw, nickname, image, campus, department, degree, student_id)" +
+                "    VALUES (?, ?, ?, ?, ?::campus_t, ?, ?::degree_t, ?) " +
+                "    RETURNING id, login_id, login_pw, nickname, image, campus, department, degree, student_id" +
                 "), " +
                 "n_auth AS (" +
                 "    INSERT INTO authentication (id_card, phone, user_id) " +

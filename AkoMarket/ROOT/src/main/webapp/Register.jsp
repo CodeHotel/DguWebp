@@ -135,12 +135,12 @@
     <br>
     비밀번호: <input type="password" name="regPw" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
     비밀번호 확인: <input type="password" name="regPwCheck" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
-    캠퍼스: <input type="checkbox" name="regCampus" value="SEOUL">서울캠퍼스
-    <input type="checkbox" name="regCampus" value="BIO">고양캠퍼스
+    캠퍼스: <input type="checkbox" name="regCampus" value="seoul">서울캠퍼스
+    <input type="checkbox" name="regCampus" value="goyang">고양캠퍼스
     <input type="checkbox" name="regCampus" value="WISE">WISE캠퍼스<br>
     학과: <input type="text" name="regMajor" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
-    구분: <input type="radio" name="regType" value="student" onclick="document.getElementById('regStudentId').disabled=false;">학부생
-    <input type="radio" name="regType" value="grad" onclick="document.getElementById('regStudentId').disabled=false;">대학원생
+    구분: <input type="radio" name="regType" value="undergraduate" onclick="document.getElementById('regStudentId').disabled=false;">학부생
+    <input type="radio" name="regType" value="postgraduate" onclick="document.getElementById('regStudentId').disabled=false;">대학원생
     <input type="radio" name="regType" value="professor" onclick="document.getElementById('regStudentId').disabled=true;">교직원<br>
     학번: <input disabled="true" id="regStudentId" type="number" name="regStudentId" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
     전화번호: <input type="tel" name="regPhone" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>

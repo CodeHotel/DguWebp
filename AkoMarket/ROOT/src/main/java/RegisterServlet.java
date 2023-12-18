@@ -31,9 +31,11 @@ public class RegisterServlet extends HttpServlet {
         String studentId = request.getParameter("regStudentId");
         String phone = request.getParameter("regPhone");
         Part idPic = request.getPart("regIdCard");
-        String id_card = ImageDB.uploadFile(idPic);
+        //String id_card = ImageDB.uploadFile(idPic);
+        String id_card ="img";
         Part profilePic = request.getPart("regPicture");
-        String image = ImageDB.uploadFile(profilePic);
+        //String image = ImageDB.uploadFile(profilePic);
+        String image ="img";
         DataBeans.User res = registerUser(id, pw, nickname, image, id_card, phone, campus, major, degree, studentId);
 
         if(res!=null){
