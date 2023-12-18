@@ -16,10 +16,8 @@ import java.nio.file.Paths;
 @MultipartConfig
 public class ImgServlet extends HttpServlet {
 
-    private static final String IMAGE_SERVER_UPLOAD_URL = "http://yourImageServer:port/uploadImage";
-    private static final String MASTER_KEY = "akoImage"; // Shared master key
-
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("Uploading");
         Part filePart = request.getPart("file"); // Retrieves <input type="file" name="file">
         String d = ImageDB.uploadFile(filePart);
         if(d!=null) {
