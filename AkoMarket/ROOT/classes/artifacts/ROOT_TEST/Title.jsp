@@ -52,8 +52,8 @@
             <td style="width:calc(var(--topMenu-height)*0.8); height:calc(var(--topMenu-height)*0.8); padding:0px; margin:0px">
                 <img style="width:auto;height:calc(var(--topMenu-height) * 0.8);display:block;margin:0;padding:0" src="resources/images/AkoFace.png">
             </td>
-            <td style="width:12%;margin:0;padding: 0;color:#4FC3F7;" onclick="window.location.href = '${pageContext.request.contextPath}';"> &nbsp;#아코마켓</td>
-            <td style="width:10%;margin:0;padding: 0" onclick="window.location.href = '${pageContext.request.contextPath}';">중고구매</td>
+            <td style="width:12%;margin:0;padding: 0;color:#4FC3F7;" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
+            <td style="width:10%;margin:0;padding: 0" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
             <td style="width:10%;margin:0;padding: 0">중고판매</td>
             <td></td>
             <td id="loginCell" style="width:7%;margin:0;padding: 0" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
@@ -64,14 +64,36 @@
                     if (userId != null) {
                         // User is logged in
                 %>
-                <%= userId %>.
+                <%= userId %>
+                <div id="loginMenu" style="display:none; position:absolute; right:1em; background-color:white; padding:0.5em; width:12%;border-radius:1em;background-color: #D35400;border:solid 1px white">
+                    <center style="width:100%; font-size:0.8em;font-family:'BaeMinHanna', system-ui ;color:white">
+                            <table>
+                                <tr style="width:90%">
+                                    <%=userId%>님 환영합니다
+
+                                </tr><br>
+                                <tr style="width:90%">
+                                    <button id="myPage" onclick="window.location.href = '${pageContext.request.contextPath}/MyPage.jsp?<%=userId%>';" style="padding:0.2em; width:80%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white">
+                                        마이페이지
+                                    </button>
+                                </tr><br>
+                                <tr style="width:90%">
+                                    <button id="chat" onclick="window.location.href = '${pageContext.request.contextPath}/Chat.jsp?<%=userId%>';" style="padding:0.2em; width:80%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white">
+                                        채 팅
+                                    </button>
+                                </tr><br>
+                                <tr style="width:90%">
+                                    <button id="logout" onclick="window.location.href = '${pageContext.request.contextPath}/logout';" style="padding:0.2em; width:80%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white">
+                                        로그아웃
+                                    </button>
+                                </tr>
+                            </table>
+                    </center>
+                </div>
                 <%
                 } else {
                 %>
                 로그인
-                <%
-                    }
-                %>
                 <div id="loginMenu" style="display:none; position:absolute; right:1em; background-color:white; padding:0.5em; width:12%;border-radius:1em;background-color: #D35400;border:solid 1px white">
                     <center>
                         <form id="loginForm" method="post" style="width:100%; font-size:0.8em;font-family:'BaeMinHanna', system-ui ;color:white">
@@ -86,10 +108,14 @@
                                 </tr>
                             </table>
                             <input id="loginSubmit" type="button" value="로그인" style="padding:0.2em; width:40%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white">
-                            <input type="button" value="회원가입" style="padding:0.2em; width:55%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white">
+                            <input type="button" value="회원가입" style="padding:0.2em; width:55%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white" onclick="window.location.href = '${pageContext.request.contextPath}/Register.html';">
                         </form>
                     </center>
                 </div>
+                <%
+                    }
+                %>
+
             </td>
         </tr>
     </table>
