@@ -11,7 +11,9 @@ public class Chat {
     private int idx;
 
     // Full parameter constructor (excluding id and idx)
-    public Chat(String message, int sender, Timestamp time, boolean system) {
+    public Chat(int id, int idx, String message, int sender, Timestamp time, boolean system) {
+        this.id = id;
+        this.idx = idx;
         this.message = message;
         this.sender = sender;
         this.time = time;

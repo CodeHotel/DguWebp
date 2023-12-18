@@ -1,9 +1,19 @@
 package DataBeans;
 
-enum Campus { seoul, goyang, WISE }
-enum Degree { undergraduate, postgraduate, professor, staff }
+enum Campus {
+    seoul, goyang, WISE
+}
+
+enum Degree {
+    undergraduate, postgraduate, professor, staff
+}
+
+enum Progress {
+    none, applied, inprogress, soldout, sellergive, buyergot
+}
 
 public class User {
+    private int id;
     private String loginId;
     private String pwHash;
     private String nickName;
@@ -14,10 +24,10 @@ public class User {
     private char[] studentId = new char[10];
     private double[] rating;
     private boolean isAdmin;
-    private int uid;
 
     // Full parameter constructor (except uid)
-    public User(String loginId, String pwHash, String nickName, String image, Campus campus, String department, Degree degree, char[] studentId, double[] rating, boolean isAdmin) {
+    public User(int id, String loginId, String pwHash, String nickName, String image, Campus campus, String department, Degree degree, char[] studentId, double[] rating, boolean isAdmin) {
+        this.id = id;
         this.loginId = loginId;
         this.pwHash = pwHash;
         this.nickName = nickName;
@@ -61,6 +71,5 @@ public class User {
     public boolean isAdmin() { return isAdmin; }
     public void setAdmin(boolean isAdmin) { this.isAdmin = isAdmin; }
 
-    public int getUid() { return uid; }
-    // No setter for uid
+    public int getUid() { return id; }
 }
