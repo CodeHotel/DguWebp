@@ -62,6 +62,25 @@ public class PostgreInterface {
         }
         return null;
     }
+
+    public static boolean isIdDuplicated(String id) {
+        String sql = "SELECT u.login_id FROM akouser u WHERE u.login_id=?;";
+
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, id);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString(1) != null;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();;
+        }
+        return false;
+    }
+
     // Updated registerAdmin method
     public static User registerAdmin(String id, String pw) {
         String sql = "WITH n_user AS (" +
@@ -711,27 +730,22 @@ public class PostgreInterface {
 
         return null;
     }
-    public static JSONArray getBuyRequests(int userId) {
-        String sql = "WITH requests AS (" +
-                "    SELECT r.id, r.buyer_id, r.product_id, r.progress" +
-                "    FROM list_progress r" +
-                "    WHERE r.owner_id = ?" +
-                ")," +
-                "p_info AS (" +
-                "    SELECT p.id, p.title, p.price, p.image, p.description, p.views" +
-                "    FROM product p" +
-                "    WHERE p.id IN (" +
-                "        SELECT r.product_id FROM requests r" +
-                "        WHERE r.progress = 'applied'" +
-                "    )" +
-                ")" +
-                "SELECT json_build_object(" +
-                "    'id', (SELECT id FROM requests)," +
-                "    'buyer_id', (SELECT buyer_id FROM requests)," +
-                "    'products', (SELECT row_to_json(p_info) FROM p_info)" +
-                ");";
-
-        JSONArray buyRequests = new JSONArray();
+    public static ProgressData[] getBuyRequests(int userId) {
+        String sql = "WITH requests AS ( " +
+                "    SELECT r.id, r.buyer_id, r.product_id, r.progress " +
+                "    FROM list_progress r " +
+                "    WHERE r.owner_id=? AND r.progress='applied' " +
+                ") " +
+                "SELECT array_to_json(array( " +
+                "    SELECT json_build_object( " +
+                "        'id', r.id, " +
+                "        'buyer_id', r.buyer_id, " +
+                "        'products', ( " +
+                "            SELECT row_to_json(p) FROM product p " +
+                "            WHERE p.id=r.product_id " +
+                "        ) " +
+                "    ) FROM requests r " +
+                "));";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -739,16 +753,54 @@ public class PostgreInterface {
             pstmt.setInt(1, userId);
             ResultSet rs = pstmt.executeQuery();
 
-            while (rs.next()) {
-                JSONObject buyRequest = new JSONObject(rs.getString(1));
+            if (rs.next()) {
+                JSONArray jsonArray = new JSONArray(rs.getString(1));
+                ProgressData[] datas = new ProgressData[jsonArray.length()];
 
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    JSONObject productObject = new JSONObject(jsonObject.getString("product"));
+                    Product product = new Product(
+                            productObject.getInt("id"),
+                            productObject.getString("title"),
+                            productObject.getInt("price"),
+                            productObject.getString("image"),
+                            productObject.getString("description"),
+                            productObject.getLong("views"),
+                            -1,
+                            null
+                    );
 
+                    JSONObject userJson = new JSONObject(jsonObject.getString("buyer"));
+                    User user = new User(
+                            userJson.getInt("id"),
+                            null,
+                            null,
+                            userJson.getString("nickname"),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false
+                    );
+
+                    datas[i] = new ProgressData(
+                            jsonObject.getInt("id"),
+                            user,
+                            product,
+                            Progress.valueOf(jsonObject.getString("progress"))
+                    );
+                }
+
+                return datas;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return buyRequests;
+        return null;
     }
 
     public static boolean acceptBuyRequest(int userId, int productId, String message) {
