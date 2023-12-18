@@ -1,5 +1,7 @@
 <%@ page import="DataBeans.PostgreInterface" %>
-<%@ page import="DataBeans.User" %><%--
+<%@ page import="DataBeans.User" %>
+<%@ page import="DataBeans.ProductData" %>
+<%@ page import="DataBeans.ImageDB" %><%--
   Created by IntelliJ IDEA.
   User: mh7cp
   Date: 2023-12-18
@@ -139,57 +141,61 @@
     <div style="font-family: BaeMinHanna, system-ui; font-size: 3em; color: #4FC3F7;"><br>#인기상품 #핫한상품</div><br><br>
     <table style="width: 80%; text-align: center;">
         <tr>
+            <%
+                DataBeans.ProductData[] datas = PostgreInterface.getPopularProducts();
+                DataBeans.Product product = null;
+                StringBuilder hashtagStr;
+            %>
             <td style="width: 30%; height:auto; display: inline-block; margin: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; text-align: center;">
-                <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="resources/images/AkoFace.png" alt="상품 이미지" class="product-image">
+                <%
+                    product = datas[0].prodcut;
+                    hashtagStr = new StringBuilder();
+                    for (String hashtag : product.getHashtags()) {
+                        hashtagStr.append("#").append(hashtag);
+                    }
+                %>
+                <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="<%=ImageDB.getImageUrl(product.getImage())%>" alt="상품 이미지" class="product-image">
                 <hr>
-                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL">상품1</a></h2>
-                <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;">상품 설명이 여기에 들어갑니다. 상품 설명을 넣어 주세요.</p>
-                <p style = "font-family: BaeMinJua, system-ui;"> #1 #2 </p>
-                <p style = "font-family: BaeMinJua, system-ui;"> 가격 </p>
+                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL"><%=product.getTitle()%></a></h2>
+                <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;"><%=product.getDescription()%></p>
+                <p style = "font-family: BaeMinJua, system-ui;"><%=hashtagStr.toString() %></p>
+                <p style = "font-family: BaeMinJua, system-ui;"><%=product.getPrice() %></p>
                 <hr>
                 <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
                 <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
             </td>
             <td style="width: 30%; height:auto; display: inline-block; margin: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; text-align: center;">
-                <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="resources/images/AkoFace.png" alt="상품 이미지" class="product-image">
+                <%
+                    product = datas[1].prodcut;
+                    hashtagStr = new StringBuilder();
+                    for (String hashtag : product.getHashtags()) {
+                        hashtagStr.append("#").append(hashtag);
+                    }
+                %>
+                <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="<%=ImageDB.getImageUrl(product.getImage())%>" alt="상품 이미지" class="product-image">
                 <hr>
-                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL">상품1</a></h2>
-                <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;">상품 설명이 여기에 들어갑니다. 상품 설명을 넣어 주세요.</p>
-                <p style = "font-family: BaeMinJua, system-ui;"> #1 #2 </p>
-                <p style = "font-family: BaeMinJua, system-ui;"> 가격 </p>
-                <hr>
-                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
-                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
-            </td>
-            <td style="width: 30%; height:auto; display: inline-block; margin: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; text-align: center;">
-                <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="resources/images/AkoFace.png" alt="상품 이미지" class="product-image">
-                <hr>
-                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL">상품1</a></h2>
-                <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;">상품 설명이 여기에 들어갑니다. 상품 설명을 넣어 주세요.</p>
-                <p style = "font-family: BaeMinJua, system-ui;"> #1 #2 </p>
-                <p style = "font-family: BaeMinJua, system-ui;"> 가격 </p>
+                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL"><%=product.getTitle()%></a></h2>
+                <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;"><%=product.getDescription()%></p>
+                <p style = "font-family: BaeMinJua, system-ui;"><%=hashtagStr.toString() %></p>
+                <p style = "font-family: BaeMinJua, system-ui;"><%=product.getPrice() %></p>
                 <hr>
                 <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
                 <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
             </td>
             <td style="width: 30%; height:auto; display: inline-block; margin: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; text-align: center;">
-                <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="resources/images/AkoFace.png" alt="상품 이미지" class="product-image">
+                <%
+                    product = datas[2].prodcut;
+                    hashtagStr = new StringBuilder();
+                    for (String hashtag : product.getHashtags()) {
+                        hashtagStr.append("#").append(hashtag);
+                    }
+                %>
+                <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="<%=ImageDB.getImageUrl(product.getImage())%>" alt="상품 이미지" class="product-image">
                 <hr>
-                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL">상품1</a></h2>
-                <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;">상품 설명이 여기에 들어갑니다. 상품 설명을 넣어 주세요.</p>
-                <p style = "font-family: BaeMinJua, system-ui;"> #1 #2 </p>
-                <p style = "font-family: BaeMinJua, system-ui;"> 가격 </p>
-                <hr>
-                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
-                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
-            </td>
-            <td style="width: 30%; height:auto; display: inline-block; margin: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; text-align: center;">
-                <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="resources/images/AkoFace.png" alt="상품 이미지" class="product-image">
-                <hr>
-                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL">상품1</a></h2>
-                <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;">상품 설명이 여기에 들어갑니다. 상품 설명을 넣어 주세요.</p>
-                <p style = "font-family: BaeMinJua, system-ui;"> #1 #2 </p>
-                <p style = "font-family: BaeMinJua, system-ui;"> 가격 </p>
+                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL"><%=product.getTitle()%></a></h2>
+                <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;"><%=product.getDescription()%></p>
+                <p style = "font-family: BaeMinJua, system-ui;"><%=hashtagStr.toString() %></p>
+                <p style = "font-family: BaeMinJua, system-ui;"><%=product.getPrice() %></p>
                 <hr>
                 <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
                 <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
