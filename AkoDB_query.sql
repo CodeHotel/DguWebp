@@ -12,12 +12,12 @@
 -- registerUser(id, pw, nickname, image, id_card, phone, campus, deparment, degree, student_id):
 WITH n_user AS (
     INSERT INTO akouser (login_id, login_pw, nickname, image, campus, deparment, degree, student_id)
-    VALUES ('testid', '1234', 'test_user', 'test_img.png', 'seoul', 'computer science', 'undergraduate', '2020101010') 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?) 
     RETURNING id, login_id, login_pw, nickname, image, campus, deparment, degree, student_id
 ), 
 n_auth AS (
     INSERT INTO authentication (id_card, phone, user_id) 
-    VALUES ('id_image_1', '01012345555', (SELECT id FROM n_user)) 
+    VALUES (?, ?, (SELECT id FROM n_user)) 
 ), 
 n_pay AS (
     INSERT INTO payment (user_id, point) 
@@ -46,7 +46,7 @@ SELECT u.nickname FROM akouser u WHERE u.nickname=?;
 -- registerAdmin(id, pw)
 WITH n_user AS (
     INSERT INTO akouser (login_id, login_pw, nickname)
-    VALUES ('test_admin', '1234', 'admin') 
+    VALUES (?, ?, ?) 
     RETURNING *
 ), 
 n_auth AS (
@@ -76,7 +76,7 @@ DELETE FROM akouser WHERE id=17;
 WITH result AS (
     SELECT akouser.*, auth.id_card, auth.phone, auth.authorized
     FROM akouser akouser, authentication auth
-    WHERE akouser.nickname='test_user' AND akouser.id=auth.user_id
+    WHERE akouser.nickname=? AND akouser.id=auth.user_id
 )
 SELECT row_to_json(result) FROM result;
 
@@ -109,7 +109,7 @@ UPDATE authentication SET authorized=true WHERE user_id=14;
 --   return: user id (on success, null will be returned on fail)
 
 -- userAuth(login_id, login_pw):
-SELECT akouser.id FROM akouser WHERE login_id='testid' AND login_pw='1234';
+SELECT akouser.id FROM akouser WHERE login_id=? AND login_pw=?;
 
 
 
@@ -122,11 +122,11 @@ SELECT akouser.id FROM akouser WHERE login_id='testid' AND login_pw='1234';
 -- addProduct(title, price, image, description, owner_id, string_array(hashtag))
 WITH product_info AS (
     INSERT INTO product(title, price, image, description, owner_id) 
-    VALUES ('camera', 100000, 'img', 'desc', 1)
+    VALUES (?, ?, ?, ?, ?)
     RETURNING *
 ), 
 hashtags AS (
-    SELECT * FROM UNNEST(string_to_array('camera,polaroid,trip,image', ','))
+    SELECT * FROM UNNEST(string_to_array(?, ','))
 ),
 n_hashtag AS (
     INSERT INTO hashtag(tag, product_id)
@@ -140,7 +140,7 @@ SELECT json_build_object(
     'image', (SELECT image FROM product_info),
     'description', (SELECT description FROM product_info),
     'views', (SELECT views FROM product_info),
-    'progress', null,
+    'progress', (SELECT progress FROM product_info),
     'hashtags', array_to_json(array(
         SELECT * FROM hashtags
     ))
@@ -154,12 +154,12 @@ SELECT json_build_object(
 
 -- modifyProduct(product_id, title, price, image, description, string_array(hashtag))
 WITH product_info AS (
-    UPDATE product SET title='dummy', price=100, image='book.png', description='for real' 
-    WHERE product.id=4
+    UPDATE product SET title=?, price=?, image=?, description=? 
+    WHERE product.id=?
     RETURNING id
 ), 
 tags AS (
-    SELECT * FROM UNNEST(string_to_array('book,phone,laptop', ','))
+    SELECT * FROM UNNEST(string_to_array(?, ','))
 ), 
 del AS (
     DELETE FROM hashtag 
@@ -181,7 +181,7 @@ SELECT id FROM product_info;
 --   safely delete product
 
 -- deleteProduct(id)
-DELETE FROM product WHERE product.id=11;
+DELETE FROM product WHERE product.id=?;
 
 
 
@@ -190,7 +190,7 @@ DELETE FROM product WHERE product.id=11;
 
 -- getBriefUserData(user_id):
 WITH user_info AS (
-    SELECT * FROM akouser WHERE akouser.id=1
+    SELECT * FROM akouser WHERE akouser.id=?
 ),
 product_list AS (
     SELECT p.id, p.price, p.image, p.description, p.views 
@@ -218,15 +218,12 @@ SELECT json_build_object(
 
 -- getProductData(product_id)
 WITH product_info AS (
-    SELECT p.id, p.title, p.price, p.image, p.description, p.views, p.owner_id
-    FROM product p WHERE p.id=2
-),
-prog AS (
-    SELECT p.progress FROM list_progress p 
-    WHERE p.product_id=(SELECT id FROM product_info)
+    UPDATE product SET views=views+1
+    WHERE product.id=?
+    RETURNING *
 ),
 user_info AS (
-    SELECT u.id, u.nickname, u.image, u.campus, u.deparment, u.degree, u.student_id
+    SELECT u.id, u.nickname, u.image, u.campus, u.department, u.degree, u.student_id
     FROM akouser u WHERE u.id=(SELECT owner_id FROM product_info)
 ),
 hashtags AS (
@@ -240,7 +237,7 @@ SELECT json_build_object(
     'image', (SELECT image FROM product_info),
     'description', (SELECT description FROM product_info),
     'views', (SELECT views FROM product_info),
-    'progress', (SELECT progress FROM prog),
+    'progress', (SELECT progress FROM product_info),
     'user_info', (SELECT row_to_json(user_info) FROM user_info),
     'hashtags', array_to_json(array(
         SELECT * FROM hashtags
@@ -255,7 +252,7 @@ SELECT json_build_object(
 WITH info AS (
     SELECT p.id, p.owner_id, u.id AS user_id
     FROM product p, akouser u
-    WHERE u.id=2 AND p.id=2
+    WHERE u.id=? AND p.id=?
 )
 INSERT INTO list_wish(owner_id, buyer_id, product_id)
 SELECT
@@ -280,7 +277,7 @@ WITH products AS (
     WHERE p.id=ANY(
         SELECT product_id FROM (
             SELECT w.product_id FROM list_wish w 
-            WHERE w.buyer_id=2
+            WHERE w.buyer_id=?
         ) x
     )
 )
@@ -292,10 +289,7 @@ SELECT array_to_json(array(
         'image', p.image,
         'description', p.description,
         'views', p.views,
-        'progress', (
-            SELECT l.progress FROM list_progress l
-            WHERE l.product_id=p.id
-        ),
+        'progress', p.progress,
         'user_info', (
             SELECT row_to_json(user_info) FROM (
                 SELECT u.id, u.nickname 
@@ -326,21 +320,21 @@ WITH search_result AS (
     WITH h_score AS (
         SELECT s.id, COUNT(s.id) AS score FROM (
             SELECT h.product_id AS id FROM hashtag h
-            WHERE h.tag LIKE ANY(string_to_array('image,camera', ','))
+            WHERE h.tag LIKE ANY(string_to_array(?, ','))
         ) s
         GROUP BY s.id
     ),
     t_score AS (
         SELECT id, 1 AS score FROM (
             SELECT p.id AS id FROM product p
-            WHERE p.title ~ ANY(string_to_array('book,phone', ','))
+            WHERE p.title ~ ANY(string_to_array(?, ','))
         ) t
     ),
     d_score AS (
         SELECT id, score FROM (
             SELECT ts_rank_cd(
                 to_tsvector(p.description), 
-                to_tsquery('desc|phone')
+                to_tsquery(?)
             ) AS score, p.id 
             FROM product p
         ) d
@@ -351,9 +345,9 @@ WITH search_result AS (
         SELECT id FROM d_score
     )
     SELECT p.id, (
-        (COALESCE((SELECT score FROM h_score WHERE h_score.id=p.id), 0) * 1) +
-        (COALESCE((SELECT score FROM t_score WHERE t_score.id=p.id), 0) * 0.5) +
-        (COALESCE((SELECT score FROM d_score WHERE d_score.id=p.id), 0) * 0.1)
+        (COALESCE((SELECT score FROM h_score WHERE h_score.id=p.id), 0) * ?) +
+        (COALESCE((SELECT score FROM t_score WHERE t_score.id=p.id), 0) * ?) +
+        (COALESCE((SELECT score FROM d_score WHERE d_score.id=p.id), 0) * ?)
     ) AS score FROM product_ids p
 ),
 products AS (
@@ -369,10 +363,7 @@ SELECT array_to_json(array(
         'image', p.image,
         'description', p.description,
         'views', p.views,
-        'progress', (
-            SELECT l.progress FROM list_progress l
-            WHERE l.product_id=p.id
-        ),
+        'progress', p.progress,
         'user_info', (
             SELECT row_to_json(user_info) 
             FROM (
@@ -397,17 +388,17 @@ SELECT array_to_json(array(
 WITH info AS (
     SELECT p.id, p.price, p.owner_id, u.id AS buyer_id
     FROM product p, akouser u 
-    WHERE p.id=2 AND u.id=3
+    WHERE p.id=? AND u.id=?
 ),
 n_progress AS (
-    INSERT INTO list_progress(owner_id, buyer_id, product_id, progress)
+    INSERT INTO list_trade(owner_id, buyer_id, product_id, progress)
     SELECT
         (SELECT owner_id FROM info),
         (SELECT buyer_id FROM info), 
         (SELECT id FROM info),
         'applied'
     WHERE NOT EXISTS (
-        SELECT id FROM list_progress p
+        SELECT id FROM list_trade p
         WHERE
             p.product_id=(SELECT id FROM info) AND
             p.buyer_id=(SELECT buyer_id FROM info)
@@ -447,8 +438,8 @@ SELECT json_build_object(
 -- getBuyRequests(user_id)
 WITH requests AS (
     SELECT r.id, r.buyer_id, r.product_id, r.progress
-    FROM list_progress r
-    WHERE r.owner_id=1 AND r.progress='applied'
+    FROM list_trade r
+    WHERE r.owner_id=? AND r.progress='applied'
 )
 SELECT array_to_json(array(
     SELECT json_build_object(
@@ -472,17 +463,21 @@ SELECT array_to_json(array(
 
 -- acceptBuyRequest(user_id, product_id, message)
 WITH req_user AS (
-    SELECT u.* FROM akouser u WHERE u.id=3
+    SELECT u.* FROM akouser u WHERE u.id=?
 ),
 req_product AS (
-    SELECT p.* FROM product p WHERE p.id=2
+    SELECT p.* FROM product p WHERE p.id=?
 ),
 prog AS (
-    UPDATE list_progress AS p SET progress='inprogress'
+    UPDATE list_trade AS p SET progress='inprogress'
     WHERE 
         p.owner_id=(SELECT owner_id FROM req_product) AND
         p.buyer_id=(SELECT id FROM req_user) AND
         p.product_id=(SELECT id FROM req_product)
+),
+u_product AS (
+    UPDATE product AS p SET product='inprogress'
+    WHERE p.id=(SELECT id FROM req_product)
 ),
 l_chat AS (
     UPDATE list_chat AS c
@@ -521,10 +516,10 @@ VALUES (
 WITH req AS (
     SELECT u.id, p.id AS product_id 
     FROM akouser u, product p
-    WHERE u.id=3 AND p.id=2
+    WHERE u.id=? AND p.id=?
 ),
 prog AS (
-    DELETE FROM list_progress p
+    DELETE FROM list_trade p
     WHERE (
         p.owner_id=(SELECT id FROM req) OR 
         p.buyer_id=(SELECT id FROM req)
@@ -532,8 +527,9 @@ prog AS (
     RETURNING *
 ), 
 can_product AS (
-    SELECT * FROM product p
+    UPDATE product AS p SET progress='none'::progress_t
     WHERE p.id=(SELECT product_id FROM prog)
+    RETURNING *
 ),
 buyer_pay AS (
     UPDATE payment SET point=payment.point+(SELECT price FROM can_product)
@@ -572,9 +568,13 @@ VALUES (
 
 -- confirmGive(product_id)
 WITH req AS (
-    UPDATE list_progress SET progress='soldout'
-    WHERE progress='inprogress' AND product_id=2
+    UPDATE list_trade SET progress='sellergive'
+    WHERE progress='inprogress' AND product_id=?
     RETURNING *
+),
+u_product AS (
+    UPDATE product AS p SET progress='sellergive'
+    WHERE p.id=(SELECT product_id FROM req)
 ),
 l_chat AS (
     UPDATE list_chat AS c
@@ -607,17 +607,9 @@ VALUES (
 
 -- confirmGot(product_id)
 WITH req AS (
-    DELETE FROM list_progress s
-    WHERE s.progress='soldout' AND s.product_id=2
+    UPDATE list_trade AS s SET s.progress='soldout'
+    WHERE s.progress='sellergive' AND s.product_id=?
     RETURNING *
-),
-n_trade AS (
-    INSERT INTO list_trade(owner_id, buyer_id, product_id)
-    VALUES (
-        (SELECT owner_id FROM req),
-        (SELECT buyer_id FROM req),
-        (SELECT product_id FROM req)
-    )
 ),
 l_chat AS (
     UPDATE list_chat AS c
@@ -653,7 +645,7 @@ VALUES (
 -- getChatPreview
 WITH l_chat AS (
     SELECT c.* FROM list_chat c
-    WHERE c.user1=3 OR c.user2=3
+    WHERE c.user1=? OR c.user2=?
 )
 SELECT array_to_json(array(
     SELECT row_to_json(c) FROM l_chat c
@@ -665,7 +657,7 @@ SELECT array_to_json(array(
 
 -- getChat(chat_id)
 WITH l_chat AS (
-    SELECT * FROM chat WHERE id=5
+    SELECT * FROM chat WHERE id=?
 )
 SELECT array_to_json(array(
     SELECT row_to_json(c) FROM l_chat c
@@ -677,9 +669,9 @@ SELECT array_to_json(array(
 
 -- sendChat(user_id, chat_id, message)
 WITH req AS (
-    SELECT u.id, c.id AS chat_id, 'some message' AS msg
+    SELECT u.id, c.id AS chat_id, ? AS msg
     FROM akouser u, list_chat c
-    WHERE u.id=3 AND c.id=5
+    WHERE u.id=? AND c.id=?
 ),
 l_chat AS (
     UPDATE list_chat AS c
