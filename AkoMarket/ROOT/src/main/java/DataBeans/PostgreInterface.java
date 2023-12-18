@@ -533,6 +533,7 @@ public class PostgreInterface {
                     hashtags = new String[hashtagJson.length()];
                     for (int i = 0; i < hashtags.length; i++) {
                         hashtags[i] = hashtagJson.getString(i);
+                        hashtags[i] = hashtags[i].substring(1, hashtags[i].length()-1);
                     }
                 }
 
@@ -1270,6 +1271,7 @@ public class PostgreInterface {
                     hashtags = new String[hashtagJson.length()];
                     for (int j = 0; j < hashtags.length; j++) {
                         hashtags[j] = hashtagJson.getString(j);
+                        hashtags[j] = hashtags[j].substring(1, hashtags[j].length()-1);
                     }
                 }
 
@@ -1360,6 +1362,7 @@ public class PostgreInterface {
                         hashtags = new String[hashtagJson.length()];
                         for (int j = 0; j < hashtags.length; j++) {
                             hashtags[j] = hashtagJson.getString(j);
+                            hashtags[j] = hashtags[j].substring(1, hashtags[j].length()-1);
                         }
                     }
 
