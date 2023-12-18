@@ -445,8 +445,9 @@ public class PostgreInterface {
 
     public static ProductData getProductData(int productId) {
         String sql = "WITH product_info AS (" +
-                "    SELECT p.id, p.title, p.price, p.image, p.description, p.views, p.owner_id" +
-                "    FROM product p WHERE p.id = ?" +
+                "    UPDATE product SET views=views+1" +
+                "    WHERE p.id = ?" +
+                "    RETURNING * " +
                 ")," +
                 "prog AS (" +
                 "    SELECT p.progress FROM list_progress p" +
