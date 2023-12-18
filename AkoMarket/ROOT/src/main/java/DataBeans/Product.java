@@ -10,7 +10,9 @@ public class Product {
     private int ownerId;
     private String[] hashtags;
 
-    public Product(int id, String title, int price, String image, String description, long views, int ownerId, String[] hashtags){
+    private Progress progress;
+
+    public Product(int id, String title, int price, String image, String description, long views, int ownerId, String[] hashtags, Progress progress){
         this.id = id;
         this.title = title;
         this.price = price;
@@ -19,6 +21,7 @@ public class Product {
         this.views = views;
         this.ownerId = ownerId;
         this.hashtags = hashtags;
+        this.progress = progress;
     }
 
     public int getId() {return id;}
@@ -35,4 +38,6 @@ public class Product {
     public void setOwnerId(int newOwnerId) {ownerId = newOwnerId;}
     public String[] getHashtags() {return hashtags;}
     public void setHashtags(String[] hashtags) {this.hashtags = hashtags;}
+
+    public Progress getProgress() {return progress;}
 }
