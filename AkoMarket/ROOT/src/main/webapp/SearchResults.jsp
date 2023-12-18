@@ -64,14 +64,15 @@
                     if (userId != null) {
                         // User is logged in
                 %>
-                <%= userId %>
+                <%
+                    User t = PostgreInterface.getBriefUserData(userId);
+                %>
+                <%=t.getNickName()%>
                 <div id="loginMenu" style="display:none; position:absolute; right:1em; background-color:white; padding:0.5em; width:12%;border-radius:1em;background-color: #D35400;border:solid 1px white">
                     <center style="width:100%; font-size:0.8em;font-family:'BaeMinHanna', system-ui ;color:white">
                         <table>
                             <tr style="width:90%">
-                                <%
-                                    User t = PostgreInterface.getBriefUserData(userId);
-                                %>
+
                                 <%=t.getNickName()%>님 환영합니다
 
                             </tr><br>
