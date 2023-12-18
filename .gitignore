@@ -1,2 +1,2 @@
 /AkoMarket/apache8/logs/
-/AkoMarket/apache8/bin/
+AkoMarket/apache8/bin/*.sh
