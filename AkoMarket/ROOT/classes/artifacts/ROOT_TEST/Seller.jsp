@@ -133,7 +133,7 @@
 </div>
 <center>
   <%
-    User seller = PostgreInterface.getBriefUserData(Integer.parseInt(request.getParameter("user")));
+    User seller = PostgreInterface.getFullUserData(Integer.parseInt(request.getParameter("user")));
   %>
   <h2 style = "font-family: BaeMinHanna, system-ui;">판매자 정보</h2><br>
   <table style = "width: 70%;">
