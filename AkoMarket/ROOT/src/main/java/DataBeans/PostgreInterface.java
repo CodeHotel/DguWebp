@@ -6,6 +6,8 @@ import java.lang.StringBuilder;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import javax.xml.transform.Result;
+
 public class PostgreInterface {
 
     public static User registerUser(String id, String pw, String nickname, String image, String id_card, String phone, String campus, String department, String degree, String studentId) {
@@ -245,30 +247,30 @@ public class PostgreInterface {
 
     // Method to add a new product and associated hashtags
     public static Product addProduct(String title, int price, String image, String description, int ownerId, String[] hashtags) {
-        String sql = "WITH product_info AS (\n" +
-                "    INSERT INTO product(title, price, image, description, owner_id) \n" +
-                "    VALUES (?, ?, ?, ?, ?)\n" +
-                "    RETURNING *\n" +
-                "), \n" +
-                "hashtags AS (\n" +
-                "    SELECT * FROM UNNEST(string_to_array(?, ','))\n" +
-                "),\n" +
-                "n_hashtag AS (\n" +
-                "    INSERT INTO hashtag(tag, product_id)\n" +
-                "    SELECT x, (SELECT id FROM product_info)\n" +
-                "    FROM hashtags x\n" +
-                ")\n" +
-                "SELECT json_build_object(\n" +
-                "    'id', (SELECT id FROM product_info),\n" +
-                "    'title', (SELECT title FROM product_info),\n" +
-                "    'price', (SELECT price FROM product_info),\n" +
-                "    'image', (SELECT image FROM product_info),\n" +
-                "    'description', (SELECT description FROM product_info),\n" +
-                "    'views', (SELECT views FROM product_info),\n" +
-                "    'progress', (SELECT progress FROM product_info),\n" +
-                "    'hashtags', array_to_json(array(\n" +
-                "        SELECT * FROM hashtags\n" +
-                "    ))\n" +
+        String sql = "WITH product_info AS ( " +
+                "    INSERT INTO product(title, price, image, description, owner_id)  " +
+                "    VALUES (?, ?, ?, ?, ?) " +
+                "    RETURNING * " +
+                "),  " +
+                "hashtags AS ( " +
+                "    SELECT * FROM UNNEST(string_to_array(?, ',')) " +
+                "), " +
+                "n_hashtag AS ( " +
+                "    INSERT INTO hashtag(tag, product_id) " +
+                "    SELECT x, (SELECT id FROM product_info) " +
+                "    FROM hashtags x " +
+                ") " +
+                "SELECT json_build_object( " +
+                "    'id', (SELECT id FROM product_info), " +
+                "    'title', (SELECT title FROM product_info), " +
+                "    'price', (SELECT price FROM product_info), " +
+                "    'image', (SELECT image FROM product_info), " +
+                "    'description', (SELECT description FROM product_info), " +
+                "    'views', (SELECT views FROM product_info), " +
+                "    'progress', (SELECT progress FROM product_info), " +
+                "    'hashtags', array_to_json(array( " +
+                "        SELECT * FROM hashtags " +
+                "    )) " +
                 ");";
 
         StringBuilder hashtagStr = new StringBuilder();
@@ -439,31 +441,31 @@ public class PostgreInterface {
     }
 
     public static ProductData getProductData(int productId) {
-        String sql = "WITH product_info AS (\n" +
-                "    UPDATE product SET views=views+1\n" +
-                "    WHERE product.id=?\n" +
-                "    RETURNING *\n" +
-                "),\n" +
-                "user_info AS (\n" +
-                "    SELECT u.id, u.nickname, u.image, u.campus, u.department, u.degree, u.student_id\n" +
-                "    FROM akouser u WHERE u.id=(SELECT owner_id FROM product_info)\n" +
-                "),\n" +
-                "hashtags AS (\n" +
-                "    SELECT h.tag\n" +
-                "    FROM hashtag h WHERE h.product_id=(SELECT id FROM product_info)\n" +
-                ")\n" +
-                "SELECT json_build_object(\n" +
-                "    'id', (SELECT id FROM product_info),\n" +
-                "    'title', (SELECT title FROM product_info),\n" +
-                "    'price', (SELECT price FROM product_info),\n" +
-                "    'image', (SELECT image FROM product_info),\n" +
-                "    'description', (SELECT description FROM product_info),\n" +
-                "    'views', (SELECT views FROM product_info),\n" +
-                "    'progress', (SELECT progress FROM product_info),\n" +
-                "    'user_info', (SELECT row_to_json(user_info) FROM user_info),\n" +
-                "    'hashtags', array_to_json(array(\n" +
-                "        SELECT * FROM hashtags\n" +
-                "    ))\n" +
+        String sql = "WITH product_info AS ( " +
+                "    UPDATE product SET views=views+1 " +
+                "    WHERE product.id=? " +
+                "    RETURNING * " +
+                "), " +
+                "user_info AS ( " +
+                "    SELECT u.id, u.nickname, u.image, u.campus, u.department, u.degree, u.student_id " +
+                "    FROM akouser u WHERE u.id=(SELECT owner_id FROM product_info) " +
+                "), " +
+                "hashtags AS ( " +
+                "    SELECT h.tag " +
+                "    FROM hashtag h WHERE h.product_id=(SELECT id FROM product_info) " +
+                ") " +
+                "SELECT json_build_object( " +
+                "    'id', (SELECT id FROM product_info), " +
+                "    'title', (SELECT title FROM product_info), " +
+                "    'price', (SELECT price FROM product_info), " +
+                "    'image', (SELECT image FROM product_info), " +
+                "    'description', (SELECT description FROM product_info), " +
+                "    'views', (SELECT views FROM product_info), " +
+                "    'progress', (SELECT progress FROM product_info), " +
+                "    'user_info', (SELECT row_to_json(user_info) FROM user_info), " +
+                "    'hashtags', array_to_json(array( " +
+                "        SELECT * FROM hashtags " +
+                "    )) " +
                 ");";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
@@ -669,49 +671,49 @@ public class PostgreInterface {
     }
 
     public static Chatlist buyRequest(int userId, int productId) {
-        String sql = "WITH info AS (\n" +
-                "    SELECT p.id, p.price, p.owner_id, u.id AS buyer_id\n" +
-                "    FROM product p, akouser u \n" +
-                "    WHERE p.id=? AND u.id=?\n" +
-                "),\n" +
-                "n_progress AS (\n" +
-                "    INSERT INTO list_trade(owner_id, buyer_id, product_id, progress)\n" +
-                "    SELECT\n" +
-                "        (SELECT owner_id FROM info),\n" +
-                "        (SELECT buyer_id FROM info), \n" +
-                "        (SELECT id FROM info),\n" +
-                "        'applied'\n" +
-                "    WHERE NOT EXISTS (\n" +
-                "        SELECT id FROM list_trade p\n" +
-                "        WHERE\n" +
-                "            p.product_id=(SELECT id FROM info) AND\n" +
-                "            p.buyer_id=(SELECT buyer_id FROM info)\n" +
-                "    )\n" +
-                "    RETURNING *\n" +
-                "),\n" +
-                "user_pay AS (\n" +
-                "    UPDATE payment SET point=payment.point-(SELECT price FROM info)\n" +
-                "    WHERE payment.user_id=(SELECT buyer_id FROM info)\n" +
-                "),\n" +
-                "del_wish AS (\n" +
-                "    DELETE FROM list_wish w\n" +
-                "    WHERE \n" +
-                "        w.buyer_id=(SELECT buyer_id FROM n_progress) AND\n" +
-                "        w.product_id=(SELECT product_id FROM n_progress)\n" +
-                "),\n" +
-                "n_chat AS (\n" +
-                "    INSERT INTO list_chat(user1, user2)\n" +
-                "    VALUES (\n" +
-                "        (SELECT owner_id FROM n_progress),\n" +
-                "        (SELECT buyer_id FROM n_progress)\n" +
-                "    )\n" +
-                "    RETURNING *\n" +
-                ")\n" +
-                "SELECT json_build_object(\n" +
-                "    'id', (SELECT id FROM n_chat),\n" +
-                "    'user1', (SELECT user1 FROM n_chat),\n" +
-                "    'user2', (SELECT user2 FROM n_chat),\n" +
-                "    'last_time', (SELECT last_time FROM n_chat)\n" +
+        String sql = "WITH info AS ( " +
+                "    SELECT p.id, p.price, p.owner_id, u.id AS buyer_id " +
+                "    FROM product p, akouser u  " +
+                "    WHERE p.id=? AND u.id=? " +
+                "), " +
+                "n_progress AS ( " +
+                "    INSERT INTO list_trade(owner_id, buyer_id, product_id, progress) " +
+                "    SELECT " +
+                "        (SELECT owner_id FROM info), " +
+                "        (SELECT buyer_id FROM info),  " +
+                "        (SELECT id FROM info), " +
+                "        'applied' " +
+                "    WHERE NOT EXISTS ( " +
+                "        SELECT id FROM list_trade p " +
+                "        WHERE " +
+                "            p.product_id=(SELECT id FROM info) AND " +
+                "            p.buyer_id=(SELECT buyer_id FROM info) " +
+                "    ) " +
+                "    RETURNING * " +
+                "), " +
+                "user_pay AS ( " +
+                "    UPDATE payment SET point=payment.point-(SELECT price FROM info) " +
+                "    WHERE payment.user_id=(SELECT buyer_id FROM info) " +
+                "), " +
+                "del_wish AS ( " +
+                "    DELETE FROM list_wish w " +
+                "    WHERE  " +
+                "        w.buyer_id=(SELECT buyer_id FROM n_progress) AND " +
+                "        w.product_id=(SELECT product_id FROM n_progress) " +
+                "), " +
+                "n_chat AS ( " +
+                "    INSERT INTO list_chat(user1, user2) " +
+                "    VALUES ( " +
+                "        (SELECT owner_id FROM n_progress), " +
+                "        (SELECT buyer_id FROM n_progress) " +
+                "    ) " +
+                "    RETURNING * " +
+                ") " +
+                "SELECT json_build_object( " +
+                "    'id', (SELECT id FROM n_chat), " +
+                "    'user1', (SELECT user1 FROM n_chat), " +
+                "    'user2', (SELECT user2 FROM n_chat), " +
+                "    'last_time', (SELECT last_time FROM n_chat) " +
                 ");";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
@@ -741,25 +743,25 @@ public class PostgreInterface {
         return null;
     }
     public static ProgressData[] getBuyRequests(int userId) {
-        String sql = "WITH requests AS (\n" +
-                "    SELECT r.id, r.buyer_id, r.product_id, r.progress\n" +
-                "    FROM list_trade r\n" +
-                "    WHERE r.owner_id=? AND r.progress='applied'\n" +
-                ")\n" +
-                "SELECT array_to_json(array(\n" +
-                "    SELECT json_build_object(\n" +
-                "        'id', r.id,\n" +
-                "        'buyer', (\n" +
-                "            SELECT row_to_json(u) FROM akouser u\n" +
-                "            WHERE u.id=r.buyer_id\n" +
-                "        ),\n" +
-                "        'product', (\n" +
-                "            SELECT row_to_json(p) FROM product p\n" +
-                "            WHERE p.id=r.product_id\n" +
-                "        ),\n" +
-                "        'progress', r.progress\n" +
-                "    ) FROM requests r\n" +
-                "));\n";
+        String sql = "WITH requests AS ( " +
+                "    SELECT r.id, r.buyer_id, r.product_id, r.progress " +
+                "    FROM list_trade r " +
+                "    WHERE r.owner_id=? AND r.progress='applied' " +
+                ") " +
+                "SELECT array_to_json(array( " +
+                "    SELECT json_build_object( " +
+                "        'id', r.id, " +
+                "        'buyer', ( " +
+                "            SELECT row_to_json(u) FROM akouser u " +
+                "            WHERE u.id=r.buyer_id " +
+                "        ), " +
+                "        'product', ( " +
+                "            SELECT row_to_json(p) FROM product p " +
+                "            WHERE p.id=r.product_id " +
+                "        ), " +
+                "        'progress', r.progress " +
+                "    ) FROM requests r " +
+                ")); ";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -819,48 +821,48 @@ public class PostgreInterface {
     }
 
     public static boolean acceptBuyRequest(int userId, int productId, String message) {
-        String sql = "WITH req_user AS (\n" +
-                "    SELECT u.* FROM akouser u WHERE u.id=?\n" +
-                "),\n" +
-                "req_product AS (\n" +
-                "    SELECT p.* FROM product p WHERE p.id=?\n" +
-                "),\n" +
-                "prog AS (\n" +
-                "    UPDATE list_trade AS p SET progress='inprogress'\n" +
-                "    WHERE \n" +
-                "        p.owner_id=(SELECT owner_id FROM req_product) AND\n" +
-                "        p.buyer_id=(SELECT id FROM req_user) AND\n" +
-                "        p.product_id=(SELECT id FROM req_product)\n" +
-                "),\n" +
-                "u_product AS (\n" +
-                "    UPDATE product AS p SET product='inprogress'\n" +
-                "    WHERE p.id=(SELECT id FROM req_product)\n" +
-                "),\n" +
-                "l_chat AS (\n" +
-                "    UPDATE list_chat AS c\n" +
-                "    SET \n" +
-                "        last_chat_idx=c.last_chat_idx+1,\n" +
-                "        last_chat=?,\n" +
-                "        user1_read=\n" +
-                "            CASE WHEN user1=(SELECT id FROM req_user)\n" +
-                "            THEN c.last_chat_idx+1\n" +
-                "            ELSE user1_read END,\n" +
-                "        user2_read=\n" +
-                "            CASE WHEN user2=(SELECT id FROM req_user)\n" +
-                "            THEN c.last_chat_idx+1\n" +
-                "            ELSE user2_read END\n" +
-                "    WHERE\n" +
-                "        (c.user1=(SELECT id FROM req_user) AND c.user2=(SELECT owner_id FROM req_product)) OR\n" +
-                "        (c.user2=(SELECT id FROM req_user) AND c.user1=(SELECT owner_id FROM req_product))\n" +
-                "    RETURNING *\n" +
-                ")\n" +
-                "INSERT INTO chat(id, idx, message, sender, system)\n" +
-                "VALUES (\n" +
-                "    (SELECT id FROM l_chat),\n" +
-                "    (SELECT last_chat_idx FROM l_chat),\n" +
-                "    (SELECT last_chat FROM l_chat),\n" +
-                "    (SELECT id FROM req_user),\n" +
-                "    true\n" +
+        String sql = "WITH req_user AS ( " +
+                "    SELECT u.* FROM akouser u WHERE u.id=? " +
+                "), " +
+                "req_product AS ( " +
+                "    SELECT p.* FROM product p WHERE p.id=? " +
+                "), " +
+                "prog AS ( " +
+                "    UPDATE list_trade AS p SET progress='inprogress' " +
+                "    WHERE  " +
+                "        p.owner_id=(SELECT owner_id FROM req_product) AND " +
+                "        p.buyer_id=(SELECT id FROM req_user) AND " +
+                "        p.product_id=(SELECT id FROM req_product) " +
+                "), " +
+                "u_product AS ( " +
+                "    UPDATE product AS p SET product='inprogress' " +
+                "    WHERE p.id=(SELECT id FROM req_product) " +
+                "), " +
+                "l_chat AS ( " +
+                "    UPDATE list_chat AS c " +
+                "    SET  " +
+                "        last_chat_idx=c.last_chat_idx+1, " +
+                "        last_chat=?, " +
+                "        user1_read= " +
+                "            CASE WHEN user1=(SELECT id FROM req_user) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user1_read END, " +
+                "        user2_read= " +
+                "            CASE WHEN user2=(SELECT id FROM req_user) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user2_read END " +
+                "    WHERE " +
+                "        (c.user1=(SELECT id FROM req_user) AND c.user2=(SELECT owner_id FROM req_product)) OR " +
+                "        (c.user2=(SELECT id FROM req_user) AND c.user1=(SELECT owner_id FROM req_product)) " +
+                "    RETURNING * " +
+                ") " +
+                "INSERT INTO chat(id, idx, message, sender, system) " +
+                "VALUES ( " +
+                "    (SELECT id FROM l_chat), " +
+                "    (SELECT last_chat_idx FROM l_chat), " +
+                "    (SELECT last_chat FROM l_chat), " +
+                "    (SELECT id FROM req_user), " +
+                "    true " +
                 ");";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
@@ -883,53 +885,53 @@ public class PostgreInterface {
     }
 
     public static boolean cancelBuyRequest(int userId, int productId, String message) {
-        String sql = "WITH req AS (\n" +
-                "    SELECT u.id, p.id AS product_id \n" +
-                "    FROM akouser u, product p\n" +
-                "    WHERE u.id=? AND p.id=?\n" +
-                "),\n" +
-                "prog AS (\n" +
-                "    DELETE FROM list_trade p\n" +
-                "    WHERE (\n" +
-                "        p.owner_id=(SELECT id FROM req) OR \n" +
-                "        p.buyer_id=(SELECT id FROM req)\n" +
-                "        ) AND p.product_id=(SELECT product_id FROM req)\n" +
-                "    RETURNING *\n" +
-                "), \n" +
-                "can_product AS (\n" +
-                "    UPDATE product AS p SET progress='none'::progress_t\n" +
-                "    WHERE p.id=(SELECT product_id FROM prog)\n" +
-                "    RETURNING *\n" +
-                "),\n" +
-                "buyer_pay AS (\n" +
-                "    UPDATE payment SET point=payment.point+(SELECT price FROM can_product)\n" +
-                "    WHERE payment.user_id=(SELECT buyer_id FROM prog)\n" +
-                "),\n" +
-                "l_chat AS (\n" +
-                "    UPDATE list_chat AS c\n" +
-                "    SET \n" +
-                "        last_chat_idx=c.last_chat_idx+1,\n" +
-                "        last_chat=?,\n" +
-                "        user1_read=\n" +
-                "            CASE WHEN user1=(SELECT id FROM req)\n" +
-                "            THEN c.last_chat_idx+1\n" +
-                "            ELSE user1_read END,\n" +
-                "        user2_read=\n" +
-                "            CASE WHEN user2=(SELECT id FROM req)\n" +
-                "            THEN c.last_chat_idx+1\n" +
-                "            ELSE user2_read END\n" +
-                "    WHERE\n" +
-                "        (c.user1=(SELECT owner_id FROM prog) AND c.user2=(SELECT buyer_id FROM prog)) OR\n" +
-                "        (c.user2=(SELECT owner_id FROM prog) AND c.user1=(SELECT buyer_id FROM prog))\n" +
-                "    RETURNING *\n" +
-                ")\n" +
-                "INSERT INTO chat(id, idx, message, sender, system)\n" +
-                "VALUES (\n" +
-                "    (SELECT id FROM l_chat),\n" +
-                "    (SELECT last_chat_idx FROM l_chat),\n" +
-                "    (SELECT last_chat FROM l_chat),\n" +
-                "    (SELECT id FROM req),\n" +
-                "    true\n" +
+        String sql = "WITH req AS ( " +
+                "    SELECT u.id, p.id AS product_id  " +
+                "    FROM akouser u, product p " +
+                "    WHERE u.id=? AND p.id=? " +
+                "), " +
+                "prog AS ( " +
+                "    DELETE FROM list_trade p " +
+                "    WHERE ( " +
+                "        p.owner_id=(SELECT id FROM req) OR  " +
+                "        p.buyer_id=(SELECT id FROM req) " +
+                "        ) AND p.product_id=(SELECT product_id FROM req) " +
+                "    RETURNING * " +
+                "),  " +
+                "can_product AS ( " +
+                "    UPDATE product AS p SET progress='none'::progress_t " +
+                "    WHERE p.id=(SELECT product_id FROM prog) " +
+                "    RETURNING * " +
+                "), " +
+                "buyer_pay AS ( " +
+                "    UPDATE payment SET point=payment.point+(SELECT price FROM can_product) " +
+                "    WHERE payment.user_id=(SELECT buyer_id FROM prog) " +
+                "), " +
+                "l_chat AS ( " +
+                "    UPDATE list_chat AS c " +
+                "    SET  " +
+                "        last_chat_idx=c.last_chat_idx+1, " +
+                "        last_chat=?, " +
+                "        user1_read= " +
+                "            CASE WHEN user1=(SELECT id FROM req) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user1_read END, " +
+                "        user2_read= " +
+                "            CASE WHEN user2=(SELECT id FROM req) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user2_read END " +
+                "    WHERE " +
+                "        (c.user1=(SELECT owner_id FROM prog) AND c.user2=(SELECT buyer_id FROM prog)) OR " +
+                "        (c.user2=(SELECT owner_id FROM prog) AND c.user1=(SELECT buyer_id FROM prog)) " +
+                "    RETURNING * " +
+                ") " +
+                "INSERT INTO chat(id, idx, message, sender, system) " +
+                "VALUES ( " +
+                "    (SELECT id FROM l_chat), " +
+                "    (SELECT last_chat_idx FROM l_chat), " +
+                "    (SELECT last_chat FROM l_chat), " +
+                "    (SELECT id FROM req), " +
+                "    true " +
                 ");";
 
 
@@ -952,38 +954,38 @@ public class PostgreInterface {
     }
 
     public static boolean confirmGive(int productId) {
-        String sql = "WITH req AS (\n" +
-                "    UPDATE list_trade SET progress='sellergive'\n" +
-                "    WHERE progress='inprogress' AND product_id=?\n" +
-                "    RETURNING *\n" +
-                "),\n" +
-                "u_product AS (\n" +
-                "    UPDATE product AS p SET progress='sellergive'\n" +
-                "    WHERE p.id=(SELECT product_id FROM req)\n" +
-                "),\n" +
-                "l_chat AS (\n" +
-                "    UPDATE list_chat AS c\n" +
-                "    SET\n" +
-                "        last_chat_idx=c.last_chat_idx+1,\n" +
-                "        last_chat='Seller have confirmed that he(she) has given you the product',\n" +
-                "        user1_read=\n" +
-                "            CASE WHEN user1=(SELECT owner_id FROM req)\n" +
-                "            THEN c.last_chat_idx+1\n" +
-                "            ELSE user1_read END,\n" +
-                "        user2_read=\n" +
-                "            CASE WHEN user2=(SELECT owner_id FROM req)\n" +
-                "            THEN c.last_chat_idx+1\n" +
-                "            ELSE user2_read END\n" +
-                "    WHERE c.user1=(SELECT owner_id FROM req) OR c.user2=(SELECT owner_id FROM req)\n" +
-                "    RETURNING *\n" +
-                ")\n" +
-                "INSERT INTO chat(id, idx, message, sender, system)\n" +
-                "VALUES (\n" +
-                "    (SELECT id FROM l_chat),\n" +
-                "    (SELECT last_chat_idx FROM l_chat),\n" +
-                "    (SELECT last_chat FROM l_chat),\n" +
-                "    (SELECT owner_id FROM req),\n" +
-                "    true\n" +
+        String sql = "WITH req AS ( " +
+                "    UPDATE list_trade SET progress='sellergive' " +
+                "    WHERE progress='inprogress' AND product_id=? " +
+                "    RETURNING * " +
+                "), " +
+                "u_product AS ( " +
+                "    UPDATE product AS p SET progress='sellergive' " +
+                "    WHERE p.id=(SELECT product_id FROM req) " +
+                "), " +
+                "l_chat AS ( " +
+                "    UPDATE list_chat AS c " +
+                "    SET " +
+                "        last_chat_idx=c.last_chat_idx+1, " +
+                "        last_chat='Seller have confirmed that he(she) has given you the product', " +
+                "        user1_read= " +
+                "            CASE WHEN user1=(SELECT owner_id FROM req) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user1_read END, " +
+                "        user2_read= " +
+                "            CASE WHEN user2=(SELECT owner_id FROM req) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user2_read END " +
+                "    WHERE c.user1=(SELECT owner_id FROM req) OR c.user2=(SELECT owner_id FROM req) " +
+                "    RETURNING * " +
+                ") " +
+                "INSERT INTO chat(id, idx, message, sender, system) " +
+                "VALUES ( " +
+                "    (SELECT id FROM l_chat), " +
+                "    (SELECT last_chat_idx FROM l_chat), " +
+                "    (SELECT last_chat FROM l_chat), " +
+                "    (SELECT owner_id FROM req), " +
+                "    true " +
                 ");";
         
         try (Connection conn = PostgreConnect.getStmt().getConnection();
@@ -1137,81 +1139,74 @@ public class PostgreInterface {
         return null;
     }
 
-    public static ProductData[] search(double hWeight, double tWeight, double dWeight, String[] keywords, String pattern) {
-        String sql = "WITH search_result AS (\n" +
-                "    WITH h_score AS (\n" +
-                "        SELECT s.id, COUNT(s.id) AS score FROM (\n" +
-                "            SELECT h.product_id AS id FROM hashtag h\n" +
-                "            WHERE h.tag LIKE ANY(string_to_array(?, ','))\n" +
-                "        ) s\n" +
-                "        GROUP BY s.id\n" +
-                "    ),\n" +
-                "    t_score AS (\n" +
-                "        SELECT id, 1 AS score FROM (\n" +
-                "            SELECT p.id AS id FROM product p\n" +
-                "            WHERE p.title ~ ANY(string_to_array(?, ','))\n" +
-                "        ) t\n" +
-                "    ),\n" +
-                "    d_score AS (\n" +
-                "        SELECT id, score FROM (\n" +
-                "            SELECT ts_rank_cd(\n" +
-                "                to_tsvector(p.description), \n" +
-                "                to_tsquery(?)\n" +
-                "            ) AS score, p.id \n" +
-                "            FROM product p\n" +
-                "        ) d\n" +
-                "    ),\n" +
-                "    product_ids AS (\n" +
-                "        SELECT id FROM h_score UNION \n" +
-                "        SELECT id FROM t_score UNION \n" +
-                "        SELECT id FROM d_score\n" +
-                "    )\n" +
-                "    SELECT p.id, (\n" +
-                "        (COALESCE((SELECT score FROM h_score WHERE h_score.id=p.id), 0) * ?) +\n" +
-                "        (COALESCE((SELECT score FROM t_score WHERE t_score.id=p.id), 0) * ?) +\n" +
-                "        (COALESCE((SELECT score FROM d_score WHERE d_score.id=p.id), 0) * ?)\n" +
-                "    ) AS score FROM product_ids p\n" +
-                "),\n" +
-                "products AS (\n" +
-                "    SELECT p.*, r.score FROM product p, search_result r\n" +
-                "    WHERE p.id=ANY(SELECT id FROM search_result) AND p.id=r.id AND score > 0\n" +
-                "    ORDER BY score DESC\n" +
-                ")\n" +
-                "SELECT array_to_json(array(\n" +
-                "    SELECT json_build_object(\n" +
-                "        'id', p.id,\n" +
-                "        'title', p.title,\n" +
-                "        'price', p.price,\n" +
-                "        'image', p.image,\n" +
-                "        'description', p.description,\n" +
-                "        'views', p.views,\n" +
-                "        'progress', p.progress,\n" +
-                "        'user_info', (\n" +
-                "            SELECT row_to_json(user_info) \n" +
-                "            FROM (\n" +
-                "                SELECT u.id, u.nickname \n" +
-                "                FROM akouser u WHERE u.id=p.owner_id\n" +
-                "            ) AS user_info),\n" +
-                "        'hashtags', (\n" +
-                "            SELECT array_to_json(array(\n" +
-                "                SELECT h.tag\n" +
-                "                FROM hashtag h WHERE h.product_id=p.id\n" +
-                "            ))) \n" +
-                "    ) FROM products p\n" +
+    public static ProductData[] search(double hWeight, double tWeight, double dWeight, String pattern) {
+        String sql = "WITH search_result AS ( " +
+                "    WITH h_score AS ( " +
+                "        SELECT s.id, COUNT(s.id) AS score FROM ( " +
+                "            SELECT h.product_id AS id FROM hashtag h " +
+                "            WHERE h.tag LIKE ANY(string_to_array(?, ',')) " +
+                "        ) s " +
+                "        GROUP BY s.id " +
+                "    ), " +
+                "    t_score AS ( " +
+                "        SELECT id, 1 AS score FROM ( " +
+                "            SELECT p.id AS id FROM product p " +
+                "            WHERE p.title ~ ANY(string_to_array(?, ',')) " +
+                "        ) t " +
+                "    ), " +
+                "    d_score AS ( " +
+                "        SELECT id, score FROM ( " +
+                "            SELECT ts_rank_cd( " +
+                "                to_tsvector(p.description),  " +
+                "                to_tsquery(?) " +
+                "            ) AS score, p.id  " +
+                "            FROM product p " +
+                "        ) d " +
+                "    ), " +
+                "    product_ids AS ( " +
+                "        SELECT id FROM h_score UNION  " +
+                "        SELECT id FROM t_score UNION  " +
+                "        SELECT id FROM d_score " +
+                "    ) " +
+                "    SELECT p.id, ( " +
+                "        (COALESCE((SELECT score FROM h_score WHERE h_score.id=p.id), 0) * ?) + " +
+                "        (COALESCE((SELECT score FROM t_score WHERE t_score.id=p.id), 0) * ?) + " +
+                "        (COALESCE((SELECT score FROM d_score WHERE d_score.id=p.id), 0) * ?) " +
+                "    ) AS score FROM product_ids p " +
+                "), " +
+                "products AS ( " +
+                "    SELECT p.*, r.score FROM product p, search_result r " +
+                "    WHERE p.id=ANY(SELECT id FROM search_result) AND p.id=r.id AND score > 0 " +
+                "    ORDER BY score DESC " +
+                ") " +
+                "SELECT array_to_json(array( " +
+                "    SELECT json_build_object( " +
+                "        'id', p.id, " +
+                "        'title', p.title, " +
+                "        'price', p.price, " +
+                "        'image', p.image, " +
+                "        'description', p.description, " +
+                "        'views', p.views, " +
+                "        'progress', p.progress, " +
+                "        'user_info', ( " +
+                "            SELECT row_to_json(user_info)  " +
+                "            FROM ( " +
+                "                SELECT u.id, u.nickname  " +
+                "                FROM akouser u WHERE u.id=p.owner_id " +
+                "            ) AS user_info), " +
+                "        'hashtags', ( " +
+                "            SELECT array_to_json(array( " +
+                "                SELECT h.tag " +
+                "                FROM hashtag h WHERE h.product_id=p.id " +
+                "            )))  " +
+                "    ) FROM products p " +
                 "));";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            StringBuilder keywordStr = new StringBuilder();
-            for (int i = 0; i < keywords.length; ++i) {
-                keywordStr.append(keywords[i]).append(',');
-            }
-
-            pattern = pattern.replace(' ', '|');
-
-            pstmt.setString(1, keywordStr.toString());
-            pstmt.setString(2, pattern);
+            pstmt.setString(1, pattern.replaceAll("\\s+", ","));
+            pstmt.setString(2, pattern.replaceAll("\\s+", "|"));
             pstmt.setDouble(3, hWeight);
             pstmt.setDouble(4, tWeight);
             pstmt.setDouble(5, dWeight);
@@ -1271,6 +1266,99 @@ public class PostgreInterface {
             e.printStackTrace();
         }
 
+        return null;
+    }
+
+    public static ProductData[] getPopularProducts() {
+        String sql = "WITH products AS ( " +
+                "    SELECT * FROM product " +
+                "    ORDER BY views DESC " +
+                "    LIMIT 3 " +
+                ") " +
+                "SELECT array_to_json(array( " +
+                "    SELECT json_build_object( " +
+                "        'id', p.id, " +
+                "        'title', p.title, " +
+                "        'price', p.price, " +
+                "        'image', p.image, " +
+                "        'description', p.description, " +
+                "        'views', p.views, " +
+                "        'progress', p.progress, " +
+                "        'user_info', ( " +
+                "            SELECT row_to_json(user_info)  " +
+                "            FROM ( " +
+                "                SELECT u.id, u.nickname  " +
+                "                FROM akouser u WHERE u.id=p.owner_id " +
+                "            ) AS user_info), " +
+                "        'hashtags', ( " +
+                "            SELECT array_to_json(array( " +
+                "                SELECT h.tag " +
+                "                FROM hashtag h WHERE h.product_id=p.id " +
+                "            )))  " +
+                "    ) FROM products p " +
+                "));";
+
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                JSONArray jsonArray = new JSONArray(rs.getString(1));
+                ProductData[] result = new ProductData[jsonArray.length()];
+                for (int i = 0; i < jsonArray.length(); ++i) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
+                    String[] hashtags = null;
+
+                    if (hashtagJson != null) {
+                        hashtags = new String[hashtagJson.length()];
+                        for (int j = 0; j < hashtags.length; j++) {
+                            JSONObject hashtagObj = hashtagJson.getJSONObject(j);
+                            hashtags[j] = hashtagObj.toString();
+                        }
+                    }
+
+
+                    Product product = new Product(
+                            jsonObject.getInt("id"),
+                            jsonObject.getString("title"),
+                            jsonObject.getInt("price"),
+                            jsonObject.getString("image"),
+                            jsonObject.getString("description"),
+                            jsonObject.getLong("views"),
+                            -1,
+                            hashtags,
+                            Progress.valueOf(jsonObject.getString("progress"))
+                    );
+
+                    JSONObject userJson = new JSONObject(jsonObject.getString("user_info"));
+                    User user = new User(
+                            userJson.getInt("id"),
+                            null,
+                            null,
+                            userJson.getString("nickname"),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false
+                    );
+
+                    result[i] = new ProductData(
+                            product,
+                            user
+                    );
+                }
+
+                return result;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return null;
     }
 }

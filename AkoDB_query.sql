@@ -696,3 +696,36 @@ VALUES (
     (SELECT msg FROM req),
     (SELECT id FROM req)
 );
+
+
+
+-- get popular items
+
+-- getPopularItems()
+WITH products AS (
+    SELECT * FROM product
+    ORDER BY views DESC
+    LIMIT 3
+)
+SELECT array_to_json(array(
+    SELECT json_build_object(
+        'id', p.id,
+        'title', p.title,
+        'price', p.price,
+        'image', p.image,
+        'description', p.description,
+        'views', p.views,
+        'progress', p.progress,
+        'user_info', (
+            SELECT row_to_json(user_info) 
+            FROM (
+                SELECT u.id, u.nickname 
+                FROM akouser u WHERE u.id=p.owner_id
+            ) AS user_info),
+        'hashtags', (
+            SELECT array_to_json(array(
+                SELECT h.tag
+                FROM hashtag h WHERE h.product_id=p.id
+            ))) 
+    ) FROM products p
+));
