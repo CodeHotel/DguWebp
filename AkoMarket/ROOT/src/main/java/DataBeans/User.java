@@ -22,11 +22,11 @@ public class User {
     private String department;
     private Degree degree;
     private char[] studentId = new char[10];
-    private double[] rating;
+    private Rating[] rating;
     private boolean isAdmin;
 
     // Full parameter constructor (except uid)
-    public User(int id, String loginId, String pwHash, String nickName, String image, Campus campus, String department, Degree degree, char[] studentId, double[] rating, boolean isAdmin) {
+    public User(int id, String loginId, String pwHash, String nickName, String image, Campus campus, String department, Degree degree, char[] studentId, Rating[] rating, boolean isAdmin) {
         this.id = id;
         this.loginId = loginId;
         this.pwHash = pwHash;
@@ -65,8 +65,8 @@ public class User {
     public char[] getStudentId() { return studentId; }
     public void setStudentId(char[] studentId) { this.studentId = studentId; }
 
-    public double[] getRating() { return rating; }
-    public void setRating(double[] rating) { this.rating = rating; }
+    public Rating[] getRating() { return rating; }
+    public void setRating(Rating[] rating) { this.rating = rating; }
 
     public boolean isAdmin() { return isAdmin; }
     public void setAdmin(boolean isAdmin) { this.isAdmin = isAdmin; }
