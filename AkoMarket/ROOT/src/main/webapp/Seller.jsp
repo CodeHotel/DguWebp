@@ -1,4 +1,7 @@
-<%--
+<%@ page import="DataBeans.User" %>
+<%@ page import="DataBeans.PostgreInterface" %>
+<%@ page import="DataBeans.Rating" %>
+<%@ page import="DataBeans.ImageDB" %><%--
   Created by IntelliJ IDEA.
   User: mh7cp
   Date: 2023-12-18
@@ -26,7 +29,7 @@
         url: "/login",
         data: {
           loginId: $("#loginId").val(),
-          loginPw: $("#loginPw").val()
+          loginPw: hashedPassword
         },
         success: function(response) {
           if (response=="success") {
@@ -68,7 +71,10 @@
           <center style="width:100%; font-size:0.8em;font-family:'BaeMinHanna', system-ui ;color:white">
             <table>
               <tr style="width:90%">
-                <%=userId%>님 환영합니다
+                <%
+                  User t = PostgreInterface.getBriefUserData(userId);
+                %>
+                <%=t.getNickName()%>님 환영합니다
 
               </tr><br>
               <tr style="width:90%">
@@ -125,16 +131,27 @@
   </div>
 </div>
 <center>
+  <%
+    User seller = PostgreInterface.getBriefUserData(Integer.parseInt(request.getParameter("user")));
+  %>
   <h2 style = "font-family: BaeMinHanna, system-ui;">판매자 정보</h2><br>
   <table style = "width: 70%;">
     <tr style = "text-align: center; height: 200px; border: 1px solid #ddd;">
-      <td style = "border: 1px solid #ddd; width: 30%"><img style ="margin-top: 30px; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" src="resources/images/AkoFace.png" alt="Profile Picture">
-        <h2 style = "font-family: BaeMinHanna, system-ui; font-size: 20px;">판매자</h2>
-        <p style="font-family: BaeMinJua, system-ui;">별점: ☆☆☆☆☆</p>
+      <td style = "border: 1px solid #ddd; width: 30%"><img style ="margin-top: 30px; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" src="<%=ImageDB.getImageUrl(seller.getImage())%>" alt="resource/images/AkoFace.png">
+        <h2 style = "font-family: BaeMinHanna, system-ui; font-size: 20px;"><%=seller.getNickName()%></h2>
+        <%
+          Rating[] rate = seller.getRating();
+          double rating = 0;
+          for(int t = 0; t<rate.length; t++){
+            rating+=rate[t].rating;
+          }
+          if(rate.length!=0) rating/=rate.length;
+        %>
+        <p style="font-family: BaeMinJua, system-ui;">평점: <%=rating%></p>
       </td>
       <td style = "border: 1px solid #ddd;">
-        <p style="font-family: BaeMinJua, system-ui;">캠퍼스: </p>
-        <p style="font-family: BaeMinJua, system-ui;">학과: </p>
+        <p style="font-family: BaeMinJua, system-ui;">캠퍼스: <%=seller.getCampus()%></p>
+        <p style="font-family: BaeMinJua, system-ui;">학과: <%=seller.getDepartment()%></p>
         <!--정보 추가-->
       </td>
     </tr>
