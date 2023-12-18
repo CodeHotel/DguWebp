@@ -23,7 +23,7 @@ public class ImgServlet extends HttpServlet {
         if(d!=null) {
             System.out.println("Uploaded at:" + d);
             String token = ImageDB.getImageUrl(d);
-            response.sendRedirect(d);
+            response.sendRedirect(token);
         }
     }
 }
