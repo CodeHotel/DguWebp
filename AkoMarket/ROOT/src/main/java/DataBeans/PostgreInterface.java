@@ -63,7 +63,7 @@ public class PostgreInterface {
         return null;
     }
 
-    public static boolean isIdDuplicated(String id) {
+    public static boolean isIdExists(String id) {
         String sql = "SELECT u.login_id FROM akouser u WHERE u.login_id=?;";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
@@ -76,7 +76,25 @@ public class PostgreInterface {
                 return rs.getString(1) != null;
             }
         } catch (SQLException e) {
-            e.printStackTrace();;
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static boolean isNickExists(String nickname) {
+        String sql = "SELECT u.nickname FROM akouser u WHERE u.nickname=?;";
+        
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, nickname);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getString(1) != null;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return false;
     }

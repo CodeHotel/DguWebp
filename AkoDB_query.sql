@@ -29,9 +29,15 @@ SELECT row_to_json(n_user) FROM n_user;
 
 -- check if id is duplicated
 
--- isIdDuplicated(id)
+-- isIdExists(id)
 SELECT u.id FROM akouser u WHERE u.id=?;
 
+
+
+-- check if nickname is duplicated
+
+-- isNickExists(nick)
+SELECT u.nickname FROM akouser u WHERE u.nickname=?;
 
 
 -- insert admin user to akouser 
