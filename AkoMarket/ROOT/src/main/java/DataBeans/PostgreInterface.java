@@ -438,12 +438,12 @@ public class PostgreInterface {
         return false;
     }
 
-    public static User getBriefUserData(int userId) {
+    public static UserData getBriefUserData(int userId) {
         String sql = "WITH user_info AS ( " +
                 "    SELECT * FROM akouser WHERE akouser.id=? " +
                 "), " +
                 "product_list AS ( " +
-                "    SELECT p.id, p.price, p.image, p.description, p.views " +
+                "    SELECT * " +
                 "    FROM product p WHERE p.owner_id=(SELECT id FROM user_info) " +
                 ") " +
                 "SELECT json_build_object( " +
@@ -470,7 +470,7 @@ public class PostgreInterface {
             if (rs.next()) {
                 JSONObject jsonObject = new JSONObject(rs.getString(1));
 
-                return new User(
+                User user = new User(
                         jsonObject.getInt("id"),
                         jsonObject.getString("login_id"),
                         null, // Password hash is not returned in brief data
@@ -480,8 +480,31 @@ public class PostgreInterface {
                         jsonObject.getString("department"),
                         jsonObject.has("degree") ? Degree.valueOf(jsonObject.getString("degree")) : null,
                         jsonObject.getString("student_id").toCharArray(),
-                        null, // Ratings are not returned in brief data
+                        new Rating[0], // Ratings are not returned in brief data
                         false // isAdmin is not part of brief data
+                );
+
+                JSONArray productArray = jsonObject.getJSONArray("products");
+                Product[] products = new Product[productArray.length()];
+
+                for (int i = 0; i < productArray.length(); ++i) {
+                    JSONObject productJson = productArray.getJSONObject(i);
+                    products[i] = new Product(
+                            productJson.getInt("id"),
+                            productJson.getString("title"),
+                            productJson.getInt("price"),
+                            productJson.getString("image"),
+                            productJson.getString("description"),
+                            productJson.getLong("views"),
+                            productJson.getInt("owner_id"),
+                            new String[0],
+                            Progress.valueOf(productJson.getString("progress"))
+                    );
+                }
+
+                return new UserData(
+                        user,
+                        products
                 );
             }
         } catch (SQLException e) {
