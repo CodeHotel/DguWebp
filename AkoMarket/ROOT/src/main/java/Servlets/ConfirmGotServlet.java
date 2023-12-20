@@ -18,7 +18,7 @@ public class ConfirmGotServlet extends HttpServlet {
         int uid = (int)session.getAttribute("userId");
         int pid = (int)session.getAttribute("productId");
 
-        boolean result = PostgreInterface.confirmGot(pid, Integer.toString(uid));
+        boolean result = PostgreInterface.confirmGot(pid, Integer.toString(pid));
 
         if(result) {
             response.getWriter().write("success");
