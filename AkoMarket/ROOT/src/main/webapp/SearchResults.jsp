@@ -135,8 +135,8 @@
     ArrayList<ProductData> searchResults = PostgreInterface.search(1.0, 0.5, 1.0,
             PostgreInterface.parseHashtag(request.getParameter("searchKeyWord")), request.getParameter("searchKeyWord"));
 %>
-<form method="post" action="SearchResults.jsp" style="width: 100%; text-align: center;font-family: BaeMinHanna,system-ui">
-    <input type="text" name="searchKeyWord" style="width: 55%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746" placeholder="#교과서 #공대 #겨울옷">
+<form id="searchForm" method="post" action="SearchResults.jsp?page=1" style="width: 100%; text-align: center;font-family: BaeMinHanna,system-ui">
+    <input type="text" name="searchKeyWord" style="width: 55%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746" placeholder="#교과서 #공대 #겨울옷" value="<%=request.getParameter("searchKeyWord")%>">
     <input type="submit" value="G O !" style="width: 8%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; font-family: BaeMinJua, system-ui; font-size: 1.1em; color: white; background-color: #D35400">
     <div style="width:100%">
         <br>
@@ -151,11 +151,15 @@
 <br><br><br>
 <center>
     <%
+        int pageLimit = 12;
+        int pg = Integer.parseInt(request.getParameter("page"))-1;
+        int from = pg*pageLimit/3;
+        int to = from+pageLimit/3;
         if(searchResults.size()!=0){
     %>
     <table style="width: 80%; text-align: center;">
         <%
-            for(int f = 0; f<(searchResults.size()%3!=0?1:0) + searchResults.size()/3; f++){
+            for(int f = pg*pageLimit/3; (f<(searchResults.size()%3!=0?1:0) + searchResults.size()/3)&&f<to; f++){
         %>
         <tr style="height:auto;">
             <%
@@ -198,14 +202,34 @@
         }
     %>
 </center>
+<script>
+    function gotoPage() {
+        var form = document.getElementById('myForm');
+        form.action = 'search.jsp?page=2';
+        form.submit();
+    }
+</script>
+<%
+    if(searchResults.size()!=0){
+%>
 <center>
     <br><br>
     <div style="margin: 20px; text-align: center; background-color: transparent; border: none; font-family: BaeMinJua, system-ui;">
-        <a href="#" style = "color: black; float: center; padding: 8px 16px; text-decoration: none; transition: color .3s; margin: 0 4px;">&lt&lt</a>
-        <a href="#" style = "color: #D35400; float: center; padding: 8px 16px; text-decoration: none; transition: color .3s; margin: 0 4px;">1</a>
-        <a href="#" style = "color: black; float: center; padding: 8px 16px; text-decoration: none; transition: color .3s; margin: 0 4px;">2</a>
-        <a href="#" style = "color: black; float: center; padding: 8px 16px; text-decoration: none; transition: color .3s; margin: 0 4px;">3</a>
-        <a href="#" style = "color: black; float: center; padding: 8px 16px; text-decoration: none; transition: color .3s; margin: 0 4px;">>></a>
+        <a href="#" style = "color: black; padding: 8px 16px; text-decoration: none; transition: color .3s; margin: 0 4px;">&lt&lt</a>
+        <%
+            for(int pgi = 0; pgi<(searchResults.size()-1)/12 + 1; pgi++){
+                if(pgi==pg){
+        %>
+        <a href="#" onclick="var form=document.getElementById('searchForm'); form.action='SearchResults.jsp?page=<%=pgi+1%>'; form.submit();" style = "color: #D35400; padding: 8px 16px; text-decoration: none; transition: color .3s; margin: 0 4px;"><%=pgi+1%></a>
+        <%
+                }else{
+        %>
+        <a href="#" onclick="var form=document.getElementById('searchForm'); form.action='SearchResults.jsp?page=<%=pgi+1%>'; form.submit();" style = "color: black; padding: 8px 16px; text-decoration: none; transition: color .3s; margin: 0 4px;"><%=pgi+1%></a>
+        <%
+                }
+            }
+        %>
+        <a href="#" style = "color: black; padding: 8px 16px; text-decoration: none; transition: color .3s; margin: 0 4px;">>></a>
     </div>
     <br><br>
     <center>
@@ -214,5 +238,8 @@
         Copyright © 2023 · All Rights Reserved
     </center>
 </center>
+<%
+    }
+%>
 </body>
 </html>
