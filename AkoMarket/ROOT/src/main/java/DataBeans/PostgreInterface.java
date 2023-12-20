@@ -1291,7 +1291,7 @@ public class PostgreInterface {
                 "            CASE WHEN user2=? " +
                 "            THEN c.last_chat_idx " +
                 "            ELSE user2_read END " +
-                "    WHERE c.id=(SELECT id FROm l_chat) " +
+                "    WHERE c.id=? " +
                 ") " +
                 "SELECT array_to_json(array( " +
                 "    SELECT json_build_object( " +
@@ -1310,6 +1310,7 @@ public class PostgreInterface {
             pstmt.setInt(1, chatId);
             pstmt.setInt(2, userId);
             pstmt.setInt(3, userId);
+            pstmt.setInt(4, chatId);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
