@@ -1,5 +1,7 @@
 package DataBeans;
 
+import sun.plugin2.message.Message;
+
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -11,12 +13,12 @@ public class ChatXml {
     @XmlElement private String message;
     @XmlElement private boolean iSent;
     @XmlElement private String time;
-    @XmlElement private boolean system;
+    @XmlElement private MessageType system;
     @XmlElement private int id;
     @XmlElement private int idx;
 
     public ChatXml(){}
-    public ChatXml(String message, boolean iSent, String time, boolean system, int id, int idx){
+    public ChatXml(String message, boolean iSent, String time, MessageType system, int id, int idx){
         this.message = message;
         this.iSent = iSent;
         this.time = time.split("T")[1].substring(0, 5);

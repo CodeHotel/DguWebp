@@ -12,10 +12,15 @@ public class ChatsXml {
     private ChatXml[] chats;
     public ChatsXml() {}
 
-    public ChatsXml(ChatListXml[] chatList) {
+    public ChatsXml(ChatXml[] chatList) {
         this.chats = chats;
     }
-
+    public ChatsXml(Chat[] chatList, int uid) {
+        chats = new ChatXml[chatList.length];
+        for(int i=0; i<chatList.length; i++){
+            chats[i] = new ChatXml(chatList[i], uid);
+        }
+    }
     // No need to annotate getters and setters
     public ChatXml[] getChatList() {
         return chats;
