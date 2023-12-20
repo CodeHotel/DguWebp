@@ -16,7 +16,7 @@ public class ConfirmGotServlet extends HttpServlet {
         HttpSession session = request.getSession(true);
         int uid = (int) session.getAttribute("userId");
         int pid = Integer.parseInt(request.getParameter("productId"));
-
+        if(PostgreInterface.getProductData(pid).prodcut.getOwnerId()==uid) throw new RuntimeException("사기는 안돼요!");
         boolean result = PostgreInterface.confirmGot(pid, Integer.toString(pid));
 
         if (result) {
