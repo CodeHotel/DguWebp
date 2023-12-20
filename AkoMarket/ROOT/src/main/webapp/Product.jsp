@@ -160,9 +160,6 @@
 
         </tr>
     </table>
-    <%
-
-    %>
     <h2 style = "font-family: BaeMinHanna, system-ui;">판매자 정보</h2><br>
     <%
         Rating[] rate = product.user.getRating();

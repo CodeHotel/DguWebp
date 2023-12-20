@@ -150,6 +150,9 @@
 </form>
 <br><br><br>
 <center>
+    <%
+        if(searchResults.size()!=0){
+    %>
     <table style="width: 80%; text-align: center;">
         <%
             for(int f = 0; f<(searchResults.size()%3!=0?1:0) + searchResults.size()/3; f++){
@@ -177,12 +180,23 @@
                 <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
                 <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
             </td>
-        </tr>
         <%
                 }
+        %>
+        </tr>
+        <%
             }
         %>
     </table>
+    <%
+        }
+        else{
+    %>
+    <br><br><br><br>
+    <h1 style="width: 100%; text-align:center;"> 검색 결과가 없습니다. </h1>
+    <%
+        }
+    %>
 </center>
 <center>
     <br><br>
