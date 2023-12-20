@@ -192,22 +192,30 @@
     return chats;
   }
 
-  function displayMessage(message, sender, time, system) {
-    if(system=='none') {
-      const messageDiv = document.createElement('div');
-      messageDiv.classList.add('message', sender);
+  function displayMessage(message, sender, time, system, opponentId) {
+    const messageDiv = document.createElement('div');
+    messageDiv.classList.add('message', sender);
 
-      const messageText = document.createElement('p');
-      messageText.classList.add('message-text');
-
-      // Concatenate message and time with HTML styling
+    const messageText = document.createElement('p');
+    messageText.classList.add('message-text');
+//create type sys_msg_t as enum ('none', 'request', 'accept', 'give', 'got', 'cancel');
+    if (system == 'none') {
       messageText.innerHTML = message + ' <span class="message-time" style="color: gray;">(<small>' + time + '</small>)</span>';
-
-      messageDiv.appendChild(messageText);
-      chatMessages.appendChild(messageDiv);
+    } else if (system == 'request') {
+      messageText.innerHTML = '<button onclick="fetch(\'/acceptbuyrequest?productId=' + message + '&userId='+opponentId+'\').then(response => console.log(response)).catch(error => console.error(error))">수락하기</button>';
+    } else if (system == 'accept') {
+      messageText.innerHTML = '<button onclick="fetch(\'/cancelbuyrequest?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">취소하기</button><br><button onclick="fetch(\'/confirmgive?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">인계확인</button>';
+    } else if (system == 'cancel') {
+      messageText.innerHTML = 'System:상품거래가 취소되었습니다.';
+    } else if (system == 'give') {
+      messageText.innerHTML = '<button onclick="fetch(\'/confirmgot?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">인수확인</button>';
+    } else if (system == 'got') {
+      messageText.innerHTML = 'System:상품 거래가 종료되었습니다.';
     }
-  }
 
+    messageDiv.appendChild(messageText);
+    chatMessages.appendChild(messageDiv);
+  }
 
   function fetchAndDisplayMessages(roomId) {
     chatMessages.innerHTML = '';
