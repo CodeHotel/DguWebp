@@ -1072,7 +1072,9 @@ public class PostgreInterface {
                 "            CASE WHEN user2=(SELECT owner_id FROM req) " +
                 "            THEN c.last_chat_idx+1 " +
                 "            ELSE user2_read END " +
-                "    WHERE c.user1=(SELECT owner_id FROM req) OR c.user2=(SELECT owner_id FROM req) " +
+                "    WHERE " +
+                "       (c.user1=(SELECT owner_id FROM req) AND c.user2=(SELECT buyer_id FROM req)) OR" +
+                "       (c.user2=(SELECT owner_id FROM req) AND c.user1=(SELECT buyer_id FROM req)) " +
                 "    RETURNING * " +
                 ") " +
                 "INSERT INTO chat(id, idx, message, sender, system) " +
@@ -1232,6 +1234,50 @@ public class PostgreInterface {
         }
 
         return null;
+    }
+
+    public static boolean sendChat(int userId, int chatId, String message) {
+        String sql = "WITH req AS ( " +
+                "    SELECT u.id, c.id AS chat_id, ? AS msg " +
+                "    FROM akouser u, list_chat c " +
+                "    WHERE u.id=? AND c.id=? " +
+                "), " +
+                "l_chat AS ( " +
+                "    UPDATE list_chat AS c " +
+                "    SET " +
+                "        last_chat_idx=c.last_chat_idx+1, " +
+                "        last_chat=(SELECT msg FROM req), " +
+                "        user1_read= " +
+                "            CASE WHEN user1=(SELECT id FROM req) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user1_read END, " +
+                "        user2_read= " +
+                "            CASE WHEN user2=(SELECT id FROM req) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user2_read END " +
+                "    WHERE c.id=(SELECT chat_id FROM req) " +
+                "    RETURNING * " +
+                ") " +
+                "INSERT INTO chat(id, idx, message, sender) " +
+                "VALUES ( " +
+                "    (SELECT chat_id FROM req), " +
+                "    (SELECT last_chat_idx FROM l_chat), " +
+                "    (SELECT msg FROM req), " +
+                "    (SELECT id FROM req) " +
+                ");";
+
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, message);
+            pstmt.setInt(2, userId);
+            pstmt.setInt(3, chatId);
+            return pstmt.executeUpdate() == 1;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     public static boolean addRating(int sellerId, int buyerId, double rating) {
