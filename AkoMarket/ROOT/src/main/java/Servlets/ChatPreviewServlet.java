@@ -39,7 +39,12 @@ public class ChatPreviewServlet extends HttpServlet {
         HttpSession session = request.getSession(true);
         int uid = (int)session.getAttribute("userId");
 
-        String xaml = chatsToXML(ChatListXml.ChatListConvert(PostgreInterface.getChatPreview(uid)));
+        ChatListXml[] t = ChatListXml.ChatListConvert(PostgreInterface.getChatPreview(uid));
+        for(ChatListXml e : t){
+
+            e.userNickname = PostgreInterface.getBriefUserData(uid==e.user1?e.user2: e.user1).user.getNickName();
+        }
+        String xaml = chatsToXML(t);
 
         response.setContentType("application/xml");
         response.getWriter().write(xaml);
@@ -48,7 +53,12 @@ public class ChatPreviewServlet extends HttpServlet {
         HttpSession session = request.getSession(true);
         int uid = (int)session.getAttribute("userId");
 
-        String xaml = chatsToXML(ChatListXml.ChatListConvert(PostgreInterface.getChatPreview(uid)));
+        ChatListXml[] t = ChatListXml.ChatListConvert(PostgreInterface.getChatPreview(uid));
+        for(ChatListXml e : t){
+
+            e.userNickname = PostgreInterface.getBriefUserData(uid==e.user1?e.user2: e.user1).user.getNickName();
+        }
+        String xaml = chatsToXML(t);
 
         response.setContentType("application/xml");
         response.getWriter().write(xaml);
