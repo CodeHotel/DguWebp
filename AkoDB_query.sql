@@ -451,22 +451,14 @@ l_chat AS (
         (user1=(SELECT owner_id FROM INFO) AND user2=(SELECT buyer_id FROM INFO)) OR
         (user2=(SELECT owner_id FROM INFO) AND user1=(SELECT buyer_id FROM INFO))
     RETURNING *
-),
-n_chat AS (
-    INSERT INTO chat(id, idx, message, sender, system)
-    VALUES (
-        (SELECT id FROM l_chat),
-        (SELECT last_chat_idx FROM l_chat),
-        (SELECT last_chat FROM l_chat),
-        (SELECT buyer_id FROM info),
-        'request'::sys_msg_t
-    )
 )
-SELECT json_build_object(
-    'id', (SELECT id FROM l_chat),
-    'user1', (SELECT user1 FROM l_chat),
-    'user2', (SELECT user2 FROM l_chat),
-    'last_time', (SELECT last_time FROM l_chat)
+INSERT INTO chat(id, idx, message, sender, system)
+VALUES (
+    (SELECT id FROM l_chat),
+    (SELECT last_chat_idx FROM l_chat),
+    (SELECT last_chat FROM l_chat),
+    (SELECT buyer_id FROM info),
+    'request'::sys_msg_t
 );
 
 
@@ -577,7 +569,7 @@ l_chat AS (
     UPDATE list_chat AS c
     SET 
         last_chat_idx=c.last_chat_idx+1,
-        last_chat='User canceled your request',
+        last_chat=?,
         user1_read=
             CASE WHEN user1=(SELECT id FROM req)
             THEN c.last_chat_idx+1
@@ -684,20 +676,19 @@ VALUES (
 WITH l_chat AS (
     SELECT c.* FROM list_chat c
     WHERE c.user1=? OR c.user2=?
-),
-user1_info AS (
-    SELECT u.id, u.nickname FROM akouser u
-    WHERE u.id=(SELECT user1 FROM l_chat)
-),
-user2_info AS (
-    SELECT u.id, u.nickname FROM akouser u
-    WHERE u.id=(SELECT user2 FROM l_chat)
+    ORDER BY c.last_time DESC
 )
 SELECT array_to_json(array(
     SELECT json_build_object(
         'id', c.id,
-        'user1', (SELECT row_to_json(u) FROM user1_info u),
-        'user2', (SELECT row_to_json(u) FROM user2_info u),
+        'user1', (
+            SELECT row_to_json(u) FROM akouser u
+            WHERE u.id=c.user1
+        ),
+        'user2', (
+            SELECT row_to_json(u) FROM akouser u
+            WHERE u.id=c.user2
+        ),
         'user1_read', c.user1_read,
         'user2_read', c.user2_read,
         'last_chat', c.last_chat,
@@ -712,7 +703,8 @@ SELECT array_to_json(array(
 
 -- getChat(chat_id)
 WITH l_chat AS (
-    SELECT * FROM chat WHERE id=?
+    SELECT * FROM chat c WHERE id=?
+    ORDER BY c.time 
 )
 SELECT array_to_json(array(
     SELECT json_build_object(
@@ -791,3 +783,13 @@ SELECT array_to_json(array(
             ))) 
     ) FROM products p
 ));
+
+
+
+-- add rating
+
+-- addRating(rating, buyerId, sellerId)
+UPDATE akouser SET rating = array_append(
+    rating, ROW(?, ?)::rating_t
+)
+WHERE akouser.id=?;

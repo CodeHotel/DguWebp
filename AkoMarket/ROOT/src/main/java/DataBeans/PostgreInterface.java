@@ -1137,31 +1137,30 @@ public class PostgreInterface {
     }
 
     public static Chatlist[] getChatPreview(int userId) {
-        String sql = "WITH l_chat AS (  " +
-                "    SELECT c.* FROM list_chat c  " +
-                "    WHERE c.user1=? OR c.user2=?  " +
-                "),  " +
-                "user1_info AS (  " +
-                "    SELECT u.id, u.nickname FROM akouser u  " +
-                "    WHERE u.id=(SELECT user1 FROM l_chat)  " +
-                "),  " +
-                "user2_info AS (  " +
-                "    SELECT u.id, u.nickname FROM akouser u  " +
-                "    WHERE u.id=(SELECT user2 FROM l_chat)  " +
-                ")  " +
-                "SELECT array_to_json(array(  " +
-                "    SELECT json_build_object(  " +
-                "        'id', c.id,  " +
-                "        'user1', (SELECT row_to_json(u) FROM user1_info u),  " +
-                "        'user2', (SELECT row_to_json(u) FROM user2_info u),  " +
-                "        'user1_read', c.user1_read,  " +
-                "        'user2_read', c.user2_read,  " +
-                "        'last_chat', c.last_chat,  " +
-                "        'last_chat_idx', c.last_chat_idx,  " +
-                "        'last_time', c.last_time  " +
-                "    ) FROM l_chat c  " +
-                "));";
-
+        String sql = "WITH l_chat AS ( " +
+                "    SELECT c.* FROM list_chat c " +
+                "    WHERE c.user1=? OR c.user2=? " +
+                "    ORDER BY c.last_time DESC " +
+                ") " +
+                "SELECT array_to_json(array( " +
+                "    SELECT json_build_object( " +
+                "        'id', c.id, " +
+                "        'user1', ( " +
+                "            SELECT row_to_json(u) FROM akouser u " +
+                "            WHERE u.id=c.user1 " +
+                "        ), " +
+                "        'user2', ( " +
+                "            SELECT row_to_json(u) FROM akouser u " +
+                "            WHERE u.id=c.user2 " +
+                "        ), " +
+                "        'user1_read', c.user1_read, " +
+                "        'user2_read', c.user2_read, " +
+                "        'last_chat', c.last_chat, " +
+                "        'last_chat_idx', c.last_chat_idx, " +
+                "        'last_time', c.last_time " +
+                "    ) FROM l_chat c " +
+                ")); "; 
+                
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
@@ -1226,13 +1225,34 @@ public class PostgreInterface {
         return null;
     }
 
-    public static boolean addRating(int sellerId, int buyerId, float rating) {
-        return true;
+    public static boolean addRating(int sellerId, int buyerId, double rating) {
+        String sql = "UPDATE akouser SET rating = array_append(\n" +
+                "    rating, ROW(?, ?)::rating_t\n" +
+                ")\n" +
+                "WHERE akouser.id=?;";
+
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setDouble(1, rating);
+            pstmt.setInt(2, buyerId);
+            pstmt.setInt(3, sellerId);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();;
+        }
+        return false;
     }
 
     public static Chat[] getChat(int chatId) {
         String sql = "WITH l_chat AS ( " +
-                "    SELECT * FROM chat WHERE id=? " +
+                "    SELECT * FROM chat c WHERE id=? " +
+                "    ORDER BY c.time  " +
                 ") " +
                 "SELECT array_to_json(array( " +
                 "    SELECT json_build_object( " +
@@ -1243,7 +1263,7 @@ public class PostgreInterface {
                 "        'time', c.time, " +
                 "        'system', c.system " +
                 "    ) FROM l_chat c " +
-                ")); ";
+                "));";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
