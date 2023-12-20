@@ -51,11 +51,11 @@
             <td style="width:calc(var(--topMenu-height)*0.8); height:calc(var(--topMenu-height)*0.8); padding:0px; margin:0px">
                 <img style="width:auto;height:calc(var(--topMenu-height) * 0.8);display:block;margin:0;padding:0" src="resources/images/AkoFace.png">
             </td>
-            <td style="width:12%;margin:0;padding: 0;color:#4FC3F7;" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
-            <td style="width:10%;margin:0;padding: 0" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
-            <td style="width:10%;margin:0;padding: 0"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
+            <td style="width:12%;margin:0;padding: 0;color:#4FC3F7; font-size:clamp(1px, 2.3vw,35px);" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
+            <td style="width:10%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
+            <td style="width:10%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
             <td></td>
-            <td id="loginCell" style="width:7%;margin:0;padding: 0" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
+            <td id="loginCell" style="width:7%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
                 onmouseleave=" document.getElementById('loginMenu').style.display = 'none';">
                 <%
                     // Check if the user is logged in by looking for a session attribute
@@ -134,7 +134,7 @@
 %>
 <center>
     <table style="width:70%;">
-        <tr style="text-align:center; height:600px;border:0px;">
+        <tr style="text-align:center; height:clamp(100px, 3.5vw,600px);border:0px;">
             <td style="width: 50%; text-align: center;">
                 <img src="<%=ImageDB.getImageUrl(product.prodcut.getImage())%>" style="max-width: 100%; max-height: 100%; display: block; margin: 0;">
             </td>
@@ -146,21 +146,20 @@
                     }
                 %>
                 <br><br>
-                <h1 style = "font-family: BaeMinHanna, system-ui;text-align: left"><%=product.prodcut.getTitle()%></h1>
+                <h1 style = "font-family: BaeMinHanna, system-ui;text-align: left; font-size:clamp(1px, 3.5vw,60px)"><%=product.prodcut.getTitle()%></h1>
                 <br>
-                <h3 style = "font-family: BaeMinHanna, system-ui;text-align: left"><%=product.prodcut.getPrice()%> 원</h3>
+                <h3 style = "font-family: BaeMinHanna, system-ui;text-align: left; font-size:clamp(1px, 2.0vw,40px)"><%=product.prodcut.getPrice()%> 원</h3>
                 <br>
-                <h3 style = "font-family: BaeMinHanna, system-ui;text-align: left;color:#4FC3F7;"><%=hashtagStr.toString()%></h3>
+                <h3 style = "font-family: BaeMinHanna, system-ui;text-align: left;color:#4FC3F7; font-size:clamp(1px, 2.0vw,40px)"><%=hashtagStr.toString()%></h3>
                 <br>
-                <p style="font-family: BaeMinJua, system-ui;text-align: left">
+                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2.0vw,40px); text-align: left">
                     <%=product.prodcut.getDescription()%>
                 </p>
-                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="">구매하기</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
+                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2.0vw, 40px)"><a style = "text-decoration: none; color: orangered;" href="">구매하기</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
             </td>
-
         </tr>
-    </table>
-    <h2 style = "font-family: BaeMinHanna, system-ui;">판매자 정보</h2><br>
+    </table><br><br><br>
+    <h2 style = "font-family: BaeMinHanna, system-ui; font-size:clamp(1px, 3.0vw,55px)">판매자 정보</h2><br>
     <%
         Rating[] rate = product.user.getRating();
         double rating = 0;
@@ -172,13 +171,13 @@
     <table style = "width: 70%;">
         <tr style = "text-align: center; height: 200px; border: 1px solid #ddd;">
             <td style = "border: 1px solid #ddd; width: 30%"><img style ="margin-top: 30px; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" src="<%=ImageDB.getImageUrl(product.user.getImage())%>" alt="resources/images/AkoFace.png">
-                <h2 style = "font-family: BaeMinHanna, system-ui; font-size: 20px;"><%=product.user.getNickName()%></h2>
-                <button style="border: 1px solid #D35400; background-color: transparent; color: #D35400; padding: 3px 8px; border-radius: 5px; vertical-align: middle;" onclick="window.location.href = '${pageContext.request.contextPath}/Seller.jsp?user=<%=product.user.getUid()%>';">방문하기</button>
-                <p style="font-family: BaeMinJua, system-ui;">평점: <%=rating%></p>
+                <h2 style = "font-family: BaeMinHanna, system-ui; font-size:clamp(1px, 2.5vw,50px);"><%=product.user.getNickName()%></h2>
+                <button style="border: 1px solid #D35400; background-color: transparent; color: #D35400; padding: 3px 8px; border-radius: 5px; vertical-align: middle; font-family: BaeMinJua, system-ui; width:clamp(1px, 10.0vw,150px); height:clamp(0.5px, 3.8vh, 70px); font-size:clamp(0.5px, 1.5vw,20px)" onclick="window.location.href = '${pageContext.request.contextPath}/Seller.jsp?user=<%=product.user.getUid()%>';">방문하기</button>
+                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 1.5vw,35px)">평점: <%=rating%></p>
             </td>
             <td style = "border: 1px solid #ddd;">
-                <p style="font-family: BaeMinJua, system-ui;">캠퍼스: <%=product.user.getCampus()%></p>
-                <p style="font-family: BaeMinJua, system-ui;">학과: <%=product.user.getDepartment()%></p>
+                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2.0vw,40px)">캠퍼스: <%=product.user.getCampus()%></p>
+                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2.0vw,40px)">학과: <%=product.user.getDepartment()%></p>
             </td>
         </tr>
     </table>
