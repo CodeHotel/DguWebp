@@ -192,30 +192,30 @@
     return chats;
   }
 
-  function displayMessage(message, sender, time, system) {
-
+  function displayMessage(message, sender, time, system, opponentId) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', sender);
 
     const messageText = document.createElement('p');
     messageText.classList.add('message-text');
-//'none', 'applied', 'inprogress', 'soldout', 'sellergive', 'buyergot'
-    if(system=='none')
-    messageText.innerHTML = message + ' <span class="message-time" style="color: gray;">(<small>' + time + '</small>)</span>';
-    else if(system=='applied')
-      d;
-    else if(system=='inprogress')
-      d;
-    else if(system=='soldout')
-      d;
-    else if(system=='sellergive')
-      d;
-    else if(system=='buyergot')
-      d;
+
+    if (system == 'none') {
+      messageText.innerHTML = message + ' <span class="message-time" style="color: gray;">(<small>' + time + '</small>)</span>';
+    } else if (system == 'applied') {
+      messageText.innerHTML = '<button onclick="fetch(\'/acceptbuyrequest?productId=' + message + '&userId='+opponentId+'\').then(response => console.log(response)).catch(error => console.error(error))">수락하기</button>';
+    } else if (system == 'inprogress') {
+      messageText.innerHTML = '<button onclick="fetch(\'/cancelbuyrequest?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">취소하기</button><br><button onclick="fetch(\'/confirmgive?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">인계확인</button>';
+    } else if (system == 'soldout') {
+      messageText.innerHTML = 'Sold Out';
+    } else if (system == 'sellergive') {
+      messageText.innerHTML = '<button onclick="fetch(\'/confirmgot?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">인수확인</button>';
+    } else if (system == 'buyergot') {
+      messageText.innerHTML = 'Buyer Received';
+    }
+
     messageDiv.appendChild(messageText);
     chatMessages.appendChild(messageDiv);
   }
-
 
   function fetchAndDisplayMessages(roomId) {
     chatMessages.innerHTML = '';
