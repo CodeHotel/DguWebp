@@ -380,15 +380,34 @@ SELECT array_to_json(array(
 
 
 
+-- create chat room
+
+-- createChatRoom(user1_id, user2_id)
+WITH info AS (
+    SELECT ? AS user1, ? AS user2
+)
+INSERT INTO list_chat(user1, user2)
+SELECT
+    (SELECT user1 FROM info),
+    (SELECT user2 FROM info)
+WHERE NOT EXISTS (
+    SELECT * FROM list_chat l
+    WHERE
+        (l.user1=(SELECT user1 FROM info) AND l.user2=(SELECT user2 FROM info)) OR
+        (l.user2=(SELECT user1 FROM info) AND l.user1=(SELECT user2 FROM info))
+);
+
+
+
 -- request for buy
 --   user_id: user id (from DB)
 --   product_id: product id (from DB)
 
--- buyRequest(user_id, product_id)
+-- buyRequest(user_id, product_id, message)
 WITH info AS (
     SELECT p.id, p.price, p.owner_id, u.id AS buyer_id
     FROM product p, akouser u 
-    WHERE p.id=? AND u.id=?
+    WHERE u.id=? AND p.id=?
 ),
 n_progress AS (
     INSERT INTO list_trade(owner_id, buyer_id, product_id, progress)
@@ -415,19 +434,31 @@ del_wish AS (
         w.buyer_id=(SELECT buyer_id FROM n_progress) AND
         w.product_id=(SELECT product_id FROM n_progress)
 ),
-n_chat AS (
-    INSERT INTO list_chat(user1, user2)
-    VALUES (
-        (SELECT owner_id FROM n_progress),
-        (SELECT buyer_id FROM n_progress)
-    )
+l_chat AS (
+    UPDATE list_chat AS c
+    SET 
+        last_chat_idx=c.last_chat_idx+1,
+        last_chat=?,
+        user1_read=
+            CASE WHEN user1=(SELECT buyer_id FROM info)
+            THEN c.last_chat_idx+1
+            ELSE user1_read END,
+        user2_read=
+            CASE WHEN user2=(SELECT buyer_id FROM info)
+            THEN c.last_chat_idx+1
+            ELSE user2_read END
+    WHERE
+        (user1=(SELECT owner_id FROM INFO) AND user2=(SELECT buyer_id FROM INFO)) OR
+        (user2=(SELECT owner_id FROM INFO) AND user1=(SELECT buyer_id FROM INFO))
     RETURNING *
 )
-SELECT json_build_object(
-    'id', (SELECT id FROM n_chat),
-    'user1', (SELECT user1 FROM n_chat),
-    'user2', (SELECT user2 FROM n_chat),
-    'last_time', (SELECT last_time FROM n_chat)
+INSERT INTO chat(id, idx, message, sender, system)
+VALUES (
+    (SELECT id FROM l_chat),
+    (SELECT last_chat_idx FROM l_chat),
+    (SELECT last_chat FROM l_chat),
+    (SELECT buyer_id FROM info),
+    'request'::sys_msg_t
 );
 
 
@@ -462,39 +493,38 @@ SELECT array_to_json(array(
 --   product_id: product id (from DB)
 
 -- acceptBuyRequest(user_id, product_id, message)
-WITH req_user AS (
-    SELECT u.* FROM akouser u WHERE u.id=?
-),
-req_product AS (
+WITH req_product AS (
     SELECT p.* FROM product p WHERE p.id=?
 ),
 prog AS (
     UPDATE list_trade AS p SET progress='inprogress'
     WHERE 
         p.owner_id=(SELECT owner_id FROM req_product) AND
-        p.buyer_id=(SELECT id FROM req_user) AND
-        p.product_id=(SELECT id FROM req_product)
+        p.buyer_id=? AND
+        p.product_id=(SELECT id FROM req_product) AND
+        p.progress='applied'::progress_t
+    RETURNING *
 ),
 u_product AS (
-    UPDATE product AS p SET product='inprogress'
-    WHERE p.id=(SELECT id FROM req_product)
+    UPDATE product AS p SET progress='inprogress'
+    WHERE p.id=(SELECT product_id FROM prog)
 ),
 l_chat AS (
     UPDATE list_chat AS c
     SET 
         last_chat_idx=c.last_chat_idx+1,
-        last_chat='User accepted your request',
+        last_chat=?,
         user1_read=
-            CASE WHEN user1=(SELECT id FROM req_user)
+            CASE WHEN user1=(SELECT owner_id FROM prog)
             THEN c.last_chat_idx+1
             ELSE user1_read END,
         user2_read=
-            CASE WHEN user2=(SELECT id FROM req_user)
+            CASE WHEN user2=(SELECT owner_id FROM prog)
             THEN c.last_chat_idx+1
             ELSE user2_read END
     WHERE
-        (c.user1=(SELECT id FROM req_user) AND c.user2=(SELECT owner_id FROM req_product)) OR
-        (c.user2=(SELECT id FROM req_user) AND c.user1=(SELECT owner_id FROM req_product))
+        (c.user1=(SELECT owner_id FROM prog) AND c.user2=(SELECT buyer_id FROM prog)) OR
+        (c.user2=(SELECT owner_id FROM prog) AND c.user1=(SELECT buyer_id FROM prog))
     RETURNING *
 )
 INSERT INTO chat(id, idx, message, sender, system)
@@ -502,8 +532,8 @@ VALUES (
     (SELECT id FROM l_chat),
     (SELECT last_chat_idx FROM l_chat),
     (SELECT last_chat FROM l_chat),
-    (SELECT id FROM req_user),
-    true
+    (SELECT owner_id FROM prog),
+    'accept'
 );
 
 
@@ -539,7 +569,7 @@ l_chat AS (
     UPDATE list_chat AS c
     SET 
         last_chat_idx=c.last_chat_idx+1,
-        last_chat='User canceled your request',
+        last_chat=?,
         user1_read=
             CASE WHEN user1=(SELECT id FROM req)
             THEN c.last_chat_idx+1
@@ -559,7 +589,7 @@ VALUES (
     (SELECT last_chat_idx FROM l_chat),
     (SELECT last_chat FROM l_chat),
     (SELECT id FROM req),
-    true
+    'cancel'::sys_msg_t
 );
 
 
@@ -580,7 +610,7 @@ l_chat AS (
     UPDATE list_chat AS c
     SET
         last_chat_idx=c.last_chat_idx+1,
-        last_chat='Seller have confirmed that he(she) has given you the product',
+        last_chat=?,
         user1_read=
             CASE WHEN user1=(SELECT owner_id FROM req)
             THEN c.last_chat_idx+1
@@ -598,16 +628,16 @@ VALUES (
     (SELECT last_chat_idx FROM l_chat),
     (SELECT last_chat FROM l_chat),
     (SELECT owner_id FROM req),
-    true
+    'give'::sys_msg_t
 );
 
 
 
 -- confirm got
 
--- confirmGot(product_id)
+-- confirmGot(product_id, message)
 WITH req AS (
-    UPDATE list_trade AS s SET s.progress='soldout'
+    UPDATE list_trade AS s SET progress='soldout'
     WHERE s.progress='sellergive' AND s.product_id=?
     RETURNING *
 ),
@@ -615,7 +645,7 @@ l_chat AS (
     UPDATE list_chat AS c
     SET
         last_chat_idx=c.last_chat_idx+1,
-        last_chat='Seller have confirmed that he(she) has given you the product',
+        last_chat=?,
         user1_read=
             CASE WHEN user1=(SELECT buyer_id FROM req)
             THEN c.last_chat_idx+1
@@ -635,7 +665,7 @@ VALUES (
     (SELECT last_chat_idx FROM l_chat),
     (SELECT last_chat FROM l_chat),
     (SELECT owner_id FROM req),
-    true
+    'got'::sys_msg_t
 );
 
 
@@ -646,20 +676,19 @@ VALUES (
 WITH l_chat AS (
     SELECT c.* FROM list_chat c
     WHERE c.user1=? OR c.user2=?
-),
-user1_info AS (
-    SELECT u.id, u.nickname FROM akouser u
-    WHERE u.id=(SELECT user1 FROM l_chat)
-),
-user2_info AS (
-    SELECT u.id, u.nickname FROM akouser u
-    WHERE u.id=(SELECT user2 FROM l_chat)
+    ORDER BY c.last_time DESC
 )
 SELECT array_to_json(array(
     SELECT json_build_object(
         'id', c.id,
-        'user1', (SELECT row_to_json(u) FROM user1_info u),
-        'user2', (SELECT row_to_json(u) FROM user2_info u),
+        'user1', (
+            SELECT row_to_json(u) FROM akouser u
+            WHERE u.id=c.user1
+        ),
+        'user2', (
+            SELECT row_to_json(u) FROM akouser u
+            WHERE u.id=c.user2
+        ),
         'user1_read', c.user1_read,
         'user2_read', c.user2_read,
         'last_chat', c.last_chat,
@@ -674,7 +703,8 @@ SELECT array_to_json(array(
 
 -- getChat(chat_id)
 WITH l_chat AS (
-    SELECT * FROM chat WHERE id=?
+    SELECT * FROM chat c WHERE id=?
+    ORDER BY c.time 
 )
 SELECT array_to_json(array(
     SELECT json_build_object(
@@ -753,3 +783,13 @@ SELECT array_to_json(array(
             ))) 
     ) FROM products p
 ));
+
+
+
+-- add rating
+
+-- addRating(rating, buyerId, sellerId)
+UPDATE akouser SET rating = array_append(
+    rating, ROW(?, ?)::rating_t
+)
+WHERE akouser.id=?;
