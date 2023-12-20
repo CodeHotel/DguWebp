@@ -70,11 +70,11 @@
       <td style="width:calc(var(--topMenu-height)*0.8); height:calc(var(--topMenu-height)*0.8); padding:0px; margin:0px">
         <img style="width:auto;height:calc(var(--topMenu-height) * 0.8);display:block;margin:0;padding:0" src="resources/images/AkoFace.png">
       </td>
-      <td style="width:12%;margin:0;padding: 0;color:#4FC3F7;" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
-      <td style="width:10%;margin:0;padding: 0" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
-      <td style="width:10%;margin:0;padding: 0"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
+      <td style="width:12%;margin:0;padding: 0;color:#4FC3F7;font-size:clamp(1px, 2.3vw,35px)" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
+      <td style="width:10%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px)" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
+      <td style="width:10%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px)"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
       <td></td>
-      <td id="loginCell" style="width:7%;margin:0;padding: 0" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
+      <td id="loginCell" style="width:7%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
           onmouseleave=" document.getElementById('loginMenu').style.display = 'none';">
         <%
           // Check if the user is logged in by looking for a session attribute
@@ -150,10 +150,10 @@
 </div>
 <center>
   <form method="post" id="registrationForm" action="/register" style="width: 100%;" enctype="multipart/form-data">
-    <h1 style = "font-family: BaeMinHanna, system-ui;">회원가입</h1>
+    <h1 style = "font-family: BaeMinHanna, system-ui; font-size:clamp(10px, 3.5vw,60px);">회원가입</h1>
     <div style="width: 70%; margin: 0 auto; background-color: #fff;padding: 20px; border-radius: 8px;">
       <br>
-      <table style="font-family: BaeMinJua, system-ui;">
+      <table style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2.0vw,20px);">
         <tr>
           <td>아이디 </td>
           <td><input type="text" name="regId">
@@ -206,7 +206,8 @@
           <td><input type="file" name="regPicture"></td>
         </tr>
         <tr><td><br></td></tr>
-        <tr><td><input type="submit" value="가입신청" onclick="registerSubmit()" style="border-radius:0.5em;border:solid 1px gray;width:6em"></td></tr>
+        <tr><td rowspan="2" colspan="2"">
+        <input type="submit" value="가입신청" style="width:100%; height:100%; color:white; background-color: #D35400; font-family: BaeMinJua, system-ui;" onclick="registerSubmit()"></td></tr>
       </table>
     </div>
   </form>

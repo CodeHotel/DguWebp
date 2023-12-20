@@ -51,11 +51,11 @@
       <td style="width:calc(var(--topMenu-height)*0.8); height:calc(var(--topMenu-height)*0.8); padding:0px; margin:0px">
         <img style="width:auto;height:calc(var(--topMenu-height) * 0.8);display:block;margin:0;padding:0" src="resources/images/AkoFace.png">
       </td>
-      <td style="width:12%;margin:0;padding: 0;color:#4FC3F7;" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
-      <td style="width:10%;margin:0;padding: 0" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
-      <td style="width:10%;margin:0;padding: 0"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
+      <td style="width:12%;margin:0;padding: 0;color:#4FC3F7; font-size:clamp(1px, 2.3vw,35px);" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
+      <td style="width:10%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
+      <td style="width:10%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
       <td></td>
-      <td id="loginCell" style="width:7%;margin:0;padding: 0" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
+      <td id="loginCell" style="width:7%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
           onmouseleave=" document.getElementById('loginMenu').style.display = 'none';">
         <%
           // Check if the user is logged in by looking for a session attribute
@@ -133,11 +133,11 @@
   <%
     UserData seller = PostgreInterface.getBriefUserData(Integer.parseInt(request.getParameter("user")));
   %>
-  <h2 style = "font-family: BaeMinHanna, system-ui;">판매자 정보</h2><br>
+  <h2 style = "font-family: BaeMinHanna, system-ui; font-size:clamp(1px, 3.5vw,55px)">판매자 정보</h2><br>
   <table style = "width: 70%;">
     <tr style = "text-align: center; height: 200px; border: 1px solid #ddd;">
       <td style = "border: 1px solid #ddd; width: 30%"><img style ="margin-top: 30px; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" src="<%=ImageDB.getImageUrl(seller.user.getImage())%>" alt="resource/images/AkoFace.png">
-        <h2 style = "font-family: BaeMinHanna, system-ui; font-size: 20px;"><%=seller.user.getNickName()%></h2>
+        <h2 style = "font-family: BaeMinHanna, system-ui; font-size:clamp(1px, 2.7vw,50px)"><%=seller.user.getNickName()%></h2>
         <%
           Rating[] rate = seller.user.getRating();
           double rating = 0;
@@ -146,17 +146,17 @@
           }
           if(rate.length!=0) rating/=rate.length;
         %>
-        <p style="font-family: BaeMinJua, system-ui;">평점: <%=rating%></p>
+        <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 1.5vw,35px)">평점: <%=rating%></p>
       </td>
       <td style = "border: 1px solid #ddd;">
-        <p style="font-family: BaeMinJua, system-ui;">캠퍼스: <%=seller.user.getCampus()%></p>
-        <p style="font-family: BaeMinJua, system-ui;">학과: <%=seller.user.getDepartment()%></p>
+        <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2.0vw,40px)">캠퍼스: <%=seller.user.getCampus()%></p>
+        <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2.0vw,40px)">학과: <%=seller.user.getDepartment()%></p>
         <!--정보 추가-->
       </td>
     </tr>
   </table>
   <br><br>
-  <h3 style = "font-family: BaeMinHanna, system-ui;">거래 상품</h3>
+  <h3 style = "font-family: BaeMinHanna, system-ui; font-size:clamp(1px, 3.0vw,55px)">거래 상품</h3>
   <br>
   <center>
     <%
