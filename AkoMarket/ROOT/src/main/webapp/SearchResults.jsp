@@ -131,7 +131,7 @@
 </div>
 <%
     DataBeans.ProductData[] searchResults = PostgreInterface.search(1.0, 0.5, 1.0,
-            PostgreInterface.parseHashtag("#노트북"), "노트북");
+            PostgreInterface.parseHashtag("a b c #노트북 #d"), "a b c #노트북 #d");
     System.out.print(searchResults.length);
 %>
 <form method="post" action="SearchResults.jsp?searchKeyWord=..." style="width: 100%; text-align: center;font-family: BaeMinHanna,system-ui">
