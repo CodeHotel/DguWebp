@@ -156,7 +156,7 @@
     </div>
     <div class="message-input">
       <input type="text" id="message-input" placeholder="메시지를 입력하세요...">
-      <button id="send-button">전송</button>
+      <button id="send-button" onclick="fetch('/sendchat')">전송</button>
     </div>
   </div>
 </div>
@@ -206,11 +206,11 @@
     } else if (system == 'accept') {
       messageText.innerHTML = '거래를 수락했어요!<br><button onclick="fetch(\'/cancelbuyrequest?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">취소하기</button><br><button onclick="fetch(\'/confirmgive?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">인계확인</button>';
     } else if (system == 'cancel') {
-      messageText.innerHTML = 'System:상품거래가 취소되었습니다.';
+      messageText.innerHTML = '<button>거래가 취소되었습니다.</button>';
     } else if (system == 'give') {
       messageText.innerHTML = '상품인계를 확인했어요!<br><button onclick="fetch(\'/confirmgot?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">인수확인</button>';
     } else if (system == 'got') {
-      messageText.innerHTML = '<br>System:상품 거래가 종료되었습니다.';
+      messageText.innerHTML = '<button>거래가 종료되었습니다.</button>';
     }
 
     messageDiv.appendChild(messageText);

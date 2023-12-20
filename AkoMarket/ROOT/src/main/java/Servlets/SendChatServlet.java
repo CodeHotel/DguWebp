@@ -1,5 +1,7 @@
 package Servlets;
 
+import DataBeans.PostgreInterface;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -14,7 +16,7 @@ public class SendChatServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String loginId = request.getParameter("loginId");
         String loginPw = request.getParameter("loginPw");
-
+        
         Integer result = DataBeans.PostgreInterface.userAuth(loginId, loginPw);
 
         if(result != -1) {
