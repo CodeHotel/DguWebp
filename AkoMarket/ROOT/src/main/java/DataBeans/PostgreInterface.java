@@ -318,14 +318,19 @@ public class PostgreInterface {
                 "    'description', (SELECT description FROM product_info), " +
                 "    'views', (SELECT views FROM product_info), " +
                 "    'progress', (SELECT progress FROM product_info), " +
+                "    'owner_id', (SELECT owner_id FROM product_info), " +
                 "    'hashtags', array_to_json(array( " +
                 "        SELECT * FROM hashtags " +
                 "    )) " +
                 ");";
 
         StringBuilder hashtagStr = new StringBuilder();
-        for (String hashtag : hashtags) {
-            hashtagStr.append(hashtag).append(',');
+        for (int inHash = 0; inHash<hashtags.length; inHash++) {
+            String hashtag = hashtags[inHash];
+            if(inHash!=0)
+                hashtagStr.append(',').append(hashtag);
+            else hashtagStr.append(hashtag);
+
         }
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
@@ -343,13 +348,13 @@ public class PostgreInterface {
             if (rs.next()) {
                 JSONObject jsonObject = new JSONObject(rs.getString(1));
                 JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
-                String[] hashtagArr = null;
+                String[] hashtagarr = null;
 
                 if (hashtagJson != null) {
-                    hashtagArr = new String[hashtagJson.length()];
-                    for (int i = 0; i < hashtagJson.length(); ++i) {
-                        JSONObject hashtagObj = hashtagJson.getJSONObject(i);
-                        hashtagArr[i] = hashtagObj.toString();
+                    hashtagarr = new String[hashtagJson.length()];
+                    for (int i = 0; i < hashtags.length; i++) {
+                        hashtagarr[i] = hashtagJson.getString(i);
+                        hashtagarr[i] = hashtags[i].substring(1, hashtags[i].length()-1);
                     }
                 }
 
@@ -361,7 +366,7 @@ public class PostgreInterface {
                         jsonObject.getString("description"),
                         jsonObject.getLong("views"),
                         jsonObject.getInt("owner_id"),
-                        hashtagArr,
+                        hashtagarr,
                         Progress.valueOf(jsonObject.getString("progress"))
                 );
             }
