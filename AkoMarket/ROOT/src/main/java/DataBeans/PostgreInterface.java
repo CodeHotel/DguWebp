@@ -1291,11 +1291,15 @@ public class PostgreInterface {
         tagArray = tagList.toArray(tagArray);
 
         StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < tagArray.length - 1; i++) {
+        for (int i = 0; i < tagArray.length; i++) {
             stringBuilder.append(tagArray[i]).append(',');
         }
-        stringBuilder.append(tagArray[tagArray.length-1]);
-        return stringBuilder.toString();
+
+        String result = stringBuilder.toString();
+        if (result.length() > 0) {
+            result.substring(0, result.length() - 1);
+        }
+        return result;
     }
 
     public static ArrayList<ProductData> search(double hWeight, double tWeight, double dWeight, String hashtag, String pattern) {
@@ -1366,12 +1370,17 @@ public class PostgreInterface {
 
             String titleP = pattern.replaceAll("\\s+", ",");
             String descP = pattern.replaceAll("\\s+", "|");
-            titleP = titleP.substring(0, titleP.length() - 1);
-            descP = descP.substring(0, descP.length() - 1);
+
+            if (titleP.charAt(titleP.length()-1) == ',') {
+                titleP = titleP.substring(0, titleP.length() - 1);
+            }
+            if (descP.charAt(descP.length() - 1) == '|') {
+                descP = descP.substring(0, descP.length() - 1);
+            }
 
             pstmt.setString(1, hashtag);
-            pstmt.setString(2, pattern.replaceAll("\\s+", ","));
-            pstmt.setString(3, pattern.replaceAll("\\s+", "|"));
+            pstmt.setString(2, titleP);
+            pstmt.setString(3, descP);
             pstmt.setDouble(4, hWeight);
             pstmt.setDouble(5, tWeight);
             pstmt.setDouble(6, dWeight);
