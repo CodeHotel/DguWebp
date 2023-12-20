@@ -135,17 +135,41 @@
 
     </div>
 </div>
-<h1 style="width: 100%; text-align:left;padding-left:1em"> 상품 정보 수정</h1>
-<form action="/modproduct?product=<%=request.getParameter("product")%>" method="post" enctype="multipart/form-data" style="width: 100%; text-align:left;padding-left:1em">
-    이미지:<input type="file" name="image" accept="image/*"><br><br>
-    상품명:<input type="text" name="title" value="상품명"><br><br>
-    해시태그:<input type="text" name="tag" value="해시태그"><br><br>
-    설명:<br>
-    <textarea id="description" name="description" rows="4" cols="50">설명</textarea><br><br>
-    가격:<input type="number" name="price" value="0000" min="0"><br><br>
-
-    <input type="submit" value="상품 등록">
-</form>
+<center>
+    <form action="/submit_product" method="post" enctype="multipart/form-data" style="width: 100%;">
+        <h1 style = "font-family: BaeMinHanna, system-ui;">상품 정보 수정</h1>
+        <div style="width: 70%; margin: 0 auto; background-color: #fff;padding: 20px; border-radius: 8px;">
+            <br>
+            <table style="font-family: BaeMinJua, system-ui;">
+                <tr>
+                    <td>이미지 </td>
+                    <td><input type="file" name="image" accept="image/*"></td>
+                </tr>
+                <tr>
+                    <td>상품명 </td>
+                    <td><input type="text" name="title" value="상품명"></td>
+                </tr>
+                <tr>
+                    <td>해시태그 </td>
+                    <td><input type="text" name="tag" value="해시태그"></td>
+                </tr>
+                <tr>
+                    <td>설명 </td>
+                    <td>    <textarea id="description" name="description" rows="4" cols="50">설명</textarea><br><br>
+                    </td>
+                </tr>
+                <tr>
+                    <td>가격 </td>
+                    <td><input type="number" name="price" value="0000" min="0"></td>
+                </tr>
+                <tr><td><br></td></tr>
+                <tr>
+                    <td><input type="submit" value="상품 등록"></td>
+                </tr>
+            </table>
+        </div>
+    </form>
+</center>
 <center>
     <br><br>
     <hr>
