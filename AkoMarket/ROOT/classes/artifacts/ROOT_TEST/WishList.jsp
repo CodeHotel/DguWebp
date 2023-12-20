@@ -55,7 +55,7 @@
       </td>
       <td style="width:12%;margin:0;padding: 0;color:#4FC3F7;" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
       <td style="width:10%;margin:0;padding: 0" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
-      <td style="width:10%;margin:0;padding: 0">중고판매</td>
+      <td style="width:10%;margin:0;padding: 0"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
       <td></td>
       <td id="loginCell" style="width:7%;margin:0;padding: 0" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
           onmouseleave=" document.getElementById('loginMenu').style.display = 'none';">
@@ -66,7 +66,8 @@
             // User is logged in
         %>
         <%
-          User t = PostgreInterface.getBriefUserData(userId);
+          DataBeans.UserData data = PostgreInterface.getBriefUserData(userId);
+          DataBeans.User t = data.user;
         %>
         <%=t.getNickName()%>
         <div id="loginMenu" style="display:none; position:absolute; right:1em; background-color:white; padding:0.5em; width:12%;border-radius:1em;background-color: #D35400;border:solid 1px white">
