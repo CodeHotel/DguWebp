@@ -1,5 +1,6 @@
 <%@ page import="DataBeans.User" %>
-<%@ page import="DataBeans.PostgreInterface" %><%--
+<%@ page import="DataBeans.PostgreInterface" %>
+<%@ page import="DataBeans.Chatlist" %><%--
   Created by IntelliJ IDEA.
   User: mh7cp
   Date: 2023-12-18
@@ -66,14 +67,16 @@
             // User is logged in
         %>
         <%
-          User t = PostgreInterface.getBriefUserData(userId);
+          DataBeans.UserData data = PostgreInterface.getBriefUserData(userId);
+          DataBeans.User t = data.user;
         %>
-        <%= t.getNickName() %>
+        <%=t.getNickName()%>
         <div id="loginMenu" style="display:none; position:absolute; right:1em; background-color:white; padding:0.5em; width:12%;border-radius:1em;background-color: #D35400;border:solid 1px white">
           <center style="width:100%; font-size:0.8em;font-family:'BaeMinHanna', system-ui ;color:white">
             <table>
               <tr style="width:90%">
-                <%= t.getNickName() %>님 환영합니다
+
+                <%=t.getNickName()%>님 환영합니다
 
               </tr><br>
               <tr style="width:90%">
@@ -129,6 +132,10 @@
 
   </div>
 </div>
+<%
+  Chatlist[] chatlists = PostgreInterface.getChatPreview(userId);
+  System.out.print(chatlists.length);
+%>
 <div style = "width: 70%; margin: 20px auto; border: 1px solid #ccc; border-radius: 5px; overflow: hidden;">
   <div style = "float: left; width: 35%; height:600px; overflow-y: auto; border-right: 1px solid #ccc;">
     <!-- 채팅방 리스트 -->

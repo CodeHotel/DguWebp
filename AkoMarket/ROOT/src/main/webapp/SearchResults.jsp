@@ -1,5 +1,4 @@
-<%@ page import="DataBeans.User" %>
-<%@ page import="DataBeans.PostgreInterface" %><%--
+<%@ page import="DataBeans.*"%><%--
   Created by IntelliJ IDEA.
   User: mh7cp
   Date: 2023-12-18
@@ -65,7 +64,8 @@
                         // User is logged in
                 %>
                 <%
-                    User t = PostgreInterface.getBriefUserData(userId);
+                    DataBeans.UserData data = PostgreInterface.getBriefUserData(userId);
+                    DataBeans.User t = data.user;
                 %>
                 <%=t.getNickName()%>
                 <div id="loginMenu" style="display:none; position:absolute; right:1em; background-color:white; padding:0.5em; width:12%;border-radius:1em;background-color: #D35400;border:solid 1px white">
@@ -129,7 +129,12 @@
 
     </div>
 </div>
-<form method="post" action="" style="width: 100%; text-align: center;font-family: BaeMinHanna,system-ui">
+<%
+    DataBeans.ProductData[] searchResults = PostgreInterface.search(1.0, 0.5, 1.0,
+            PostgreInterface.parseHashtag("a b c #노트북 #d"), "a b c #노트북 #d");
+    System.out.print(searchResults.length);
+%>
+<form method="post" action="SearchResults.jsp" style="width: 100%; text-align: center;font-family: BaeMinHanna,system-ui">
     <input type="text" name="searchKeyWord" style="width: 55%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746" placeholder="#교과서 #공대 #겨울옷">
     <input type="submit" value="G O !" style="width: 8%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; font-family: BaeMinJua, system-ui; font-size: 1.1em; color: white; background-color: #D35400">
     <div style="width:100%">
@@ -197,5 +202,6 @@
         동국대학교
         Copyright © 2023 · All Rights Reserved
     </center>
+</center>
 </body>
 </html>

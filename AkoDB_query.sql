@@ -646,9 +646,26 @@ VALUES (
 WITH l_chat AS (
     SELECT c.* FROM list_chat c
     WHERE c.user1=? OR c.user2=?
+),
+user1_info AS (
+    SELECT u.id, u.nickname FROM akouser u
+    WHERE u.id=(SELECT user1 FROM l_chat)
+),
+user2_info AS (
+    SELECT u.id, u.nickname FROM akouser u
+    WHERE u.id=(SELECT user2 FROM l_chat)
 )
 SELECT array_to_json(array(
-    SELECT row_to_json(c) FROM l_chat c
+    SELECT json_build_object(
+        'id', c.id,
+        'user1', (SELECT row_to_json(u) FROM user1_info u),
+        'user2', (SELECT row_to_json(u) FROM user2_info u),
+        'user1_read', c.user1_read,
+        'user2_read', c.user2_read,
+        'last_chat', c.last_chat,
+        'last_chat_idx', c.last_chat_idx,
+        'last_time', c.last_time
+    ) FROM l_chat c
 ));
 
 
@@ -660,7 +677,14 @@ WITH l_chat AS (
     SELECT * FROM chat WHERE id=?
 )
 SELECT array_to_json(array(
-    SELECT row_to_json(c) FROM l_chat c
+    SELECT json_build_object(
+        'id', c.id,
+        'idx', c.idx,
+        'message', c.message,
+        'sender', c.sender,
+        'time', c.time,
+        'system', c.system
+    ) FROM l_chat c
 ));
 
 
