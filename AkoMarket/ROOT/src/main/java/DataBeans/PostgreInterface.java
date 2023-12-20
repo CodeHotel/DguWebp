@@ -2,6 +2,10 @@ package DataBeans;
 
 import java.sql.*;
 import java.lang.StringBuilder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -803,8 +807,8 @@ public class PostgreInterface {
                 JSONObject jsonObject = new JSONObject(rs.getString(1));
                 return new Chatlist(
                         jsonObject.getInt("id"),
-                        jsonObject.getInt("user1"),
-                        jsonObject.getInt("user2"),
+                        new User(jsonObject.getInt("user1"), null, null, null, null, null, null, null,null,null,false),
+                        new User(jsonObject.getInt("user2"), null, null, null, null, null, null, null,null,null,false),
                         jsonObject.getInt("user1_read"),
                         jsonObject.getInt("user2_read"),
                         jsonObject.getString("last_chat"),
@@ -1141,9 +1145,26 @@ public class PostgreInterface {
         String sql = "WITH l_chat AS (  " +
                 "    SELECT c.* FROM list_chat c  " +
                 "    WHERE c.user1=? OR c.user2=?  " +
+                "),  " +
+                "user1_info AS (  " +
+                "    SELECT u.id, u.nickname FROM akouser u  " +
+                "    WHERE u.id=(SELECT user1 FROM l_chat)  " +
+                "),  " +
+                "user2_info AS (  " +
+                "    SELECT u.id, u.nickname FROM akouser u  " +
+                "    WHERE u.id=(SELECT user2 FROM l_chat)  " +
                 ")  " +
                 "SELECT array_to_json(array(  " +
-                "    SELECT row_to_json(c) FROM l_chat c  " +
+                "    SELECT json_build_object(  " +
+                "        'id', c.id,  " +
+                "        'user1', (SELECT row_to_json(u) FROM user1_info u),  " +
+                "        'user2', (SELECT row_to_json(u) FROM user2_info u),  " +
+                "        'user1_read', c.user1_read,  " +
+                "        'user2_read', c.user2_read,  " +
+                "        'last_chat', c.last_chat,  " +
+                "        'last_chat_idx', c.last_chat_idx,  " +
+                "        'last_time', c.last_time  " +
+                "    ) FROM l_chat c  " +
                 "));";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
@@ -1153,24 +1174,56 @@ public class PostgreInterface {
             pstmt.setInt(2, userId);
             ResultSet rs = pstmt.executeQuery();
 
-            JSONArray jsonArray = new JSONArray(rs.getString(1));
-            Chatlist[] chatlists = new Chatlist[jsonArray.length()];
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                chatlists[i] = new Chatlist(
-                        jsonObject.getInt("id"),
-                        jsonObject.getInt("user1"),
-                        jsonObject.getInt("user2"),
-                        jsonObject.getInt("user1_read"),
-                        jsonObject.getInt("user2_read"),
-                        jsonObject.getString("last_chat"),
-                        jsonObject.getInt("last_chat_idx"),
-                        jsonObject.getString("last_time")
-                );
+            if (rs.next()) {
+                JSONArray jsonArray = new JSONArray(rs.getString(1));
+                Chatlist[] chatlists = new Chatlist[jsonArray.length()];
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    JSONObject user1Obj = jsonObject.getJSONObject("user1");
+                    JSONObject user2Obj = jsonObject.getJSONObject("user2");
+
+                    User user1 = new User(
+                            user1Obj.getInt("id"),
+                            null,
+                            null,
+                            user1Obj.getString("nickname"),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false
+                    );
+
+                    User user2 = new User(
+                            user2Obj.getInt("id"),
+                            null,
+                            null,
+                            user2Obj.getString("nickname"),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false
+                    );
+
+                    chatlists[i] = new Chatlist(
+                            jsonObject.getInt("id"),
+                            user1,
+                            user2,
+                            jsonObject.getInt("user1_read"),
+                            jsonObject.getInt("user2_read"),
+                            jsonObject.optString("last_chat", null),
+                            jsonObject.getInt("last_chat_idx"),
+                            jsonObject.optString("last_time", null)
+                    );
+                }
+
+                return chatlists;
             }
-
-            return chatlists;
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -1215,8 +1268,29 @@ public class PostgreInterface {
         return null;
     }
 
-    public static ProductData[] search(double hWeight, double tWeight, double dWeight, String pattern) {
-        //a,b
+    public static String parseHashtag(String tagStr) {
+        List<String> tagList = new ArrayList<>();
+        String regex = "#\\S+";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(tagStr);
+
+        while (matcher.find()) {
+            tagList.add(matcher.group().substring(1));
+        }
+
+        // Convert the list to an array
+        String[] tagArray = new String[tagList.size()];
+        tagArray = tagList.toArray(tagArray);
+
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String tag : tagArray) {
+            stringBuilder.append(tag).append(',');
+        }
+
+        return stringBuilder.toString();
+    }
+
+    public static ProductData[] search(double hWeight, double tWeight, double dWeight, String hashtag, String pattern) {
         String sql = "WITH search_result AS ( " +
                 "    WITH h_score AS ( " +
                 "        SELECT s.id, COUNT(s.id) AS score FROM ( " +
@@ -1282,62 +1356,65 @@ public class PostgreInterface {
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, pattern.replaceAll("\\s+", ","));
-            pstmt.setString(2, pattern.replaceAll("\\s+", "|"));
-            pstmt.setDouble(3, hWeight);
-            pstmt.setDouble(4, tWeight);
-            pstmt.setDouble(5, dWeight);
+            pstmt.setString(1, hashtag);
+            pstmt.setString(2, pattern.replaceAll("\\s+", ","));
+            pstmt.setString(3, pattern.replaceAll("\\s+", "|"));
+            pstmt.setDouble(4, hWeight);
+            pstmt.setDouble(5, tWeight);
+            pstmt.setDouble(6, dWeight);
             ResultSet rs = pstmt.executeQuery();
 
-            JSONArray jsonArray = new JSONArray(rs.getString(1));
-            ProductData[] result = new ProductData[jsonArray.length()];
-            for (int i = 0; i < jsonArray.length(); ++i) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
-                String[] hashtags = null;
+            if (rs.next()) {
+                JSONArray jsonArray = new JSONArray(rs.getString(1));
+                ProductData[] result = new ProductData[jsonArray.length()];
+                for (int i = 0; i < jsonArray.length(); ++i) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
+                    String[] hashtags = null;
 
-                if (hashtagJson != null) {
-                    hashtags = new String[hashtagJson.length()];
-                    for (int j = 0; j < hashtags.length; j++) {
-                        hashtags[j] = hashtagJson.getString(j);
-                        hashtags[j] = hashtags[j].substring(1, hashtags[j].length()-1);
+                    if (hashtagJson != null) {
+                        hashtags = new String[hashtagJson.length()];
+                        for (int j = 0; j < hashtags.length; j++) {
+                            hashtags[j] = hashtagJson.getString(j);
+                            hashtags[j] = hashtags[j].substring(1, hashtags[j].length() - 1);
+                        }
                     }
+
+                    Product product = new Product(
+                            jsonObject.getInt("id"),
+                            jsonObject.getString("title"),
+                            jsonObject.getInt("price"),
+                            jsonObject.optString("image", null),
+                            jsonObject.optString("description", null),
+                            jsonObject.getLong("views"),
+                            -1,
+                            hashtags,
+                            Progress.valueOf(jsonObject.getString("progress"))
+                    );
+
+                    JSONObject userJson = jsonObject.getJSONObject("user_info");
+                    User user = new User(
+                            userJson.getInt("id"),
+                            null,
+                            null,
+                            userJson.getString("nickname"),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false
+                    );
+
+                    result[i] = new ProductData(
+                            product,
+                            user
+                    );
                 }
 
-                Product product = new Product(
-                        jsonObject.getInt("id"),
-                        jsonObject.getString("title"),
-                        jsonObject.getInt("price"),
-                        jsonObject.optString("image", null),
-                        jsonObject.optString("description", null),
-                        jsonObject.getLong("views"),
-                        -1,
-                        hashtags,
-                        Progress.valueOf(jsonObject.getString("progress"))
-                );
-
-                JSONObject userJson = jsonObject.getJSONObject("user_info");
-                User user = new User(
-                        userJson.getInt("id"),
-                        null,
-                        null,
-                        userJson.getString("nickname"),
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        false
-                );
-
-                result[i] = new ProductData(
-                        product,
-                        user
-                );
+                return result;
             }
-
-            return result;
         } catch (SQLException e) {
             e.printStackTrace();
         }
