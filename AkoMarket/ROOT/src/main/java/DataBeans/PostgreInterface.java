@@ -749,11 +749,11 @@ public class PostgreInterface {
         return null;
     }
 
-    public static Chatlist buyRequest(int userId, int productId) {
+    public static boolean buyRequest(int userId, int productId, String message) {
         String sql = "WITH info AS ( " +
                 "    SELECT p.id, p.price, p.owner_id, u.id AS buyer_id " +
                 "    FROM product p, akouser u  " +
-                "    WHERE p.id=? AND u.id=? " +
+                "    WHERE u.id=? AND p.id=? " +
                 "), " +
                 "n_progress AS ( " +
                 "    INSERT INTO list_trade(owner_id, buyer_id, product_id, progress) " +
@@ -780,46 +780,49 @@ public class PostgreInterface {
                 "        w.buyer_id=(SELECT buyer_id FROM n_progress) AND " +
                 "        w.product_id=(SELECT product_id FROM n_progress) " +
                 "), " +
-                "n_chat AS ( " +
-                "    INSERT INTO list_chat(user1, user2) " +
-                "    VALUES ( " +
-                "        (SELECT owner_id FROM n_progress), " +
-                "        (SELECT buyer_id FROM n_progress) " +
-                "    ) " +
+                "l_chat AS ( " +
+                "    UPDATE list_chat AS c " +
+                "    SET  " +
+                "        last_chat_idx=c.last_chat_idx+1, " +
+                "        last_chat=?, " +
+                "        user1_read= " +
+                "            CASE WHEN user1=(SELECT buyer_id FROM info) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user1_read END, " +
+                "        user2_read= " +
+                "            CASE WHEN user2=(SELECT buyer_id FROM info) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user2_read END " +
+                "    WHERE " +
+                "        (user1=(SELECT owner_id FROM INFO) AND user2=(SELECT buyer_id FROM INFO)) OR " +
+                "        (user2=(SELECT owner_id FROM INFO) AND user1=(SELECT buyer_id FROM INFO)) " +
                 "    RETURNING * " +
                 ") " +
-                "SELECT json_build_object( " +
-                "    'id', (SELECT id FROM n_chat), " +
-                "    'user1', (SELECT user1 FROM n_chat), " +
-                "    'user2', (SELECT user2 FROM n_chat), " +
-                "    'last_time', (SELECT last_time FROM n_chat) " +
-                ");";
+                "INSERT INTO chat(id, idx, message, sender, system) " +
+                "VALUES ( " +
+                "    (SELECT id FROM l_chat), " +
+                "    (SELECT last_chat_idx FROM l_chat), " +
+                "    (SELECT last_chat FROM l_chat), " +
+                "    (SELECT buyer_id FROM info), " +
+                "    'request'::sys_msg_t " +
+                "); ";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setInt(1, productId);
-            pstmt.setInt(2, userId);
+            pstmt.setInt(1, userId);
+            pstmt.setInt(2, productId);
+            pstmt.setString(3, message);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
-                JSONObject jsonObject = new JSONObject(rs.getString(1));
-                return new Chatlist(
-                        jsonObject.getInt("id"),
-                        new User(jsonObject.getInt("user1"), null, null, null, null, null, null, null,null,null,false),
-                        new User(jsonObject.getInt("user2"), null, null, null, null, null, null, null,null,null,false),
-                        jsonObject.getInt("user1_read"),
-                        jsonObject.getInt("user2_read"),
-                        jsonObject.getString("last_chat"),
-                        jsonObject.getInt("last_chat_idx"),
-                        jsonObject.getString("time")
-                );
+                return rs.getInt(1) > 0;
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
 
-        return null;
+        return false;
     }
     public static ProgressData[] getBuyRequests(int userId) {
         String sql = "WITH requests AS ( " +
@@ -900,22 +903,21 @@ public class PostgreInterface {
     }
 
     public static boolean acceptBuyRequest(int userId, int productId, String message) {
-        String sql = "WITH req_user AS ( " +
-                "    SELECT u.* FROM akouser u WHERE u.id=? " +
-                "), " +
-                "req_product AS ( " +
+        String sql = "WITH req_product AS ( " +
                 "    SELECT p.* FROM product p WHERE p.id=? " +
                 "), " +
                 "prog AS ( " +
                 "    UPDATE list_trade AS p SET progress='inprogress' " +
                 "    WHERE  " +
                 "        p.owner_id=(SELECT owner_id FROM req_product) AND " +
-                "        p.buyer_id=(SELECT id FROM req_user) AND " +
-                "        p.product_id=(SELECT id FROM req_product) " +
+                "        p.buyer_id=? AND " +
+                "        p.product_id=(SELECT id FROM req_product) AND " +
+                "        p.progress='applied'::progress_t " +
+                "    RETURNING * " +
                 "), " +
                 "u_product AS ( " +
-                "    UPDATE product AS p SET product='inprogress' " +
-                "    WHERE p.id=(SELECT id FROM req_product) " +
+                "    UPDATE product AS p SET progress='inprogress' " +
+                "    WHERE p.id=(SELECT product_id FROM prog) " +
                 "), " +
                 "l_chat AS ( " +
                 "    UPDATE list_chat AS c " +
@@ -923,16 +925,16 @@ public class PostgreInterface {
                 "        last_chat_idx=c.last_chat_idx+1, " +
                 "        last_chat=?, " +
                 "        user1_read= " +
-                "            CASE WHEN user1=(SELECT id FROM req_user) " +
+                "            CASE WHEN user1=(SELECT owner_id FROM prog) " +
                 "            THEN c.last_chat_idx+1 " +
                 "            ELSE user1_read END, " +
                 "        user2_read= " +
-                "            CASE WHEN user2=(SELECT id FROM req_user) " +
+                "            CASE WHEN user2=(SELECT owner_id FROM prog) " +
                 "            THEN c.last_chat_idx+1 " +
                 "            ELSE user2_read END " +
                 "    WHERE " +
-                "        (c.user1=(SELECT id FROM req_user) AND c.user2=(SELECT owner_id FROM req_product)) OR " +
-                "        (c.user2=(SELECT id FROM req_user) AND c.user1=(SELECT owner_id FROM req_product)) " +
+                "        (c.user1=(SELECT owner_id FROM prog) AND c.user2=(SELECT buyer_id FROM prog)) OR " +
+                "        (c.user2=(SELECT owner_id FROM prog) AND c.user1=(SELECT buyer_id FROM prog)) " +
                 "    RETURNING * " +
                 ") " +
                 "INSERT INTO chat(id, idx, message, sender, system) " +
@@ -940,15 +942,15 @@ public class PostgreInterface {
                 "    (SELECT id FROM l_chat), " +
                 "    (SELECT last_chat_idx FROM l_chat), " +
                 "    (SELECT last_chat FROM l_chat), " +
-                "    (SELECT id FROM req_user), " +
-                "    true " +
+                "    (SELECT owner_id FROM prog), " +
+                "    'accept' " +
                 ");";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement((sql))) {
 
-            pstmt.setInt(1, userId);
-            pstmt.setInt(2, productId);
+            pstmt.setInt(1, productId);
+            pstmt.setInt(2, userId);
             pstmt.setString(3, message);
             ResultSet rs = pstmt.executeQuery();
 
@@ -1010,7 +1012,7 @@ public class PostgreInterface {
                 "    (SELECT last_chat_idx FROM l_chat), " +
                 "    (SELECT last_chat FROM l_chat), " +
                 "    (SELECT id FROM req), " +
-                "    true " +
+                "    'cancel'::sys_msg_t " +
                 ");";
 
 
@@ -1032,7 +1034,7 @@ public class PostgreInterface {
         return false;
     }
 
-    public static boolean confirmGive(int productId) {
+    public static boolean confirmGive(int productId, String message) {
         String sql = "WITH req AS ( " +
                 "    UPDATE list_trade SET progress='sellergive' " +
                 "    WHERE progress='inprogress' AND product_id=? " +
@@ -1046,7 +1048,7 @@ public class PostgreInterface {
                 "    UPDATE list_chat AS c " +
                 "    SET " +
                 "        last_chat_idx=c.last_chat_idx+1, " +
-                "        last_chat='Seller have confirmed that he(she) has given you the product', " +
+                "        last_chat=?, " +
                 "        user1_read= " +
                 "            CASE WHEN user1=(SELECT owner_id FROM req) " +
                 "            THEN c.last_chat_idx+1 " +
@@ -1064,13 +1066,14 @@ public class PostgreInterface {
                 "    (SELECT last_chat_idx FROM l_chat), " +
                 "    (SELECT last_chat FROM l_chat), " +
                 "    (SELECT owner_id FROM req), " +
-                "    true " +
+                "    'give'::sys_msg_t " +
                 ");";
         
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, productId);
+            pstmt.setString(2, message);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
@@ -1083,51 +1086,44 @@ public class PostgreInterface {
         return false;
     }
 
-    public static boolean confirmGot(int productId) {
-        String sql = "WITH req AS (  " +
-                "    DELETE FROM list_trade s  " +
-                "    WHERE s.progress='soldout' AND s.product_id=?  " +
-                "    RETURNING *  " +
-                "),  " +
-                "n_trade AS (  " +
-                "    INSERT INTO list_trade(owner_id, buyer_id, product_id)  " +
-                "    VALUES (  " +
-                "        (SELECT owner_id FROM req),  " +
-                "        (SELECT buyer_id FROM req),  " +
-                "        (SELECT product_id FROM req)  " +
-                "    )  " +
-                "),  " +
-                "l_chat AS (  " +
-                "    UPDATE list_chat AS c  " +
-                "    SET  " +
-                "        last_chat_idx=c.last_chat_idx+1,  " +
-                "        last_chat='Seller have confirmed that he(she) has given you the product',  " +
-                "        user1_read=  " +
-                "            CASE WHEN user1=(SELECT buyer_id FROM req)  " +
-                "            THEN c.last_chat_idx+1  " +
-                "            ELSE user1_read END,  " +
-                "        user2_read=  " +
-                "            CASE WHEN user2=(SELECT buyer_id FROM req)  " +
-                "            THEN c.last_chat_idx+1  " +
-                "            ELSE user2_read END  " +
-                "    WHERE  " +
-                "        (c.user1=(SELECT owner_id FROM req) AND c.user2=(SELECT buyer_id FROM req)) OR  " +
-                "        (c.user2=(SELECT owner_id FROM req) AND c.user1=(SELECT buyer_id FROM req))  " +
-                "    RETURNING *  " +
-                ")  " +
-                "INSERT INTO chat(id, idx, message, sender, system)  " +
-                "VALUES (  " +
-                "    (SELECT id FROM l_chat),  " +
-                "    (SELECT last_chat_idx FROM l_chat),  " +
-                "    (SELECT last_chat FROM l_chat),  " +
-                "    (SELECT owner_id FROM req),  " +
-                "    true  " +
-                ");";
+    public static boolean confirmGot(int productId, String message) {
+        String sql = "WITH req AS ( " +
+                "    UPDATE list_trade AS s SET progress='soldout' " +
+                "    WHERE s.progress='sellergive' AND s.product_id=? " +
+                "    RETURNING * " +
+                "), " +
+                "l_chat AS ( " +
+                "    UPDATE list_chat AS c " +
+                "    SET " +
+                "        last_chat_idx=c.last_chat_idx+1, " +
+                "        last_chat=?, " +
+                "        user1_read= " +
+                "            CASE WHEN user1=(SELECT buyer_id FROM req) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user1_read END, " +
+                "        user2_read= " +
+                "            CASE WHEN user2=(SELECT buyer_id FROM req) " +
+                "            THEN c.last_chat_idx+1 " +
+                "            ELSE user2_read END " +
+                "    WHERE " +
+                "        (c.user1=(SELECT owner_id FROM req) AND c.user2=(SELECT buyer_id FROM req)) OR " +
+                "        (c.user2=(SELECT owner_id FROM req) AND c.user1=(SELECT buyer_id FROM req)) " +
+                "    RETURNING * " +
+                ") " +
+                "INSERT INTO chat(id, idx, message, sender, system) " +
+                "VALUES ( " +
+                "    (SELECT id FROM l_chat), " +
+                "    (SELECT last_chat_idx FROM l_chat), " +
+                "    (SELECT last_chat FROM l_chat), " +
+                "    (SELECT owner_id FROM req), " +
+                "    'got'::sys_msg_t " +
+                "); ";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
             pstmt.setInt(1, productId);
+            pstmt.setString(2, message);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
