@@ -13,9 +13,7 @@ import java.io.IOException;
 @WebServlet("/acceptbuyrequest")
 public class AcceptBuyRequestServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(true);
-        int uid = (int)session.getAttribute("userId");
-        int buyer_id = Integer.parseInt(request.getParameter("buyerId"));
+        int buyer_id = Integer.parseInt(request.getParameter("userId"));
         int pid = Integer.parseInt(request.getParameter("productId"));
 
         boolean result = PostgreInterface.acceptBuyRequest(buyer_id, pid, Integer.toString(pid));
