@@ -14,21 +14,9 @@ import java.io.IOException;
 public class SendChatServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String loginId = request.getParameter("loginId");
-        String loginPw = request.getParameter("loginPw");
+        HttpSession session = request.getSession(true);
+        int uid = (int)session.getAttribute("userId");
+        PostgreInterface.sendChat(uid, Integer.parseInt(request.getParameter("chatId")), request.getParameter("message"));
         
-        Integer result = DataBeans.PostgreInterface.userAuth(loginId, loginPw);
-
-        if(result != -1) {
-            // Creating or retrieving existing session
-            HttpSession session = request.getSession(true);
-            // Setting user ID (or any other user-related information) in session
-            session.setAttribute("userId", result);
-
-            // Send a success response
-            response.getWriter().write("success");
-        } else {
-            response.getWriter().write("null");
-        }
     }
 }

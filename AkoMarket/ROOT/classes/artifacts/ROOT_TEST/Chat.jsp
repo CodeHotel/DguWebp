@@ -23,6 +23,27 @@
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
   <script>
+    function sendChat() {
+      const messageInput = document.getElementById('message-input');
+      const selectedRoom = document.querySelector('.selectedRoom');
+      const chatId = selectedRoom.getAttribute('data-room-id');
+
+      const data = new URLSearchParams();
+      data.append('message', messageInput.value);
+      data.append('chatId', chatId);
+
+      fetch('/sendchat', {
+        method: 'POST',
+        body: data
+      })
+              .then(response => response.text())
+              .then(result => {
+                console.log(result);
+                messageInput.value = ''; // Clear input field after sending
+              })
+              .catch(error => console.error('Error:', error));
+      document.getElementById('message-input').value = '';
+    }
     function loginSubmit() {
       event.preventDefault();
 
@@ -156,7 +177,7 @@
     </div>
     <div class="message-input">
       <input type="text" id="message-input" placeholder="메시지를 입력하세요...">
-      <button id="send-button">전송</button>
+      <button id="send-button" onclick="sendChat()">전송</button>
     </div>
   </div>
 </div>
