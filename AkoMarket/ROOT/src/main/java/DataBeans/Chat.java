@@ -9,12 +9,12 @@ public class Chat {
     private String message;
     private int sender;
     private String time;
-    private boolean system;
+    private MessageType system;
     private int id;
     private int idx;
 
     // Full parameter constructor (excluding id and idx)
-    public Chat(int id, int idx, String message, int sender, String time, boolean system) {
+    public Chat(int id, int idx, String message, int sender, String time, MessageType system) {
         this.id = id;
         this.idx = idx;
         this.message = message;
@@ -33,8 +33,8 @@ public class Chat {
     public String getTime() { return time; }
     public void setTime(String time) { this.time = time; }
 
-    public boolean isSystem() { return system; }
-    public void setSystem(boolean system) { this.system = system; }
+    public MessageType isSystem() { return system; }
+    public void setSystem(MessageType system) { this.system = system; }
 
     public int getId() { return id; }
     // No setter for id
