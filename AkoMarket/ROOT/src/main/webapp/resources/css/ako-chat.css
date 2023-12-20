@@ -43,3 +43,6 @@
 .message-input button:hover {
     background-color: orangered;
 }
+.selected-room {
+    background-color: blanchedalmond;
+}

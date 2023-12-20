@@ -184,12 +184,12 @@
   }
 
   function fillChatRoom(chatRoomId) {
-    fetch('/chatroom?room='+chatRoomId)
+    fetch('/chatroom?room=' + chatRoomId)
             .then(response => response.text())
             .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
             .then(data => {
               const chats = data.documentElement.childNodes;
-              for(let i = 0; i < chats.length; i++) {
+              for (let i = 0; i < chats.length; i++) {
                 const chatNode = chats[i];
                 if (chatNode.nodeType === Node.ELEMENT_NODE) {
                   const message = chatNode.getElementsByTagName('message')[0].textContent;
@@ -198,14 +198,32 @@
                   const system = chatNode.getElementsByTagName('system')[0].textContent;
                   const id = chatNode.getElementsByTagName('id')[0].textContent;
                   const idx = chatNode.getElementsByTagName('id')[0].textContent;
-                  
+
                 }
               }
             })
             .catch(error => {
               console.error('Error fetching chat messages:', error);
             });
+
   }
+  function selectChatRoom(roomElement, roomId) {
+    const selectedRooms = document.querySelectorAll('.selected-room');
+    selectedRooms.forEach(room => room.classList.remove('selected-room'));
+
+    roomElement.classList.add('selected-room');
+
+    fillChatRoom(roomId);
+  }
+
+  const chatRoomElements = document.querySelectorAll('[style*="cursor: pointer"]');
+  chatRoomElements.forEach((room, index) => {
+    room.addEventListener('click', () => {
+      const roomId = index;
+      selectChatRoom(room, roomId);
+    });
+  });
+
 
   setInterval(fetchChatMessages, 300);
 </script>
