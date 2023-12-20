@@ -1216,6 +1216,7 @@ public class PostgreInterface {
     }
 
     public static ProductData[] search(double hWeight, double tWeight, double dWeight, String pattern) {
+        //a,b
         String sql = "WITH search_result AS ( " +
                 "    WITH h_score AS ( " +
                 "        SELECT s.id, COUNT(s.id) AS score FROM ( " +
