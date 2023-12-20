@@ -311,8 +311,8 @@ public class PostgreInterface {
                 "), " +
                 "n_hashtag AS ( " +
                 "    INSERT INTO hashtag(tag, product_id) " +
-                "    SELECT x, (SELECT id FROM product_info) " +
-                "    FROM hashtags x " +
+                "    SELECT x.*, (SELECT id FROM product_info) " +
+                "    FROM hashtags x" +
                 ") " +
                 "SELECT json_build_object( " +
                 "    'id', (SELECT id FROM product_info), " +
@@ -565,7 +565,6 @@ public class PostgreInterface {
                     hashtags = new String[hashtagJson.length()];
                     for (int i = 0; i < hashtags.length; i++) {
                         hashtags[i] = hashtagJson.getString(i);
-                        hashtags[i] = hashtags[i].substring(1, hashtags[i].length()-1);
                     }
                 }
 
@@ -1232,12 +1231,19 @@ public class PostgreInterface {
     }
 
     public static Chat[] getChat(int chatId) {
-        String sql = "WITH l_chat AS (  " +
-                "    SELECT * FROM chat WHERE id=?  " +
-                ")  " +
-                "SELECT array_to_json(array(  " +
-                "    SELECT row_to_json(c) FROM l_chat c  " +
-                "));";
+        String sql = "WITH l_chat AS ( " +
+                "    SELECT * FROM chat WHERE id=? " +
+                ") " +
+                "SELECT array_to_json(array( " +
+                "    SELECT json_build_object( " +
+                "        'id', c.id, " +
+                "        'idx', c.idx, " +
+                "        'message', c.message, " +
+                "        'sender', c.sender, " +
+                "        'time', c.time, " +
+                "        'system', c.system " +
+                "    ) FROM l_chat c " +
+                ")); ";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -1245,22 +1251,24 @@ public class PostgreInterface {
             pstmt.setInt(1, chatId);
             ResultSet rs = pstmt.executeQuery();
 
-            JSONArray jsonArray = new JSONArray(rs.getString(1));
-            Chat[] chats = new Chat[jsonArray.length()];
+            if (rs.next()) {
+                JSONArray jsonArray = new JSONArray(rs.getString(1));
+                Chat[] chats = new Chat[jsonArray.length()];
 
-            for (int i = 0; i < jsonArray.length(); ++i) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                chats[i] = new Chat(
-                        jsonObject.getInt("id"),
-                        jsonObject.getInt("idx"),
-                        jsonObject.getString("message"),
-                        jsonObject.getInt("sender"),
-                        jsonObject.getString("time"),
-                        jsonObject.getBoolean("System")
-                );
+                for (int i = 0; i < jsonArray.length(); ++i) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    chats[i] = new Chat(
+                            jsonObject.getInt("id"),
+                            jsonObject.getInt("idx"),
+                            jsonObject.getString("message"),
+                            jsonObject.getInt("sender"),
+                            jsonObject.getString("time"),
+                            jsonObject.getBoolean("System")
+                    );
+                }
+
+                return chats;
             }
-
-            return chats;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -1283,14 +1291,14 @@ public class PostgreInterface {
         tagArray = tagList.toArray(tagArray);
 
         StringBuilder stringBuilder = new StringBuilder();
-        for (String tag : tagArray) {
-            stringBuilder.append(tag).append(',');
+        for (int i = 0; i < tagArray.length - 1; i++) {
+            stringBuilder.append(tagArray[i]).append(',');
         }
-
+        stringBuilder.append(tagArray[tagArray.length-1]);
         return stringBuilder.toString();
     }
 
-    public static ProductData[] search(double hWeight, double tWeight, double dWeight, String hashtag, String pattern) {
+    public static ArrayList<ProductData> search(double hWeight, double tWeight, double dWeight, String hashtag, String pattern) {
         String sql = "WITH search_result AS ( " +
                 "    WITH h_score AS ( " +
                 "        SELECT s.id, COUNT(s.id) AS score FROM ( " +
@@ -1356,6 +1364,11 @@ public class PostgreInterface {
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
+            String titleP = pattern.replaceAll("\\s+", ",");
+            String descP = pattern.replaceAll("\\s+", "|");
+            titleP = titleP.substring(0, titleP.length() - 1);
+            descP = descP.substring(0, descP.length() - 1);
+
             pstmt.setString(1, hashtag);
             pstmt.setString(2, pattern.replaceAll("\\s+", ","));
             pstmt.setString(3, pattern.replaceAll("\\s+", "|"));
@@ -1366,7 +1379,7 @@ public class PostgreInterface {
 
             if (rs.next()) {
                 JSONArray jsonArray = new JSONArray(rs.getString(1));
-                ProductData[] result = new ProductData[jsonArray.length()];
+                ArrayList<ProductData> result = new ArrayList<ProductData>();
                 for (int i = 0; i < jsonArray.length(); ++i) {
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
                     JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
@@ -1376,7 +1389,6 @@ public class PostgreInterface {
                         hashtags = new String[hashtagJson.length()];
                         for (int j = 0; j < hashtags.length; j++) {
                             hashtags[j] = hashtagJson.getString(j);
-                            hashtags[j] = hashtags[j].substring(1, hashtags[j].length() - 1);
                         }
                     }
 
@@ -1407,10 +1419,10 @@ public class PostgreInterface {
                             false
                     );
 
-                    result[i] = new ProductData(
+                    result.add( new ProductData(
                             product,
                             user
-                    );
+                    ));
                 }
 
                 return result;
@@ -1468,7 +1480,6 @@ public class PostgreInterface {
                         hashtags = new String[hashtagJson.length()];
                         for (int j = 0; j < hashtags.length; j++) {
                             hashtags[j] = hashtagJson.getString(j);
-                            hashtags[j] = hashtags[j].substring(1, hashtags[j].length()-1);
                         }
                     }
 

@@ -1,4 +1,5 @@
-<%@ page import="DataBeans.*"%><%--
+<%@ page import="DataBeans.*"%>
+<%@ page import="java.util.ArrayList" %><%--
   Created by IntelliJ IDEA.
   User: mh7cp
   Date: 2023-12-18
@@ -6,6 +7,7 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%request.setCharacterEncoding("UTF-8");%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -130,9 +132,8 @@
     </div>
 </div>
 <%
-    DataBeans.ProductData[] searchResults = PostgreInterface.search(1.0, 0.5, 1.0,
-            PostgreInterface.parseHashtag("a b c #노트북 #d"), "a b c #노트북 #d");
-    System.out.print(searchResults.length);
+    ArrayList<ProductData> searchResults = PostgreInterface.search(1.0, 0.5, 1.0,
+            PostgreInterface.parseHashtag(request.getParameter("searchKeyWord")), request.getParameter("searchKeyWord"));
 %>
 <form method="post" action="SearchResults.jsp" style="width: 100%; text-align: center;font-family: BaeMinHanna,system-ui">
     <input type="text" name="searchKeyWord" style="width: 55%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746" placeholder="#교과서 #공대 #겨울옷">
@@ -149,43 +150,53 @@
 </form>
 <br><br><br>
 <center>
+    <%
+        if(searchResults.size()!=0){
+    %>
     <table style="width: 80%; text-align: center;">
-        <tr>
-            <td style="width: 30%; height:auto; display: inline-block; margin: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; text-align: center;">
-                <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="resources/images/AkoFace.png" alt="상품 이미지" class="product-image">
+        <%
+            for(int f = 0; f<(searchResults.size()%3!=0?1:0) + searchResults.size()/3; f++){
+        %>
+        <tr style="height:auto;">
+            <%
+                for(int pd = 0; pd<3; pd++){
+                    if(3*f+pd>=searchResults.size()) continue;
+                    Product product = searchResults.get(3*f+pd).prodcut;
+                    StringBuilder hashtagStr = new StringBuilder();
+                    for (String hashtag : product.getHashtags()) {
+                        hashtagStr.append("#").append(hashtag).append("  ");
+                    }
+            %>
+            <td style="width: 30%; height:auto; display: inline-block; margin: 1.6%; border: 1px solid #ccc; padding: 1.6%; box-sizing: border-box; text-align: center;">
+                <div style="width:100%;height:25vh">
+                    <img style = "max-width: 100%; max-height: 100%; margin-bottom: 5px;" src="<%=ImageDB.getImageUrl(product.getImage())%>" alt="상품 이미지" class="product-image">
+                </div>
                 <hr>
-                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL">상품1</a></h2>
-                <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;">상품 설명이 여기에 들어갑니다. 상품 설명을 넣어 주세요.</p>
-                <p style = "font-family: BaeMinJua, system-ui;"> #1 #2 </p>
-                <p style = "font-family: BaeMinJua, system-ui;"> 가격 </p>
+                <h2 style="font-family: BaeMinHanna, system-ui; font-size:clamp(1px, 2.5vw,50px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><a style = "text-decoration: none; color: black;" href="Product.jsp?product=<%=product.getId()%>"><%=product.getTitle()%></a></h2>
+                <p style = "font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getDescription()%></p>
+                <p style = "font-family: BaeMinJua, system-ui;color:#4FC3F7; font-size:clamp(1px, 2vw,40px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=hashtagStr.toString() %></p>
+                <p style = "font-family: BaeMinJua, system-ui;font-size:clamp(1px, 2vw,40px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getPrice() %></p>
                 <hr>
-                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
-                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
+                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
+                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
             </td>
-            <td style="width: 30%; height:auto; display: inline-block; margin: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; text-align: center;">
-                <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="resources/images/AkoFace.png" alt="상품 이미지" class="product-image">
-                <hr>
-                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL">상품1</a></h2>
-                <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;">상품 설명이 여기에 들어갑니다. 상품 설명을 넣어 주세요.</p>
-                <p style = "font-family: BaeMinJua, system-ui;"> #1 #2 </p>
-                <p style = "font-family: BaeMinJua, system-ui;"> 가격 </p>
-                <hr>
-                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
-                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
-            </td>
-            <td style="width: 30%; height:auto; display: inline-block; margin: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; text-align: center;">
-                <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="resources/images/AkoFace.png" alt="상품 이미지" class="product-image">
-                <hr>
-                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL">상품1</a></h2>
-                <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;">상품 설명이 여기에 들어갑니다. 상품 설명을 넣어 주세요.</p>
-                <p style = "font-family: BaeMinJua, system-ui;"> #1 #2 </p>
-                <p style = "font-family: BaeMinJua, system-ui;"> 가격 </p>
-                <hr>
-                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
-                <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
-            </td>
+        <%
+                }
+        %>
         </tr>
+        <%
+            }
+        %>
     </table>
+    <%
+        }
+        else{
+    %>
+    <br><br><br><br>
+    <h1 style="width: 100%; text-align:center;"> 검색 결과가 없습니다. </h1>
+    <%
+        }
+    %>
 </center>
 <center>
     <br><br>
