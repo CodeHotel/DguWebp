@@ -17,7 +17,7 @@
     <link rel="stylesheet" type="text/css" href="resources/css/ako-main.css">
     <style>
         .hashtag {
-            color: lightblue;
+            color: #4FC3F7;
         }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>

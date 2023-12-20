@@ -229,8 +229,41 @@
     });
   });
 
+  function fetchAndParseXML() {
+    fetch('/chatpreview')
+            .then(response => response.text())
+            .then(xmlString => {
+              const parser = new DOMParser();
+              const xmlDoc = parser.parseFromString(xmlString, "text/xml");
 
-  setInterval(fetchChatMessages, 300);
+              const chatLists = xmlDoc.getElementsByTagName("chatList");
+              const parsedChats = [];
+
+              for (let chat of chatLists) {
+                let chatObj = {
+                  id: chat.getElementsByTagName("id")[0].textContent,
+                  user1: chat.getElementsByTagName("user1")[0].textContent,
+                  user2: chat.getElementsByTagName("user2")[0].textContent,
+                  user1_read: chat.getElementsByTagName("user1_read")[0].textContent,
+                  user2_read: chat.getElementsByTagName("user2_read")[0].textContent,
+                  last_msg: chat.getElementsByTagName("last_msg")[0].textContent,
+                  last_idx: chat.getElementsByTagName("last_idx")[0].textContent,
+                  time: chat.getElementsByTagName("time")[0].textContent
+                };
+                parsedChats.push(chatObj);
+              }
+
+              console.log(parsedChats); // Process data as needed
+            })
+            .catch(error => console.error('Error fetching XML:', error));
+  }
+
+  // Polling
+  setInterval(fetchAndParseXML, 5000); // Poll every 5000 milliseconds (5 seconds)
+
+
+
+
 </script>
 </body>
 </html>
