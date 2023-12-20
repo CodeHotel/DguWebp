@@ -3,7 +3,7 @@
   <display-name>ROOT</display-name>
   <servlet>
     <servlet-name>LoginServlet</servlet-name>
-    <servlet-class>LoginServlet</servlet-class>
+    <servlet-class>Servlets.LoginServlet</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>LoginServlet</servlet-name>
@@ -11,7 +11,7 @@
   </servlet-mapping>
   <servlet>
     <servlet-name>LogoutServlet</servlet-name>
-    <servlet-class>LogoutServlet</servlet-class>
+    <servlet-class>Servlets.LogoutServlet</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>LogoutServlet</servlet-name>
@@ -19,7 +19,7 @@
   </servlet-mapping>
   <servlet>
     <servlet-name>TestServlet</servlet-name>
-    <servlet-class>TestServlet</servlet-class>
+    <servlet-class>Servlets.TestServlet</servlet-class>
   </servlet>
   <servlet-mapping>
     <servlet-name>TestServlet</servlet-name>

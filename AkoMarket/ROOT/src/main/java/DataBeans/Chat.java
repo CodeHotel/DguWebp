@@ -1,5 +1,8 @@
 package DataBeans;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+import java.io.StringWriter;
 import java.sql.Timestamp;
 
 public class Chat {
@@ -18,6 +21,21 @@ public class Chat {
         this.sender = sender;
         this.time = time;
         this.system = system;
+    }
+
+    public static String chatsToXML(Chat[] chatArray) {
+        try {
+            JAXBContext context = JAXBContext.newInstance(Chat[].class);
+            Marshaller marshaller = context.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+            StringWriter sw = new StringWriter();
+            marshaller.marshal(chatArray, sw);
+            return sw.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     // Getters and setters (excluding id and idx)
