@@ -206,7 +206,7 @@
           <td><input type="file" name="regPicture"></td>
         </tr>
         <tr><td><br></td></tr>
-        <tr><td rowspan="2" colspan="2"">
+        <tr><td colspan="2">
         <input type="submit" value="가입신청" style="width:100%; height:100%; color:white; background-color: #D35400; font-family: BaeMinJua, system-ui;" onclick="registerSubmit()"></td></tr>
       </table>
     </div>
