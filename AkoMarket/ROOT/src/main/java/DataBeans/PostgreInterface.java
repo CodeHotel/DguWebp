@@ -2,6 +2,10 @@ package DataBeans;
 
 import java.sql.*;
 import java.lang.StringBuilder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -1215,8 +1219,29 @@ public class PostgreInterface {
         return null;
     }
 
-    public static ProductData[] search(double hWeight, double tWeight, double dWeight, String pattern) {
-        //a,b
+    public static String parseHashtag(String tagStr) {
+        List<String> tagList = new ArrayList<>();
+        String regex = "#\\S+";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(tagStr);
+
+        while (matcher.find()) {
+            tagList.add(matcher.group().substring(1));
+        }
+
+        // Convert the list to an array
+        String[] tagArray = new String[tagList.size()];
+        tagArray = tagList.toArray(tagArray);
+
+        StringBuilder stringBuilder = new StringBuilder();
+        for (String tag : tagArray) {
+            stringBuilder.append(tag).append(',');
+        }
+
+        return stringBuilder.toString();
+    }
+
+    public static ProductData[] search(double hWeight, double tWeight, double dWeight, String hashtag, String pattern) {
         String sql = "WITH search_result AS ( " +
                 "    WITH h_score AS ( " +
                 "        SELECT s.id, COUNT(s.id) AS score FROM ( " +
@@ -1282,62 +1307,65 @@ public class PostgreInterface {
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, pattern.replaceAll("\\s+", ","));
-            pstmt.setString(2, pattern.replaceAll("\\s+", "|"));
-            pstmt.setDouble(3, hWeight);
-            pstmt.setDouble(4, tWeight);
-            pstmt.setDouble(5, dWeight);
+            pstmt.setString(1, hashtag);
+            pstmt.setString(2, pattern.replaceAll("\\s+", ","));
+            pstmt.setString(3, pattern.replaceAll("\\s+", "|"));
+            pstmt.setDouble(4, hWeight);
+            pstmt.setDouble(5, tWeight);
+            pstmt.setDouble(6, dWeight);
             ResultSet rs = pstmt.executeQuery();
 
-            JSONArray jsonArray = new JSONArray(rs.getString(1));
-            ProductData[] result = new ProductData[jsonArray.length()];
-            for (int i = 0; i < jsonArray.length(); ++i) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
-                String[] hashtags = null;
+            if (rs.next()) {
+                JSONArray jsonArray = new JSONArray(rs.getString(1));
+                ProductData[] result = new ProductData[jsonArray.length()];
+                for (int i = 0; i < jsonArray.length(); ++i) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
+                    String[] hashtags = null;
 
-                if (hashtagJson != null) {
-                    hashtags = new String[hashtagJson.length()];
-                    for (int j = 0; j < hashtags.length; j++) {
-                        hashtags[j] = hashtagJson.getString(j);
-                        hashtags[j] = hashtags[j].substring(1, hashtags[j].length()-1);
+                    if (hashtagJson != null) {
+                        hashtags = new String[hashtagJson.length()];
+                        for (int j = 0; j < hashtags.length; j++) {
+                            hashtags[j] = hashtagJson.getString(j);
+                            hashtags[j] = hashtags[j].substring(1, hashtags[j].length() - 1);
+                        }
                     }
+
+                    Product product = new Product(
+                            jsonObject.getInt("id"),
+                            jsonObject.getString("title"),
+                            jsonObject.getInt("price"),
+                            jsonObject.optString("image", null),
+                            jsonObject.optString("description", null),
+                            jsonObject.getLong("views"),
+                            -1,
+                            hashtags,
+                            Progress.valueOf(jsonObject.getString("progress"))
+                    );
+
+                    JSONObject userJson = jsonObject.getJSONObject("user_info");
+                    User user = new User(
+                            userJson.getInt("id"),
+                            null,
+                            null,
+                            userJson.getString("nickname"),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false
+                    );
+
+                    result[i] = new ProductData(
+                            product,
+                            user
+                    );
                 }
 
-                Product product = new Product(
-                        jsonObject.getInt("id"),
-                        jsonObject.getString("title"),
-                        jsonObject.getInt("price"),
-                        jsonObject.optString("image", null),
-                        jsonObject.optString("description", null),
-                        jsonObject.getLong("views"),
-                        -1,
-                        hashtags,
-                        Progress.valueOf(jsonObject.getString("progress"))
-                );
-
-                JSONObject userJson = jsonObject.getJSONObject("user_info");
-                User user = new User(
-                        userJson.getInt("id"),
-                        null,
-                        null,
-                        userJson.getString("nickname"),
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        null,
-                        false
-                );
-
-                result[i] = new ProductData(
-                        product,
-                        user
-                );
+                return result;
             }
-
-            return result;
         } catch (SQLException e) {
             e.printStackTrace();
         }
