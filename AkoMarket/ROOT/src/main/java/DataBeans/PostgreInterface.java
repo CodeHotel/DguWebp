@@ -1232,12 +1232,19 @@ public class PostgreInterface {
     }
 
     public static Chat[] getChat(int chatId) {
-        String sql = "WITH l_chat AS (  " +
-                "    SELECT * FROM chat WHERE id=?  " +
-                ")  " +
-                "SELECT array_to_json(array(  " +
-                "    SELECT row_to_json(c) FROM l_chat c  " +
-                "));";
+        String sql = "WITH l_chat AS ( " +
+                "    SELECT * FROM chat WHERE id=? " +
+                ") " +
+                "SELECT array_to_json(array( " +
+                "    SELECT json_build_object( " +
+                "        'id', c.id, " +
+                "        'idx', c.idx, " +
+                "        'message', c.message, " +
+                "        'sender', c.sender, " +
+                "        'time', c.time, " +
+                "        'system', c.system " +
+                "    ) FROM l_chat c " +
+                ")); ";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -1245,22 +1252,24 @@ public class PostgreInterface {
             pstmt.setInt(1, chatId);
             ResultSet rs = pstmt.executeQuery();
 
-            JSONArray jsonArray = new JSONArray(rs.getString(1));
-            Chat[] chats = new Chat[jsonArray.length()];
+            if (rs.next()) {
+                JSONArray jsonArray = new JSONArray(rs.getString(1));
+                Chat[] chats = new Chat[jsonArray.length()];
 
-            for (int i = 0; i < jsonArray.length(); ++i) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                chats[i] = new Chat(
-                        jsonObject.getInt("id"),
-                        jsonObject.getInt("idx"),
-                        jsonObject.getString("message"),
-                        jsonObject.getInt("sender"),
-                        jsonObject.getString("time"),
-                        jsonObject.getBoolean("System")
-                );
+                for (int i = 0; i < jsonArray.length(); ++i) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    chats[i] = new Chat(
+                            jsonObject.getInt("id"),
+                            jsonObject.getInt("idx"),
+                            jsonObject.getString("message"),
+                            jsonObject.getInt("sender"),
+                            jsonObject.getString("time"),
+                            jsonObject.getBoolean("System")
+                    );
+                }
+
+                return chats;
             }
-
-            return chats;
         } catch (SQLException e) {
             e.printStackTrace();
         }
