@@ -16,7 +16,7 @@ public class BuyRequestServlet extends HttpServlet {
         HttpSession session = request.getSession(true);
         int uid = (int)session.getAttribute("userId");
         int pid = Integer.parseInt(request.getParameter("productId"));
-
+        PostgreInterface.createChatRoom(uid, PostgreInterface.getProductData(pid).user.getUid());
         String message = "productId=" + Integer.toString(pid) + "&userId=" + Integer.toString(uid);
 
         boolean result = PostgreInterface.buyRequest(uid, pid, message);
