@@ -1230,6 +1230,10 @@ public class PostgreInterface {
         return null;
     }
 
+    public static boolean addRating(int sellerId, int buyerId, float rating) {
+        return true;
+    }
+
     public static Chat[] getChat(int chatId) {
         String sql = "WITH l_chat AS ( " +
                 "    SELECT * FROM chat WHERE id=? " +
