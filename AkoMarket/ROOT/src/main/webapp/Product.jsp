@@ -135,7 +135,7 @@
     <table style="width:70%;">
         <tr style="text-align:center; height:600px;border:0px;">
             <td style="width: 50%; text-align: center;">
-                <img src="<%=ImageDB.getImageUrl(product.prodcut.getImage())%>>" style="max-width: 100%; max-height: 100%; display: block; margin: 0;">
+                <img src="<%=ImageDB.getImageUrl(product.prodcut.getImage())%>" style="max-width: 100%; max-height: 100%; display: block; margin: 0;">
             </td>
             <td style="padding-left:5%;vertical-align:top;text-align: left">
                 <br><br>
@@ -165,7 +165,7 @@
     %>
     <table style = "width: 70%;">
         <tr style = "text-align: center; height: 200px; border: 1px solid #ddd;">
-            <td style = "border: 1px solid #ddd; width: 30%"><img style ="margin-top: 30px; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" src="<%=ImageDB.getImageUrl(product.user.getImage())%>" alt="resource/images/AkoFace.png">
+            <td style = "border: 1px solid #ddd; width: 30%"><img style ="margin-top: 30px; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" src="<%=ImageDB.getImageUrl(product.user.getImage())%>" alt="resources/images/AkoFace.png">
                 <h2 style = "font-family: BaeMinHanna, system-ui; font-size: 20px;"><%=product.user.getNickName()%></h2>
                 <button style="border: 1px solid #D35400; background-color: transparent; color: #D35400; padding: 3px 8px; border-radius: 5px; vertical-align: middle;" onclick="window.location.href = '${pageContext.request.contextPath}/Seller.jsp?user=<%=product.user.getUid()%>';">방문하기</button>
                 <p style="font-family: BaeMinJua, system-ui;">평점: <%=rating%></p>
