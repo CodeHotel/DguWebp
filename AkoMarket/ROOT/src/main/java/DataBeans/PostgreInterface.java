@@ -311,8 +311,8 @@ public class PostgreInterface {
                 "), " +
                 "n_hashtag AS ( " +
                 "    INSERT INTO hashtag(tag, product_id) " +
-                "    SELECT x, (SELECT id FROM product_info) " +
-                "    FROM hashtags x " +
+                "    SELECT x.*, (SELECT id FROM product_info) " +
+                "    FROM hashtags x" +
                 ") " +
                 "SELECT json_build_object( " +
                 "    'id', (SELECT id FROM product_info), " +
@@ -565,7 +565,6 @@ public class PostgreInterface {
                     hashtags = new String[hashtagJson.length()];
                     for (int i = 0; i < hashtags.length; i++) {
                         hashtags[i] = hashtagJson.getString(i);
-                        hashtags[i] = hashtags[i].substring(1, hashtags[i].length()-1);
                     }
                 }
 
@@ -1292,10 +1291,10 @@ public class PostgreInterface {
         tagArray = tagList.toArray(tagArray);
 
         StringBuilder stringBuilder = new StringBuilder();
-        for (String tag : tagArray) {
-            stringBuilder.append(tag).append(',');
+        for (int i = 0; i < tagArray.length - 1; i++) {
+            stringBuilder.append(tagArray[i]).append(',');
         }
-
+        stringBuilder.append(tagArray[tagArray.length-1]);
         return stringBuilder.toString();
     }
 
@@ -1365,6 +1364,11 @@ public class PostgreInterface {
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
+            String titleP = pattern.replaceAll("\\s+", ",");
+            String descP = pattern.replaceAll("\\s+", "|");
+            titleP = titleP.substring(0, titleP.length() - 1);
+            descP = descP.substring(0, descP.length() - 1);
+
             pstmt.setString(1, hashtag);
             pstmt.setString(2, pattern.replaceAll("\\s+", ","));
             pstmt.setString(3, pattern.replaceAll("\\s+", "|"));
@@ -1385,7 +1389,6 @@ public class PostgreInterface {
                         hashtags = new String[hashtagJson.length()];
                         for (int j = 0; j < hashtags.length; j++) {
                             hashtags[j] = hashtagJson.getString(j);
-                            hashtags[j] = hashtags[j].substring(1, hashtags[j].length() - 1);
                         }
                     }
 
@@ -1477,7 +1480,6 @@ public class PostgreInterface {
                         hashtags = new String[hashtagJson.length()];
                         for (int j = 0; j < hashtags.length; j++) {
                             hashtags[j] = hashtagJson.getString(j);
-                            hashtags[j] = hashtags[j].substring(1, hashtags[j].length()-1);
                         }
                     }
 

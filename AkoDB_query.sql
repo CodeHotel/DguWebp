@@ -130,7 +130,7 @@ hashtags AS (
 ),
 n_hashtag AS (
     INSERT INTO hashtag(tag, product_id)
-    SELECT x, (SELECT id FROM product_info)
+    SELECT x.*, (SELECT id FROM product_info)
     FROM hashtags x
 )
 SELECT json_build_object(
