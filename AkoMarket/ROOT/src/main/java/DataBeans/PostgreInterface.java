@@ -839,11 +839,7 @@ public class PostgreInterface {
             pstmt.setInt(1, userId);
             pstmt.setInt(2, productId);
             pstmt.setString(3, message);
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
+            return pstmt.executeUpdate() == 1;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -978,12 +974,8 @@ public class PostgreInterface {
             pstmt.setInt(1, productId);
             pstmt.setInt(2, userId);
             pstmt.setString(3, message);
-            ResultSet rs = pstmt.executeQuery();
 
-            // Insert into chat table
-            if (rs.next()) {
-                return rs.getInt(0) > 0;
-            }
+            return pstmt.executeUpdate() == 1;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -1048,11 +1040,8 @@ public class PostgreInterface {
             pstmt.setInt(1, userId);
             pstmt.setInt(2, productId);
             pstmt.setString(3, message);
-            ResultSet rs = pstmt.executeQuery();
 
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
+            return pstmt.executeUpdate() == 1;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -1100,11 +1089,8 @@ public class PostgreInterface {
 
             pstmt.setInt(1, productId);
             pstmt.setString(2, message);
-            ResultSet rs = pstmt.executeQuery();
 
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
+            return pstmt.executeUpdate() == 1;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -1150,11 +1136,8 @@ public class PostgreInterface {
 
             pstmt.setInt(1, productId);
             pstmt.setString(2, message);
-            ResultSet rs = pstmt.executeQuery();
 
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
+            return pstmt.executeUpdate() == 1;
         } catch (SQLException e) {
             e.printStackTrace();
         }

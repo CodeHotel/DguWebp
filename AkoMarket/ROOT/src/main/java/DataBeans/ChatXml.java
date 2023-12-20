@@ -1,7 +1,5 @@
 package DataBeans;
 
-import sun.plugin2.message.Message;
-
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlAccessorType;
