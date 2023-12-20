@@ -807,8 +807,8 @@ public class PostgreInterface {
                 JSONObject jsonObject = new JSONObject(rs.getString(1));
                 return new Chatlist(
                         jsonObject.getInt("id"),
-                        jsonObject.getInt("user1"),
-                        jsonObject.getInt("user2"),
+                        new User(jsonObject.getInt("user1"), null, null, null, null, null, null, null,null,null,false),
+                        new User(jsonObject.getInt("user2"), null, null, null, null, null, null, null,null,null,false),
                         jsonObject.getInt("user1_read"),
                         jsonObject.getInt("user2_read"),
                         jsonObject.getString("last_chat"),
@@ -1145,9 +1145,26 @@ public class PostgreInterface {
         String sql = "WITH l_chat AS (  " +
                 "    SELECT c.* FROM list_chat c  " +
                 "    WHERE c.user1=? OR c.user2=?  " +
+                "),  " +
+                "user1_info AS (  " +
+                "    SELECT u.id, u.nickname FROM akouser u  " +
+                "    WHERE u.id=(SELECT user1 FROM l_chat)  " +
+                "),  " +
+                "user2_info AS (  " +
+                "    SELECT u.id, u.nickname FROM akouser u  " +
+                "    WHERE u.id=(SELECT user2 FROM l_chat)  " +
                 ")  " +
                 "SELECT array_to_json(array(  " +
-                "    SELECT row_to_json(c) FROM l_chat c  " +
+                "    SELECT json_build_object(  " +
+                "        'id', c.id,  " +
+                "        'user1', (SELECT row_to_json(u) FROM user1_info u),  " +
+                "        'user2', (SELECT row_to_json(u) FROM user2_info u),  " +
+                "        'user1_read', c.user1_read,  " +
+                "        'user2_read', c.user2_read,  " +
+                "        'last_chat', c.last_chat,  " +
+                "        'last_chat_idx', c.last_chat_idx,  " +
+                "        'last_time', c.last_time  " +
+                "    ) FROM l_chat c  " +
                 "));";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
@@ -1157,24 +1174,56 @@ public class PostgreInterface {
             pstmt.setInt(2, userId);
             ResultSet rs = pstmt.executeQuery();
 
-            JSONArray jsonArray = new JSONArray(rs.getString(1));
-            Chatlist[] chatlists = new Chatlist[jsonArray.length()];
-            for (int i = 0; i < jsonArray.length(); i++) {
-                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                chatlists[i] = new Chatlist(
-                        jsonObject.getInt("id"),
-                        jsonObject.getInt("user1"),
-                        jsonObject.getInt("user2"),
-                        jsonObject.getInt("user1_read"),
-                        jsonObject.getInt("user2_read"),
-                        jsonObject.getString("last_chat"),
-                        jsonObject.getInt("last_chat_idx"),
-                        jsonObject.getString("last_time")
-                );
+            if (rs.next()) {
+                JSONArray jsonArray = new JSONArray(rs.getString(1));
+                Chatlist[] chatlists = new Chatlist[jsonArray.length()];
+                for (int i = 0; i < jsonArray.length(); i++) {
+                    JSONObject jsonObject = jsonArray.getJSONObject(i);
+                    JSONObject user1Obj = jsonObject.getJSONObject("user1");
+                    JSONObject user2Obj = jsonObject.getJSONObject("user2");
+
+                    User user1 = new User(
+                            user1Obj.getInt("id"),
+                            null,
+                            null,
+                            user1Obj.getString("nickname"),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false
+                    );
+
+                    User user2 = new User(
+                            user2Obj.getInt("id"),
+                            null,
+                            null,
+                            user2Obj.getString("nickname"),
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            null,
+                            false
+                    );
+
+                    chatlists[i] = new Chatlist(
+                            jsonObject.getInt("id"),
+                            user1,
+                            user2,
+                            jsonObject.getInt("user1_read"),
+                            jsonObject.getInt("user2_read"),
+                            jsonObject.optString("last_chat", null),
+                            jsonObject.getInt("last_chat_idx"),
+                            jsonObject.optString("last_time", null)
+                    );
+                }
+
+                return chatlists;
             }
-
-            return chatlists;
-
         } catch (SQLException e) {
             e.printStackTrace();
         }
