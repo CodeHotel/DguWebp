@@ -150,7 +150,7 @@
 </div>
 <center>
   <form method="post" id="registrationForm" action="/register" style="width: 100%;" enctype="multipart/form-data">
-    <h1 style = "font-family: BaeMinHanna, system-ui; font-size:clamp(10px, 3.5vw,60px);">회원가입</h1>
+    <h1 style = "font-family: BaeMinHanna, system-ui; font-size:clamp(5px, 3.5vw,60px);">회원가입</h1>
     <div style="width: 70%; margin: 0 auto; background-color: #fff;padding: 20px; border-radius: 8px;">
       <br>
       <table style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2.0vw,20px);">
@@ -206,8 +206,7 @@
           <td><input type="file" name="regPicture"></td>
         </tr>
         <tr><td><br></td></tr>
-        <tr><td colspan="2">
-        <input type="submit" value="가입신청" style="width:100%; height:100%; color:white; background-color: #D35400; font-family: BaeMinJua, system-ui;" onclick="registerSubmit()"></td></tr>
+        <tr><td><input type="submit" value="가입신청" style="width:clamp(1px, 10.0vw,150px); height:clamp(0.5px, 3.8vh, 100px); font-size:clamp(0.5px, 1.5vw,20px)" onclick="registerSubmit()" style="border-radius:0.5em;border:solid 1px gray;width:6em"></td></tr>
       </table>
     </div>
   </form>
