@@ -208,7 +208,7 @@
     } else if (system == 'cancel') {
       messageText.innerHTML = 'System:상품거래가 취소되었습니다.';
     } else if (system == 'give') {
-      messageText.innerHTML = '상품인계를 확인했어요!<br><button onclick="fetch(\'/confirmgot?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">인계확인</button>';
+      messageText.innerHTML = '상품인계를 확인했어요!<br><button onclick="fetch(\'/confirmgot?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">인수확인</button>';
     } else if (system == 'got') {
       messageText.innerHTML = '<br>System:상품 거래가 종료되었습니다.';
     }
