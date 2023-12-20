@@ -39,7 +39,7 @@ public class ChatPreviewServlet extends HttpServlet {
         HttpSession session = request.getSession(true);
         int uid = (int)session.getAttribute("userId");
 
-        ChatListXml[] t = ChatListXml.ChatListConvert(PostgreInterface.getChatPreview(uid));
+        ChatListXml[] t = ChatListXml.ChatListConvert(PostgreInterface.getChatPreview(uid),uid);
         for(ChatListXml e : t){
 
             e.userNickname = PostgreInterface.getBriefUserData(uid==e.user1?e.user2: e.user1).user.getNickName();
@@ -53,7 +53,7 @@ public class ChatPreviewServlet extends HttpServlet {
         HttpSession session = request.getSession(true);
         int uid = (int)session.getAttribute("userId");
 
-        ChatListXml[] t = ChatListXml.ChatListConvert(PostgreInterface.getChatPreview(uid));
+        ChatListXml[] t = ChatListXml.ChatListConvert(PostgreInterface.getChatPreview(uid),uid);
         for(ChatListXml e : t){
 
             e.userNickname = PostgreInterface.getBriefUserData(uid==e.user1?e.user2: e.user1).user.getNickName();

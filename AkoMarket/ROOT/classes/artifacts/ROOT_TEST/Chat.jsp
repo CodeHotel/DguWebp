@@ -196,7 +196,7 @@
                   const time = chatNode.getElementsByTagName('time')[0].textContent;
                   const system = chatNode.getElementsByTagName('system')[0].textContent;
                   const id = chatNode.getElementsByTagName('id')[0].textContent;
-                  const idx = chatNode.getElementsByTagName('id')[0].textContent;
+                  const idx = chatNode.getElementsByTagName('idx')[0].textContent;
 
                 }
               }
@@ -216,6 +216,7 @@
   }
 
   let globalChatData = [];
+  let lastIdxMap = new Map();
 
   function fetchAndParseXML() {
     fetch('/chatpreview')
@@ -228,19 +229,32 @@
               const parsedChats = [];
 
               for (let chat of chatLists) {
+                const id = parseInt(chat.getElementsByTagName("id")[0].textContent, 10);
+                const last_idx = parseInt(chat.getElementsByTagName("last_idx")[0].textContent, 10);
+
                 let chatObj = {
-                  id: chat.getElementsByTagName("id")[0].textContent,
-                  user1: chat.getElementsByTagName("user1")[0].textContent,
-                  user2: chat.getElementsByTagName("user2")[0].textContent,
-                  user1_read: chat.getElementsByTagName("user1_read")[0].textContent,
-                  user2_read: chat.getElementsByTagName("user2_read")[0].textContent,
+                  id: id,
+                  user1: parseInt(chat.getElementsByTagName("user1")[0].textContent, 10),
+                  user2: parseInt(chat.getElementsByTagName("user2")[0].textContent, 10),
+                  user_read: parseInt(chat.getElementsByTagName("user_read")[0].textContent, 10),
                   last_msg: chat.getElementsByTagName("last_msg")[0].textContent,
-                  last_idx: chat.getElementsByTagName("last_idx")[0].textContent,
+                  last_idx: last_idx,
                   time: chat.getElementsByTagName("time")[0].textContent,
                   userNickname: chat.getElementsByTagName("userNickname")[0].textContent
                 };
+
+                // Check if the last_idx has changed
+                if (lastIdxMap.has(id) && lastIdxMap.get(id) !== last_idx) {
+                  // Trigger notification for this chatroom
+                  notifyChatRoomUpdate(chatObj);
+                }
+
+                // Update lastIdxMap after checking for changes
+                lastIdxMap.set(id, last_idx);
+
                 parsedChats.push(chatObj);
               }
+
 
               globalChatData = parsedChats;
               console.log(globalChatData); // Now stored in globalChatData
@@ -248,6 +262,27 @@
             })
             .catch(error => console.error('Error fetching XML:', error));
   }
+
+  function notifyChatRoomUpdate(chatRoom) {
+    if (!("Notification" in window)) {
+      console.log("This browser does not support desktop notification");
+    } else if (Notification.permission === "granted") {
+      // If it's okay to show notifications
+      const notification = new Notification(chatRoom.userNickname+' : '+chatRoom.last_msg);
+    } else if (Notification.permission !== "denied") {
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          const notification = new Notification(chatRoom.userNickname+' : '+chatRoom.last_msg);
+        }
+      });
+    }
+  }
+
+
+  // Call this function initially and also set up polling
+  fetchAndParseXML();
+  setInterval(fetchAndParseXML, 5000); // Adjust the interval as needed
+
   function updateChatRooms() {
     const chatRoomList = document.getElementById('chatRoomList');
 
@@ -256,13 +291,13 @@
 
       if (chatDiv) {
         // Update existing chat room info
-        chatDiv.innerHTML = chat.userNickname + ' : ' + chat.last_msg + '  (' + chat.time + ')';
+        chatDiv.innerHTML = chat.userNickname + ' : ' + chat.last_msg + '  ' + chat.time + '    (' + (chat.last_idx-chat.user_read)+')';
       } else {
         // Create new chat room div
         chatDiv = document.createElement('div');
         chatDiv.id = 'chat_' + chat.id;
         chatDiv.style = "padding: 20px; cursor: pointer; border-bottom: 1px solid #ccc;";
-        chatDiv.innerHTML = chat.userNickname + ' : ' + chat.last_msg + '  (' + chat.time + ')';
+        chatDiv.innerHTML = chat.userNickname + ' : ' + chat.last_msg + '  ' + chat.time + '    (' + (chat.last_idx-chat.user_read)+')';
         chatRoomList.appendChild(chatDiv);
       }
     });
