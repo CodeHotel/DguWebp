@@ -1277,29 +1277,13 @@ public class PostgreInterface {
     }
 
     public static String parseHashtag(String tagStr) {
-        List<String> tagList = new ArrayList<>();
-        String regex = "#\\S+";
-        Pattern pattern = Pattern.compile(regex);
-        Matcher matcher = pattern.matcher(tagStr);
+        String tag = tagStr.replaceAll("#", ",").replaceAll("\\s+", ",");
 
-        while (matcher.find()) {
-            tagList.add(matcher.group().substring(1));
+        if (tag.charAt(0) == ',') {
+            tag = tag.substring(1);
         }
 
-        // Convert the list to an array
-        String[] tagArray = new String[tagList.size()];
-        tagArray = tagList.toArray(tagArray);
-
-        StringBuilder stringBuilder = new StringBuilder();
-        for (int i = 0; i < tagArray.length; i++) {
-            stringBuilder.append(tagArray[i]).append(',');
-        }
-
-        String result = stringBuilder.toString();
-        if (result.length() > 0) {
-            result.substring(0, result.length() - 1);
-        }
-        return result;
+        return tag;
     }
 
     public static ArrayList<ProductData> search(double hWeight, double tWeight, double dWeight, String hashtag, String pattern) {
@@ -1340,7 +1324,7 @@ public class PostgreInterface {
                 "products AS ( " +
                 "    SELECT p.*, r.score FROM product p, search_result r " +
                 "    WHERE p.id=ANY(SELECT id FROM search_result) AND p.id=r.id AND score > 0 " +
-                "    ORDER BY score DESC " +
+                "    ORDER BY score DESC, p.views DESC " +
                 ") " +
                 "SELECT array_to_json(array( " +
                 "    SELECT json_build_object( " +
