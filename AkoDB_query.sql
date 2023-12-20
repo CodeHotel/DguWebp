@@ -353,7 +353,7 @@ WITH search_result AS (
 products AS (
     SELECT p.*, r.score FROM product p, search_result r
     WHERE p.id=ANY(SELECT id FROM search_result) AND p.id=r.id AND score > 0
-    ORDER BY score DESC
+    ORDER BY score DESC, p.views DESC
 )
 SELECT array_to_json(array(
     SELECT json_build_object(
