@@ -138,10 +138,18 @@
                 <img src="<%=ImageDB.getImageUrl(product.prodcut.getImage())%>" style="max-width: 100%; max-height: 100%; display: block; margin: 0;">
             </td>
             <td style="padding-left:5%;vertical-align:top;text-align: left">
+                <%
+                    StringBuilder hashtagStr = new StringBuilder();
+                    for (String hashtag : product.prodcut.getHashtags()) {
+                        hashtagStr.append("#").append(hashtag).append("  ");
+                    }
+                %>
                 <br><br>
                 <h1 style = "font-family: BaeMinHanna, system-ui;text-align: left"><%=product.prodcut.getTitle()%></h1>
                 <br>
                 <h3 style = "font-family: BaeMinHanna, system-ui;text-align: left"><%=product.prodcut.getPrice()%> 원</h3>
+                <br>
+                <h3 style = "font-family: BaeMinHanna, system-ui;text-align: left;color:#4FC3F7;"><%=hashtagStr.toString()%></h3>
                 <br>
                 <p style="font-family: BaeMinJua, system-ui;text-align: left">
                     <%=product.prodcut.getDescription()%>

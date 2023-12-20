@@ -153,14 +153,14 @@
                     product = datas[0].prodcut;
                     hashtagStr = new StringBuilder();
                     for (String hashtag : product.getHashtags()) {
-                        hashtagStr.append("#").append(hashtag);
+                        hashtagStr.append("#").append(hashtag).append("  ");
                     }
                 %>
                 <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="<%=ImageDB.getImageUrl(product.getImage())%>" alt="상품 이미지" class="product-image">
                 <hr>
                 <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="Product.jsp?product=<%=product.getId()%>"><%=product.getTitle()%></a></h2>
                 <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;"><%=product.getDescription()%></p>
-                <p style = "font-family: BaeMinJua, system-ui;"><%=hashtagStr.toString() %></p>
+                <p style = "font-family: BaeMinJua, system-ui;color:#4FC3F7;"><%=hashtagStr.toString() %></p>
                 <p style = "font-family: BaeMinJua, system-ui;"><%=product.getPrice() %></p>
                 <hr>
                 <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
@@ -171,14 +171,14 @@
                     product = datas[1].prodcut;
                     hashtagStr = new StringBuilder();
                     for (String hashtag : product.getHashtags()) {
-                        hashtagStr.append("#").append(hashtag);
+                        hashtagStr.append("#").append(hashtag).append("  ");
                     }
                 %>
                 <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="<%=ImageDB.getImageUrl(product.getImage())%>" alt="상품 이미지" class="product-image">
                 <hr>
                 <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="Product.jsp?product=<%=product.getId()%>"><%=product.getTitle()%></a></h2>
                 <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;"><%=product.getDescription()%></p>
-                <p style = "font-family: BaeMinJua, system-ui;"><%=hashtagStr.toString() %></p>
+                <p style = "font-family: BaeMinJua, system-ui;color:#4FC3F7;"><%=hashtagStr.toString() %></p>
                 <p style = "font-family: BaeMinJua, system-ui;"><%=product.getPrice() %></p>
                 <hr>
                 <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
@@ -189,14 +189,14 @@
                     product = datas[2].prodcut;
                     hashtagStr = new StringBuilder();
                     for (String hashtag : product.getHashtags()) {
-                        hashtagStr.append("#").append(hashtag);
+                        hashtagStr.append("#").append(hashtag).append("  ");
                     }
                 %>
                 <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="<%=ImageDB.getImageUrl(product.getImage())%>" alt="상품 이미지" class="product-image">
                 <hr>
                 <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="Product.jsp?product=<%=product.getId()%>"><%=product.getTitle()%></a></h2>
                 <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;"><%=product.getDescription()%></p>
-                <p style = "font-family: BaeMinJua, system-ui;"><%=hashtagStr.toString() %></p>
+                <p style = "font-family: BaeMinJua, system-ui;color:#4FC3F7;"><%=hashtagStr.toString() %></p>
                 <p style = "font-family: BaeMinJua, system-ui;"><%=product.getPrice() %></p>
                 <hr>
                 <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
