@@ -37,9 +37,8 @@ public class ChatListXml {
         this.user2_read = fromChatList.user2_read;
         this.last_msg = fromChatList.last_msg;
         this.last_idx = fromChatList.last_idx;
-        this.time = fromChatList.time;
+        this.time = fromChatList.time.split("T")[1].substring(0, 5);
     }
-
     public static ChatListXml[] ChatListConvert(Chatlist[] from){
         ChatListXml[] ret = new ChatListXml[from.length];
         for(int i=0; i< from.length; i++){
