@@ -65,7 +65,8 @@
             // User is logged in
         %>
         <%
-          User t = PostgreInterface.getBriefUserData(userId);
+          DataBeans.UserData data = PostgreInterface.getBriefUserData(userId);
+          DataBeans.User t = data.user;
         %>
         <%=t.getNickName()%>
         <div id="loginMenu" style="display:none; position:absolute; right:1em; background-color:white; padding:0.5em; width:12%;border-radius:1em;background-color: #D35400;border:solid 1px white">
