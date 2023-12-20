@@ -192,7 +192,7 @@
     return chats;
   }
 
-  function displayMessage(message, sender, time, system, opponentId) {
+  function displayMessage(message, sender, time, system) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', sender);
 
@@ -202,15 +202,15 @@
     if (system == 'none') {
       messageText.innerHTML = message + ' <span class="message-time" style="color: gray;">(<small>' + time + '</small>)</span>';
     } else if (system == 'request') {
-      messageText.innerHTML = '<button onclick="fetch(\'/acceptbuyrequest?productId=' + message + '&userId='+opponentId+'\').then(response => console.log(response)).catch(error => console.error(error))">수락하기</button>';
+      messageText.innerHTML = '거래를 신청했어요!<br><button onclick="fetch(\'/acceptbuyrequest?' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">수락하기</button>';
     } else if (system == 'accept') {
-      messageText.innerHTML = '<button onclick="fetch(\'/cancelbuyrequest?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">취소하기</button><br><button onclick="fetch(\'/confirmgive?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">인계확인</button>';
+      messageText.innerHTML = '거래를 수락했어요!<br><button onclick="fetch(\'/cancelbuyrequest?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">취소하기</button><br><button onclick="fetch(\'/confirmgive?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">인계확인</button>';
     } else if (system == 'cancel') {
       messageText.innerHTML = 'System:상품거래가 취소되었습니다.';
     } else if (system == 'give') {
-      messageText.innerHTML = '<button onclick="fetch(\'/confirmgot?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">인수확인</button>';
+      messageText.innerHTML = '상품인계를 확인했어요!<br><button onclick="fetch(\'/confirmgot?productId=' + message + '\').then(response => console.log(response)).catch(error => console.error(error))">인계확인</button>';
     } else if (system == 'got') {
-      messageText.innerHTML = 'System:상품 거래가 종료되었습니다.';
+      messageText.innerHTML = '<br>System:상품 거래가 종료되었습니다.';
     }
 
     messageDiv.appendChild(messageText);
@@ -377,7 +377,7 @@
   updateChatRooms();
 
   // Optional: set up polling to keep globalChatData updated
-  setInterval(updateChatRooms, 5000); // Adjust the interval as needed
+  setInterval(updateChatRooms, 300); // Adjust the interval as needed
 
 
 
