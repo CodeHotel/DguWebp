@@ -51,11 +51,11 @@
             <td style="width:calc(var(--topMenu-height)*0.8); height:calc(var(--topMenu-height)*0.8); padding:0px; margin:0px">
                 <img style="width:auto;height:calc(var(--topMenu-height) * 0.8);display:block;margin:0;padding:0" src="resources/images/AkoFace.png">
             </td>
-            <td style="width:12%;margin:0;padding: 0;color:#4FC3F7;" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
-            <td style="width:10%;margin:0;padding: 0" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
-            <td style="width:10%;margin:0;padding: 0"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
+            <td style="width:12%;margin:0;padding: 0;color:#4FC3F7; font-size:clamp(1px, 2.3vw,35px);" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
+            <td style="width:10%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
+            <td style="width:10%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
             <td></td>
-            <td id="loginCell" style="width:7%;margin:0;padding: 0" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
+            <td id="loginCell" style="width:7%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
                 onmouseleave=" document.getElementById('loginMenu').style.display = 'none';">
                 <%
                     // Check if the user is logged in by looking for a session attribute
@@ -144,19 +144,19 @@
                 if(rate.length!=0) rating/=rate.length;
             %>
             <td style = "border: 1px solid #ddd; width: 30%"><img style ="margin-top: 30px; width: 50px; height: 50px; border-radius: 50%; object-fit: cover; margin-bottom: 10px;" src="<%=ImageDB.getImageUrl(usr.getImage())%>" alt="resource/images/AkoFace.png">
-                <h2 style = "font-family: BaeMinHanna, system-ui; font-size: 20px;">내 정보</h2>
-                <button style="border: 1px solid #D35400; background-color: transparent; color: #D35400; padding: 3px 8px; border-radius: 5px; vertical-align: middle;" onclick="window.location.href = '${pageContext.request.contextPath}/'">정보 수정</button>
-                <p style="font-family: BaeMinJua, system-ui;">평점: <%=rating%></p>
+                <h2 style = "font-family: BaeMinHanna, system-ui; font-size:clamp(1px, 3.5vw,55px)">내 정보</h2>
+                <button style="border: 1px solid #D35400; background-color: transparent; color: #D35400; padding: 3px 8px; border-radius: 5px; vertical-align: middle; font-family: BaeMinJua, system-ui; width:clamp(1px, 10.0vw,150px); height:clamp(0.5px, 3.8vh, 70px); font-size:clamp(0.5px, 1.5vw,20px);" onclick="window.location.href = '${pageContext.request.contextPath}/'">정보 수정</button>
+                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 1.5vw,35px)">평점: <%=rating%></p>
             </td>
             <td style = "border: 1px solid #ddd;">
-                <p style="font-family: BaeMinJua, system-ui;">캠퍼스: <%=usr.getCampus()%></p>
-                <p style="font-family: BaeMinJua, system-ui;">학과: <%=usr.getDepartment()%></p>
+                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2.0vw,40px)">캠퍼스: <%=usr.getCampus()%></p>
+                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2.0vw,40px)">학과: <%=usr.getDepartment()%></p>
             </td>
         </tr>
     </table>
     <br><br>
 
-    <h3 style = "font-family: BaeMinHanna, system-ui;">거래 상품</h3>
+    <h3 style = "font-family: BaeMinHanna, system-ui; font-size:clamp(1px, 3.0vw,55px)">거래 상품</h3>
     <br>
     <center>
         <%
