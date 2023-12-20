@@ -131,28 +131,68 @@
 
   </div>
 </div>
-<form method="post" action="" style="width: 100%; text-align:left;padding-left:1em">
-  <h1>내 정보 수정</h1>
-  <div style="width:100%">
-    <br>
-    아이디: <input type="text" name="regId" value="아이디" style="border-radius:0.5em;border:solid 1px gray;width:6em" readonly>
-    <br>
-    비밀번호: <input type="password" name="regPw" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
-    비밀번호 확인: <input type="password" name="regPwCheck" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
-    캠퍼스: <input type="checkbox" name="regCampus" value="SEOUL">서울캠퍼스
-    <input type="checkbox" name="regCampus" value="BIO">고양캠퍼스
-    <input type="checkbox" name="regCampus" value="WISE">WISE캠퍼스<br>
-    학과: <input type="text" name="regMajor" value="학과" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
-    구분: <input type="radio" name="regType" value="student" onclick="document.getElementById('regStudentId').disabled=false;">학부생
-    <input type="radio" name="regType" value="grad" onclick="document.getElementById('regStudentId').disabled=false;">대학원생
-    <input type="radio" name="regType" value="professor" onclick="document.getElementById('regStudentId').disabled=true;">교직원<br>
-    학번: <input disabled="true" id="regStudentId" type="number" name="regStudentId" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
-    전화번호: <input type="tel" name="regPhone" value="전화번호" style="border-radius:0.5em;border:solid 1px gray;width:6em"><br>
-    학생증/교원증 인증 <input type="file" name="regIdCard"><br>
-    프로필 사진 업로드 <input type="file" name="regPicture"><br>
-    <input type="submit" value="수정완료" style="border-radius:0.5em;border:solid 1px gray;width:6em">
-  </div>
-</form>
+<center>
+  <form method="post" action="" style="width: 100%;">
+    <h1 style = "font-family: BaeMinHanna, system-ui;">내 정보 수정</h1>
+    <div style="width: 70%; margin: 0 auto; background-color: #fff;padding: 20px; border-radius: 8px;">
+      <br>
+      <table style="font-family: BaeMinJua, system-ui;">
+        <tr>
+          <td>아이디 </td>
+          <td><input type="text" name="regId" value="아이디" readonly></td>
+        </tr>
+        <tr>
+          <td>닉네임 </td>
+          <td><input type="text" name="regNickname" class="hiddenInput">
+            <input type="button" name="checkNickname" value="중복확인"></td>
+        </tr>
+        <tr>
+          <td>비밀번호 </td>
+          <td><input type="password" name="regPw"></td>
+        </tr>
+        <tr>
+          <td>비밀번호 확인 </td>
+          <td><input type="password" name="regPwCheck"></td>
+        </tr>
+        <tr>
+          <td>캠퍼스 </td>
+          <td><input type="checkbox" name="regCampus" value="SEOUL">서울캠퍼스
+            <input type="checkbox" name="regCampus" value="BIO">고양캠퍼스
+            <input type="checkbox" name="regCampus" value="WISE">WISE캠퍼스<br></td>
+        </tr>
+        <tr>
+          <td>학과 </td>
+          <td><input type="text" name="regMajor" value="학과"></td>
+        </tr>
+        <tr>
+          <td>구분 </td>
+          <td><input type="radio" name="regType" value="student" onclick="document.getElementById('regStudentId').disabled=false;">학부생
+            <input type="radio" name="regType" value="grad" onclick="document.getElementById('regStudentId').disabled=false;">대학원생
+            <input type="radio" name="regType" value="professor" onclick="document.getElementById('regStudentId').disabled=true;">교직원</td>
+        </tr>
+        <tr>
+          <td>학번 </td>
+          <td><input disabled="true" id="regStudentId" type="number" name="regStudentId"></td>
+        </tr>
+        <tr>
+          <td>전화번호 </td>
+          <td><input type="tel" name="regPhone" value="전화번호"></td>
+        </tr>
+        <tr>
+          <td>학생증/교원증 인증 </td>
+          <td><input type="file" name="regIdCard"></td>
+        </tr>
+        <tr>
+          <td>프로필 사진 업로드 </td>
+          <td><input type="file" name="regPicture"></td>
+        </tr>
+        <tr><td><br></td></tr>
+        <tr><td><input type="submit" value="수정완료" style="border-radius:0.5em;border:solid 1px gray;width:6em">
+        </td></tr>
+      </table>
+    </div>
+  </form>
+</center>
 <center>
   <br><br>
   <hr>
