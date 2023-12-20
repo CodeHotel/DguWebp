@@ -18,7 +18,9 @@ public class BuyRequestServlet extends HttpServlet {
         int uid = (int)session.getAttribute("userId");
         int pid = Integer.parseInt(request.getParameter("productId"));
 
-        boolean result = PostgreInterface.buyRequest(uid, pid, Integer.toString(pid));
+        String message = "productId=" + Integer.toString(pid) + "&userId=" + Integer.toString(uid);
+
+        boolean result = PostgreInterface.buyRequest(uid, pid, message);
 
         if(result) {
             response.getWriter().write("success");
