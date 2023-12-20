@@ -701,10 +701,23 @@ SELECT array_to_json(array(
 
 -- get chat list
 
--- getChat(chat_id)
+-- getChat(chat_id, user_id)
 WITH l_chat AS (
     SELECT * FROM chat c WHERE id=?
     ORDER BY c.time 
+),
+u_chat AS (
+    UPDATE list_chat AS c
+    SET
+        user1_read=
+            CASE WHEN user1=?
+            THEN c.last_chat_idx
+            ELSE user1_read END,
+        user2_read=
+            CASE WHEN user2=?
+            THEN c.last_chat_idx
+            ELSE user2_read END
+    WHERE c.id=(SELECT id FROm l_chat)
 )
 SELECT array_to_json(array(
     SELECT json_build_object(
