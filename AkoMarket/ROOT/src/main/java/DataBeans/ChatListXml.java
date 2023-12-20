@@ -16,6 +16,7 @@ public class ChatListXml {
     @XmlElement public String last_msg;
     @XmlElement public int last_idx;
     @XmlElement public String time;
+    @XmlElement public String userNickname;
 
     public ChatListXml(){}
     public ChatListXml(int id, int user1, int user2, int user1_read, int user2_read, String last_msg, int last_idx, String time) {

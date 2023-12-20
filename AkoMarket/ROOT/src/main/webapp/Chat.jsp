@@ -215,14 +215,6 @@
     //fillChatRoom(roomId);
   }
 
-  const chatRoomElements = document.querySelectorAll('[style*="cursor: pointer"]');
-  chatRoomElements.forEach((room, index) => {
-    room.addEventListener('click', () => {
-      const roomId = index;
-      selectChatRoom(room, roomId);
-    });
-  });
-
   let globalChatData = [];
 
   function fetchAndParseXML() {
@@ -244,7 +236,8 @@
                   user2_read: chat.getElementsByTagName("user2_read")[0].textContent,
                   last_msg: chat.getElementsByTagName("last_msg")[0].textContent,
                   last_idx: chat.getElementsByTagName("last_idx")[0].textContent,
-                  time: chat.getElementsByTagName("time")[0].textContent
+                  time: chat.getElementsByTagName("time")[0].textContent,
+                  userNickname: chat.getElementsByTagName("userNickname")[0].textContent
                 };
                 parsedChats.push(chatObj);
               }
@@ -263,15 +256,23 @@
 
       if (chatDiv) {
         // Update existing chat room info
-        chatDiv.innerHTML = '채팅방 ' + chat.id + ' - Last Message: ' + chat.last_msg + ' at ' + chat.time;
+        chatDiv.innerHTML = chat.userNickname + ' : ' + chat.last_msg + '  (' + chat.time + ')';
       } else {
         // Create new chat room div
         chatDiv = document.createElement('div');
         chatDiv.id = 'chat_' + chat.id;
         chatDiv.style = "padding: 20px; cursor: pointer; border-bottom: 1px solid #ccc;";
-        chatDiv.innerHTML = '채팅방 ' + chat.id + ' - Last Message: ' + chat.last_msg + ' at ' + chat.time;
+        chatDiv.innerHTML = chat.userNickname + ' : ' + chat.last_msg + '  (' + chat.time + ')';
         chatRoomList.appendChild(chatDiv);
       }
+    });
+
+    const chatRoomElements = document.querySelectorAll('[style*="cursor: pointer"]');
+    chatRoomElements.forEach((room, index) => {
+      room.addEventListener('click', () => {
+        const roomId = index;
+        selectChatRoom(room, roomId);
+      });
     });
   }
 
