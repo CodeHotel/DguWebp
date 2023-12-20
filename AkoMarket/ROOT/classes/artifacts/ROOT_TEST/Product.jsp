@@ -64,7 +64,8 @@
                         // User is logged in
                 %>
                 <%
-                    User t = PostgreInterface.getBriefUserData(userId);
+                    DataBeans.UserData data = PostgreInterface.getBriefUserData(userId);
+                    DataBeans.User t = data.user;
                 %>
                 <%= t.getNickName() %>
                 <div id="loginMenu" style="display:none; position:absolute; right:1em; background-color:white; padding:0.5em; width:12%;border-radius:1em;background-color: #D35400;border:solid 1px white">
@@ -134,7 +135,7 @@
     <table style="width:70%;">
         <tr style="text-align:center; height:600px;border:0px;">
             <td style="width: 50%; text-align: center;">
-                <img src="resources/images/AkoFace.png" style="max-width: 100%; max-height: 100%; display: block; margin: 0;">
+                <img src="<%=ImageDB.getImageUrl(product.prodcut.getImage())%>>" style="max-width: 100%; max-height: 100%; display: block; margin: 0;">
             </td>
             <td style="padding-left:5%;vertical-align:top;text-align: left">
                 <br><br>

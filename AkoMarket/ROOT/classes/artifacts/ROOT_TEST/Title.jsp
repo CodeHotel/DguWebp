@@ -9,7 +9,6 @@
   To change this template use File | Settings | File Templates.
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" session="true"%>
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -68,7 +67,8 @@
                         // User is logged in
                 %>
                 <%
-                    User t = PostgreInterface.getBriefUserData(userId);
+                    DataBeans.UserData data = PostgreInterface.getBriefUserData(userId);
+                    DataBeans.User t = data.user;
                 %>
                 <%=t.getNickName()%>
                 <div id="loginMenu" style="display:none; position:absolute; right:1em; background-color:white; padding:0.5em; width:12%;border-radius:1em;background-color: #D35400;border:solid 1px white">
@@ -131,8 +131,8 @@
     <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
         <div style="font-family: BaeMinJua, system-ui; font-size: 6em;">아 코 마 켓</div><br>
         <div style="font-family: BaeMinJua, system-ui; font-size: 1.5em; color: #0000FF;">#멀리_찾지_말고 &nbsp;&nbsp;&nbsp;#학교에서_거래해</div>
-        <form method="post" action="" style="width: 100%; text-align: center;">
-            <input type="text" name="searchKeyWord" style="width: 55%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746" placeholder="#교과서 #공대 #겨울옷">
+        <form method="post" action="SearchResults.jsp?" style="width: 100%; text-align: center;">
+            <input type="text" id="searchKeyWord" name="searchKeyWord" style="width: 55%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746" placeholder="#교과서 #공대 #겨울옷">
             <input type="submit" value="G O !" style="width: 8%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; font-family: BaeMinJua, system-ui; font-size: 1.1em; color: white; background-color: #D35400">
         </form>
     </div>
@@ -145,6 +145,8 @@
                 DataBeans.ProductData[] datas = PostgreInterface.getPopularProducts();
                 DataBeans.Product product = null;
                 StringBuilder hashtagStr;
+
+                if (datas != null && datas.length == 3) {
             %>
             <td style="width: 30%; height:auto; display: inline-block; margin: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; text-align: center;">
                 <%
@@ -156,7 +158,7 @@
                 %>
                 <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="<%=ImageDB.getImageUrl(product.getImage())%>" alt="상품 이미지" class="product-image">
                 <hr>
-                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL"><%=product.getTitle()%></a></h2>
+                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="Product.jsp?product=<%=product.getId()%>"><%=product.getTitle()%></a></h2>
                 <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;"><%=product.getDescription()%></p>
                 <p style = "font-family: BaeMinJua, system-ui;"><%=hashtagStr.toString() %></p>
                 <p style = "font-family: BaeMinJua, system-ui;"><%=product.getPrice() %></p>
@@ -174,7 +176,7 @@
                 %>
                 <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="<%=ImageDB.getImageUrl(product.getImage())%>" alt="상품 이미지" class="product-image">
                 <hr>
-                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL"><%=product.getTitle()%></a></h2>
+                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="Product.jsp?product=<%=product.getId()%>"><%=product.getTitle()%></a></h2>
                 <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;"><%=product.getDescription()%></p>
                 <p style = "font-family: BaeMinJua, system-ui;"><%=hashtagStr.toString() %></p>
                 <p style = "font-family: BaeMinJua, system-ui;"><%=product.getPrice() %></p>
@@ -192,7 +194,7 @@
                 %>
                 <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="<%=ImageDB.getImageUrl(product.getImage())%>" alt="상품 이미지" class="product-image">
                 <hr>
-                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL"><%=product.getTitle()%></a></h2>
+                <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="Product.jsp?product=<%=product.getId()%>"><%=product.getTitle()%></a></h2>
                 <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;"><%=product.getDescription()%></p>
                 <p style = "font-family: BaeMinJua, system-ui;"><%=hashtagStr.toString() %></p>
                 <p style = "font-family: BaeMinJua, system-ui;"><%=product.getPrice() %></p>
@@ -200,6 +202,7 @@
                 <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
                 <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
             </td>
+            <% } %>
         </tr>
     </table>
     <br><br>

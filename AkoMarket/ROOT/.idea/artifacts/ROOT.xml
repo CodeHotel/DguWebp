@@ -8,6 +8,7 @@
           <element id="library" level="project" name="postgresql-42.7.1" />
         </element>
       </element>
+      <element id="module-source" name="ROOT" />
     </root>
   </artifact>
 </component>

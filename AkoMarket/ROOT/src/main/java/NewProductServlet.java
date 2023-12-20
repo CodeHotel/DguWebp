@@ -46,6 +46,7 @@ public class NewProductServlet extends HttpServlet {
             int price = Integer.parseInt(request.getParameter("price"));
             Part image = request.getPart("image");
             String imagePath = ImageDB.uploadFile(image);
+            //String imagePath = "";
             HttpSession session = request.getSession(true);
             Object uid = session.getAttribute("userId");
             String[] tag = parse(tags);
