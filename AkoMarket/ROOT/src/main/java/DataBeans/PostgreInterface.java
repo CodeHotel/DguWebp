@@ -311,8 +311,8 @@ public class PostgreInterface {
                 "), " +
                 "n_hashtag AS ( " +
                 "    INSERT INTO hashtag(tag, product_id) " +
-                "    SELECT x, (SELECT id FROM product_info) " +
-                "    FROM hashtags x " +
+                "    SELECT x.*, (SELECT id FROM product_info) " +
+                "    FROM hashtags x" +
                 ") " +
                 "SELECT json_build_object( " +
                 "    'id', (SELECT id FROM product_info), " +
@@ -1292,10 +1292,10 @@ public class PostgreInterface {
         tagArray = tagList.toArray(tagArray);
 
         StringBuilder stringBuilder = new StringBuilder();
-        for (String tag : tagArray) {
-            stringBuilder.append(tag).append(',');
+        for (int i = 0; i < tagArray.length - 1; i++) {
+            stringBuilder.append(tagArray[i]).append(',');
         }
-
+        stringBuilder.append(tagArray[tagArray.length-1]);
         return stringBuilder.toString();
     }
 
@@ -1364,6 +1364,11 @@ public class PostgreInterface {
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            String titleP = pattern.replaceAll("\\s+", ",");
+            String descP = pattern.replaceAll("\\s+", "|");
+            titleP = titleP.substring(0, titleP.length() - 1);
+            descP = descP.substring(0, descP.length() - 1);
 
             pstmt.setString(1, hashtag);
             pstmt.setString(2, pattern.replaceAll("\\s+", ","));
