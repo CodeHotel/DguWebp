@@ -749,6 +749,32 @@ public class PostgreInterface {
         return null;
     }
 
+    public static void createChatRoom(int user1, int user2) {
+        String sql = "WITH info AS ( " +
+                "    SELECT ? AS user1, ? AS user2 " +
+                ") " +
+                "INSERT INTO list_chat(user1, user2) " +
+                "SELECT " +
+                "    (SELECT user1 FROM info), " +
+                "    (SELECT user2 FROM info) " +
+                "WHERE NOT EXISTS ( " +
+                "    SELECT * FROM list_chat l " +
+                "    WHERE " +
+                "        (l.user1=(SELECT user1 FROM info) AND l.user2=(SELECT user2 FROM info)) OR " +
+                "        (l.user2=(SELECT user1 FROM info) AND l.user1=(SELECT user2 FROM info)) " +
+                ");";
+
+        try (Connection conn = PostgreConnect.getStmt().getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, user1);
+            pstmt.setInt(2, user2);
+            ResultSet rs = pstmt.executeQuery();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static boolean buyRequest(int userId, int productId, String message) {
         String sql = "WITH info AS ( " +
                 "    SELECT p.id, p.price, p.owner_id, u.id AS buyer_id " +
@@ -1226,9 +1252,9 @@ public class PostgreInterface {
     }
 
     public static boolean addRating(int sellerId, int buyerId, double rating) {
-        String sql = "UPDATE akouser SET rating = array_append(\n" +
-                "    rating, ROW(?, ?)::rating_t\n" +
-                ")\n" +
+        String sql = "UPDATE akouser SET rating = array_append( " +
+                "    rating, ROW(?, ?)::rating_t " +
+                ") " +
                 "WHERE akouser.id=?;";
 
         try (Connection conn = PostgreConnect.getStmt().getConnection();
