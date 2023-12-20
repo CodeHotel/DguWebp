@@ -1324,7 +1324,7 @@ public class PostgreInterface {
                             jsonObject.getString("message"),
                             jsonObject.getInt("sender"),
                             jsonObject.getString("time"),
-                            jsonObject.getBoolean("System")
+                            MessageType.valueOf(jsonObject.getString("System"))
                     );
                 }
 
