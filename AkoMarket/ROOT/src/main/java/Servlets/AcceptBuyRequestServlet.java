@@ -19,7 +19,7 @@ public class AcceptBuyRequestServlet extends HttpServlet {
         int buyer_id = (int)session.getAttribute("buyerId");
         int pid = (int)session.getAttribute("productId");
 
-        boolean result = PostgreInterface.acceptBuyRequest(buyer_id, pid, Integer.toString(uid));
+        boolean result = PostgreInterface.acceptBuyRequest(buyer_id, pid, Integer.toString(pid));
 
         if(result) {
             response.getWriter().write("success");
