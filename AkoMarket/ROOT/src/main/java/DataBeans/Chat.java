@@ -23,21 +23,6 @@ public class Chat {
         this.system = system;
     }
 
-    public static String chatsToXML(Chat[] chatArray) {
-        try {
-            JAXBContext context = JAXBContext.newInstance(Chat[].class);
-            Marshaller marshaller = context.createMarshaller();
-            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-
-            StringWriter sw = new StringWriter();
-            marshaller.marshal(chatArray, sw);
-            return sw.toString();
-        } catch (Exception e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     // Getters and setters (excluding id and idx)
     public String getMessage() { return message; }
     public void setMessage(String message) { this.message = message; }
