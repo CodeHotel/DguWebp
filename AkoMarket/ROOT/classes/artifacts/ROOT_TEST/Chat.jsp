@@ -142,13 +142,7 @@
   System.out.print(chatlists.length);
 %>
 <div style = "width: 70%; margin: 20px auto; border: 1px solid #ccc; border-radius: 5px; overflow: hidden;">
-  <div style = "float: left; width: 35%; height:600px; overflow-y: auto; border-right: 1px solid #ccc;">
-    <!-- 채팅방 리스트 -->
-    <div style = "padding: 20px; cursor: pointer; border-bottom: 1px solid #ccc;">채팅방 1</div>
-    <div style = "padding: 20px; cursor: pointer; border-bottom: 1px solid #ccc;">채팅방 1</div>
-    <div style = "padding: 20px; cursor: pointer; border-bottom: 1px solid #ccc;">채팅방 1</div>
-    <div style = "padding: 20px; cursor: pointer; border-bottom: 1px solid #ccc;">채팅방 1</div>
-    <!-- Add more chat rooms as needed -->
+  <div style = "float: left; width: 35%; height:600px; overflow-y: auto; border-right: 1px solid #ccc;" id="chatRoomList">
   </div>
   <div style = "float: right; width: 64%; height:600px; border-left: 1px solid #ccc;">
     <div style="display: flex; align-items: center; background-color: #f9f9f9;">
@@ -229,6 +223,8 @@
     });
   });
 
+  let globalChatData = [];
+
   function fetchAndParseXML() {
     fetch('/chatpreview')
             .then(response => response.text())
@@ -253,13 +249,41 @@
                 parsedChats.push(chatObj);
               }
 
-              console.log(parsedChats); // Process data as needed
+              globalChatData = parsedChats;
+              console.log(globalChatData); // Now stored in globalChatData
+              updateChatRooms();
             })
             .catch(error => console.error('Error fetching XML:', error));
   }
+  function updateChatRooms() {
+    const chatRoomList = document.getElementById('chatRoomList');
 
-  // Polling
-  setInterval(fetchAndParseXML, 5000); // Poll every 5000 milliseconds (5 seconds)
+    globalChatData.forEach(chat => {
+      let chatDiv = document.getElementById('chat_' + chat.id);
+
+      if (chatDiv) {
+        // Update existing chat room info
+        chatDiv.innerHTML = '채팅방 ' + chat.id + ' - Last Message: ' + chat.last_msg + ' at ' + chat.time;
+      } else {
+        // Create new chat room div
+        chatDiv = document.createElement('div');
+        chatDiv.id = 'chat_' + chat.id;
+        chatDiv.style = "padding: 20px; cursor: pointer; border-bottom: 1px solid #ccc;";
+        chatDiv.innerHTML = '채팅방 ' + chat.id + ' - Last Message: ' + chat.last_msg + ' at ' + chat.time;
+        chatRoomList.appendChild(chatDiv);
+      }
+    });
+  }
+
+
+  // Call this function whenever you need to update the chat rooms
+  updateChatRooms();
+
+  // Initial call to populate globalChatData
+  fetchAndParseXML();
+
+  // Optional: set up polling to keep globalChatData updated
+  setInterval(fetchAndParseXML, 5000); // Adjust the interval as needed
 
 
 
