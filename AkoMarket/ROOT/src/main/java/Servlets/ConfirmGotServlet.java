@@ -12,7 +12,19 @@ import java.io.IOException;
 
 @WebServlet("/confirmgot")
 public class ConfirmGotServlet extends HttpServlet {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(true);
+        int uid = (int) session.getAttribute("userId");
+        int pid = Integer.parseInt(request.getParameter("productId"));
 
+        boolean result = PostgreInterface.confirmGot(pid, Integer.toString(pid));
+
+        if (result) {
+            response.getWriter().write("success");
+        } else {
+            response.getWriter().write("null");
+        }
+    }
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(true);
         int uid = (int)session.getAttribute("userId");
