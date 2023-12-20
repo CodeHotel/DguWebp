@@ -13,6 +13,11 @@
 <head>
   <meta charset="UTF-8">
   <title>아코마켓-채팅</title>
+  <style>
+    .selectedRoom {
+      background-color: blanchedalmond;
+    }
+  </style>
   <link rel="stylesheet" type="text/css" href="resources/css/ako-main.css">
   <link rel="stylesheet" type="text/css" href="resources/css/ako-chat.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -173,18 +178,6 @@
   const sendButton = document.getElementById('send-button');
   const chatMessages = document.getElementById('chat-messages');
 
-  sendButton.addEventListener('click', () => {
-    sendMessage();
-  });
-
-  function sendMessage() {
-    const messageText = messageInput.value.trim();
-    if (messageText !== '') {
-      displayMessage(messageText, 'self');
-      messageInput.value = '';
-    }
-  }
-
   function displayMessage(message, sender) {
     const messageDiv = document.createElement('div');
     messageDiv.classList.add('message', sender);
@@ -194,6 +187,50 @@
     messageDiv.appendChild(messageText);
     chatMessages.appendChild(messageDiv);
   }
+
+  function fillChatRoom(chatRoomId) {
+    fetch('/chatroom?room=' + chatRoomId)
+            .then(response => response.text())
+            .then(str => (new window.DOMParser()).parseFromString(str, "text/xml"))
+            .then(data => {
+              const chats = data.documentElement.childNodes;
+              for (let i = 0; i < chats.length; i++) {
+                const chatNode = chats[i];
+                if (chatNode.nodeType === Node.ELEMENT_NODE) {
+                  const message = chatNode.getElementsByTagName('message')[0].textContent;
+                  const sender = chatNode.getElementsByTagName('sender')[0].textContent;
+                  const time = chatNode.getElementsByTagName('time')[0].textContent;
+                  const system = chatNode.getElementsByTagName('system')[0].textContent;
+                  const id = chatNode.getElementsByTagName('id')[0].textContent;
+                  const idx = chatNode.getElementsByTagName('id')[0].textContent;
+
+                }
+              }
+            })
+            .catch(error => {
+              console.error('Error fetching chat messages:', error);
+            });
+
+  }
+  function selectChatRoom(roomElement, roomId) {
+    const selectedRooms = document.querySelectorAll('.selectedRoom');
+    selectedRooms.forEach(room => room.classList.remove('selectedRoom'));
+
+    roomElement.classList.add('selectedRoom');
+
+    //fillChatRoom(roomId);
+  }
+
+  const chatRoomElements = document.querySelectorAll('[style*="cursor: pointer"]');
+  chatRoomElements.forEach((room, index) => {
+    room.addEventListener('click', () => {
+      const roomId = index;
+      selectChatRoom(room, roomId);
+    });
+  });
+
+
+  setInterval(fetchChatMessages, 300);
 </script>
 </body>
 </html>

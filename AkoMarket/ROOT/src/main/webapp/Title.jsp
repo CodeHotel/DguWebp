@@ -15,6 +15,11 @@
     <meta charset="UTF-8">
     <title>아코마켓</title>
     <link rel="stylesheet" type="text/css" href="resources/css/ako-main.css">
+    <style>
+        .hashtag {
+            color: #4FC3F7;
+        }
+    </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
     <script>
@@ -132,7 +137,9 @@
         <div style="font-family: BaeMinJua, system-ui; font-size:clamp(10px, 10.0vw, 250px);">아 코 마 켓</div><br>
         <div style="font-family: BaeMinJua, system-ui; font-size:clamp(3px, 3.0vw, 100px); color: #0000FF;">#멀리_찾지_말고 &nbsp;&nbsp;&nbsp;#학교에서_거래해</div>
         <form method="post" action="SearchResults.jsp?page=1" style="width: 100%; text-align: center;">
-            <input type="text" id="searchKeyWord" name="searchKeyWord" style="width: 55%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746" placeholder="#교과서 #공대 #겨울옷">
+            <div id="hashtagInput" contenteditable="true"></div>
+            <input type="text" id="hiddenInput" name="searchKeyWord" style="display: none;">
+
             <input type="submit" value="G O !" style="width: 8%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; font-family: BaeMinJua, system-ui; font-size: 1.1em; color: white; background-color: #D35400">
         </form>
     </div>
@@ -222,6 +229,92 @@
     document.addEventListener("DOMContentLoaded", function() {
         document.getElementById("loginSubmit").addEventListener("click", loginSubmit);
     });
+
+    const hashtagInput = document.getElementById('hashtagInput');
+    const hiddenInput = document.getElementById('hiddenInput');
+    let isComposing = false;
+
+    hashtagInput.addEventListener('compositionstart', () => {
+        isComposing = true;
+    });
+
+    hashtagInput.addEventListener('compositionend', () => {
+        isComposing = false;
+        formatHashtags(); // Call formatHashtags after composition ends
+    });
+
+    hashtagInput.addEventListener('input', () => {
+        if (!isComposing) {
+            formatHashtags(); // Call formatHashtags only if not in the middle of composition
+        }
+    });
+
+    function formatHashtags() {
+        if (!isComposing) { // Check if not composing
+            const fullText = getTextFromDiv(hashtagInput);
+            const caretPos = getCaretPosition(hashtagInput);
+
+            // Set the value of the hidden input to the unformatted full text
+            hiddenInput.value = fullText;
+
+            hashtagInput.innerHTML = fullText.replace(/(#\S+)/g, '<span class="hashtag" style="color: lightblue;">$1</span>');
+            setCaretPosition(hashtagInput, caretPos);
+        }
+    }
+
+    function getTextFromDiv(div) {
+        return Array.from(div.childNodes).reduce((text, node) => {
+            return text + (node.nodeType === 3 ? node.nodeValue : node.innerText);
+        }, '');
+    }
+
+    function getCaretPosition(element) {
+        let position = 0;
+        const selection = window.getSelection();
+        if (selection.rangeCount !== 0) {
+            const range = selection.getRangeAt(0);
+            const preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(element);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            position = preCaretRange.toString().length;
+        }
+        return position;
+    }
+
+    function setCaretPosition(element, position) {
+        const range = document.createRange();
+        const sel = window.getSelection();
+        let currentPos = 0;
+        let found = false;
+
+        function setRange(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                if (currentPos + node.length >= position) {
+                    range.setStart(node, position - currentPos);
+                    range.collapse(true);
+                    found = true;
+                } else {
+                    currentPos += node.length;
+                }
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                for (const child of node.childNodes) {
+                    setRange(child);
+                    if (found) break;
+                }
+            }
+        }
+
+        for (const child of element.childNodes) {
+            setRange(child);
+            if (found) break;
+        }
+
+        if (found) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }
+
 
 </script>
 </body>

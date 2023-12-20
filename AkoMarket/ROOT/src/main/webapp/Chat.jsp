@@ -13,6 +13,11 @@
 <head>
   <meta charset="UTF-8">
   <title>아코마켓-채팅</title>
+  <style>
+    .selectedRoom {
+      background-color: blanchedalmond;
+    }
+  </style>
   <link rel="stylesheet" type="text/css" href="resources/css/ako-main.css">
   <link rel="stylesheet" type="text/css" href="resources/css/ako-chat.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -208,12 +213,12 @@
 
   }
   function selectChatRoom(roomElement, roomId) {
-    const selectedRooms = document.querySelectorAll('.selected-room');
-    selectedRooms.forEach(room => room.classList.remove('selected-room'));
+    const selectedRooms = document.querySelectorAll('.selectedRoom');
+    selectedRooms.forEach(room => room.classList.remove('selectedRoom'));
 
-    roomElement.classList.add('selected-room');
+    roomElement.classList.add('selectedRoom');
 
-    fillChatRoom(roomId);
+    //fillChatRoom(roomId);
   }
 
   const chatRoomElements = document.querySelectorAll('[style*="cursor: pointer"]');
