@@ -171,15 +171,67 @@
   const messageInput = document.getElementById('message-input');
   const sendButton = document.getElementById('send-button');
   const chatMessages = document.getElementById('chat-messages');
+  function parseChatXML(xmlString) {
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+    const chatNodes = xmlDoc.getElementsByTagName("chats");
+    const chats = [];
 
-  function displayMessage(message, sender) {
-    const messageDiv = document.createElement('div');
-    messageDiv.classList.add('message', sender);
-    const messageText = document.createElement('p');
-    messageText.classList.add('message-text');
-    messageText.innerText = message;
-    messageDiv.appendChild(messageText);
-    chatMessages.appendChild(messageDiv);
+    for (let chat of chatNodes) {
+      let chatObj = {
+        message: chat.getElementsByTagName("message")[0].textContent,
+        iSent: chat.getElementsByTagName("iSent")[0].textContent === 'true',
+        time: chat.getElementsByTagName("time")[0].textContent,
+        system: chat.getElementsByTagName("system")[0].textContent,
+        id: parseInt(chat.getElementsByTagName("id")[0].textContent, 10),
+        idx: parseInt(chat.getElementsByTagName("idx")[0].textContent, 10)
+      };
+      chats.push(chatObj);
+    }
+
+    return chats;
+  }
+
+  function displayMessage(message, sender, time, system) {
+    if(system=='none') {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('message', sender);
+
+      const messageText = document.createElement('p');
+      messageText.classList.add('message-text');
+
+      // Concatenate message and time with HTML styling
+      messageText.innerHTML = message + ' <span class="message-time" style="color: gray;">(<small>' + time + '</small>)</span>';
+
+      messageDiv.appendChild(messageText);
+      chatMessages.appendChild(messageDiv);
+    }
+  }
+
+
+  function fetchAndDisplayMessages(roomId) {
+    chatMessages.innerHTML = '';
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    fetch(`chatroomservlet?roomId=`+roomId)
+            .then(response => response.text())
+            .then(xmlString => {
+              const parser = new DOMParser();
+              const xmlDoc = parser.parseFromString(xmlString, "text/xml");
+              const chatNodes = xmlDoc.getElementsByTagName("chats");
+
+              for (let chat of chatNodes) {
+                const message = chat.getElementsByTagName("message")[0].textContent;
+                const iSent = chat.getElementsByTagName("iSent")[0].textContent === 'true';
+                const time = chat.getElementsByTagName("time")[0].textContent;
+                const system = chat.getElementsByTagName("system")[0].textContent;
+                if (iSent) {
+                  displayMessage(message, 'self', time, system);
+                } else {
+                  displayMessage(message, 'message.self', time, system);
+                }
+              }
+            })
+            .catch(error => console.error('Error fetching chat messages:', error));
   }
 
   function fillChatRoom(chatRoomId) {
@@ -210,9 +262,11 @@
     const selectedRooms = document.querySelectorAll('.selectedRoom');
     selectedRooms.forEach(room => room.classList.remove('selectedRoom'));
 
+
     roomElement.classList.add('selectedRoom');
 
-    //fillChatRoom(roomId);
+
+    fetchAndDisplayMessages(roomId);
   }
 
   let globalChatData = [];
@@ -289,37 +343,33 @@
     globalChatData.forEach(chat => {
       let chatDiv = document.getElementById('chat_' + chat.id);
 
-      if (chatDiv) {
-        // Update existing chat room info
-        chatDiv.innerHTML = chat.userNickname + ' : ' + chat.last_msg + '  ' + chat.time + '    (' + (chat.last_idx-chat.user_read)+')';
-      } else {
+      if (!chatDiv) {
         // Create new chat room div
         chatDiv = document.createElement('div');
         chatDiv.id = 'chat_' + chat.id;
+        chatDiv.setAttribute('data-room-id', chat.id); // Store room ID in a data attribute
+        chatDiv.className = 'chat-room'; // Assign a class for easier selection
         chatDiv.style = "padding: 20px; cursor: pointer; border-bottom: 1px solid #ccc;";
-        chatDiv.innerHTML = chat.userNickname + ' : ' + chat.last_msg + '  ' + chat.time + '    (' + (chat.last_idx-chat.user_read)+')';
         chatRoomList.appendChild(chatDiv);
-      }
-    });
 
-    const chatRoomElements = document.querySelectorAll('[style*="cursor: pointer"]');
-    chatRoomElements.forEach((room, index) => {
-      room.addEventListener('click', () => {
-        const roomId = index;
-        selectChatRoom(room, roomId);
-      });
+        // Add click event listener
+        chatDiv.addEventListener('click', function() {
+          selectChatRoom(this, this.getAttribute('data-room-id'));
+        });
+      }
+
+      // Update chat room info
+      chatDiv.innerHTML = chat.userNickname + ' : ' + chat.last_msg + '  ' + chat.time + '    (' + (chat.last_idx-chat.user_read)+')';
     });
   }
+
 
 
   // Call this function whenever you need to update the chat rooms
   updateChatRooms();
 
-  // Initial call to populate globalChatData
-  fetchAndParseXML();
-
   // Optional: set up polling to keep globalChatData updated
-  setInterval(fetchAndParseXML, 5000); // Adjust the interval as needed
+  setInterval(updateChatRooms, 5000); // Adjust the interval as needed
 
 
 
