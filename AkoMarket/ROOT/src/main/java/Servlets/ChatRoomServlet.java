@@ -1,8 +1,6 @@
 package Servlets;
 
-import DataBeans.ChatListXml;
-import DataBeans.ChatListXmlWrapper;
-import DataBeans.PostgreInterface;
+import DataBeans.*;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -17,15 +15,14 @@ import java.io.StringWriter;
 
 @WebServlet("/chatroomservlet")
 public class ChatRoomServlet extends HttpServlet {
-    public String chatsToXML(ChatListXml[] chatArray) {
+    public String chatsToXML(ChatsXml chatArray) {
         try {
-            ChatListXmlWrapper wrapper = new ChatListXmlWrapper(chatArray);
-            JAXBContext context = JAXBContext.newInstance(ChatListXmlWrapper.class);
+            JAXBContext context = JAXBContext.newInstance(ChatsXml.class);
             Marshaller marshaller = context.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 
             StringWriter sw = new StringWriter();
-            marshaller.marshal(wrapper, sw);
+            marshaller.marshal(chatArray, sw);
             return sw.toString();
         } catch (Exception e) {
             e.printStackTrace();
@@ -36,13 +33,10 @@ public class ChatRoomServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
         HttpSession session = request.getSession(true);
         int uid = (int)session.getAttribute("userId");
-
-        ChatListXml[] t = ChatListXml.ChatListConvert(PostgreInterface.getChatPreview(uid),uid);
-        for(ChatListXml e : t){
-
-            e.userNickname = PostgreInterface.getBriefUserData(uid==e.user1?e.user2: e.user1).user.getNickName();
-        }
-        String xaml = chatsToXML(t);
+        int cid = Integer.parseInt(request.getParameter("roomId"));
+        Chat[] chatarr = PostgreInterface.getChat(cid, uid);
+        ChatsXml chats = new ChatsXml(chatarr, uid);
+        String xaml = this.chatsToXML(chats);
 
         response.setContentType("application/xml");
         response.getWriter().write(xaml);
@@ -50,13 +44,10 @@ public class ChatRoomServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(true);
         int uid = (int)session.getAttribute("userId");
-
-        ChatListXml[] t = ChatListXml.ChatListConvert(PostgreInterface.getChatPreview(uid),uid);
-        for(ChatListXml e : t){
-
-            e.userNickname = PostgreInterface.getBriefUserData(uid==e.user1?e.user2: e.user1).user.getNickName();
-        }
-        String xaml = chatsToXML(t);
+        int cid = Integer.parseInt(request.getParameter("roomId"));
+        Chat[] chatarr = PostgreInterface.getChat(cid, uid);
+        ChatsXml chats = new ChatsXml(chatarr, uid);
+        String xaml = this.chatsToXML(chats);
 
         response.setContentType("application/xml");
         response.getWriter().write(xaml);
