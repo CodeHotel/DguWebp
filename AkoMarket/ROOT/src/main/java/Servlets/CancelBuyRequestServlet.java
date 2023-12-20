@@ -16,7 +16,7 @@ public class CancelBuyRequestServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(true);
         int uid = (int)session.getAttribute("userId");
-        int pid = (int)session.getAttribute("productId");
+        int pid = Integer.parseInt(request.getParameter("productId"));
 
         boolean result = PostgreInterface.cancelBuyRequest(uid, pid, Integer.toString(pid));
 
