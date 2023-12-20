@@ -1290,7 +1290,7 @@ public class PostgreInterface {
         return stringBuilder.toString();
     }
 
-    public static ProductData[] search(double hWeight, double tWeight, double dWeight, String hashtag, String pattern) {
+    public static ArrayList<ProductData> search(double hWeight, double tWeight, double dWeight, String hashtag, String pattern) {
         String sql = "WITH search_result AS ( " +
                 "    WITH h_score AS ( " +
                 "        SELECT s.id, COUNT(s.id) AS score FROM ( " +
@@ -1366,7 +1366,7 @@ public class PostgreInterface {
 
             if (rs.next()) {
                 JSONArray jsonArray = new JSONArray(rs.getString(1));
-                ProductData[] result = new ProductData[jsonArray.length()];
+                ArrayList<ProductData> result = new ArrayList<ProductData>();
                 for (int i = 0; i < jsonArray.length(); ++i) {
                     JSONObject jsonObject = jsonArray.getJSONObject(i);
                     JSONArray hashtagJson = jsonObject.optJSONArray("hashtags");
@@ -1407,10 +1407,10 @@ public class PostgreInterface {
                             false
                     );
 
-                    result[i] = new ProductData(
+                    result.add( new ProductData(
                             product,
                             user
-                    );
+                    ));
                 }
 
                 return result;
