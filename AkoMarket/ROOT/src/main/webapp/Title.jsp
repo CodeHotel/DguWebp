@@ -95,6 +95,11 @@
                                     </button>
                                 </tr><br>
                                 <tr style="width:90%">
+                                    <button id="WishList" onclick="window.location.href = '${pageContext.request.contextPath}/WishList.jsp';" style="padding:0.2em; width:80%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white">
+                                        장바구니
+                                    </button>
+                                </tr><br>
+                                <tr style="width:90%">
                                     <button id="logout" onclick="window.location.href = '${pageContext.request.contextPath}/logout';" style="padding:0.2em; width:80%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white">
                                         로그아웃
                                     </button>
