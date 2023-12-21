@@ -17,7 +17,7 @@
     <link rel="stylesheet" type="text/css" href="resources/css/ako-main.css">
     <style>
         .hashtag {
-            color: lightblue;
+            color: #4FC3F7;
         }
     </style>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
@@ -135,10 +135,11 @@
 <div style="position: relative; width: 100%; background-image: url('resources/images/TitleBackground.png'); background-size: 100% auto; background-repeat: no-repeat; padding-top: 56.25%;">
     <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
         <div style="font-family: BaeMinJua, system-ui; font-size:clamp(10px, 10.0vw, 250px);">아 코 마 켓</div><br>
-        <div style="font-family: BaeMinJua, system-ui; font-size:clamp(3px, 3.0vw, 100px); color: #0000FF;">#멀리_찾지_말고 &nbsp;&nbsp;&nbsp;#학교에서_거래해</div>
-        <form method="post" action="SearchResults.jsp?page=1" style="width: 100%; text-align: center;">
-            <div id="hashtagInput" contenteditable="true"></div>
+        <div style="font-family: BaeMinJua, system-ui; font-size:clamp(3px, 3.0vw, 100px); color: #0000FF;">#멀리_찾지_말고 &nbsp;&nbsp;&nbsp;#학교에서_거래해</div><br>
+        <form method="post" action="SearchResults.jsp?page=1" style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center;">
+            <div id="hashtagInput" contenteditable="true" style="padding-top: 1.0em; width: 55%; height: 1.9em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; background-color:#ffffff; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746;"></div>
             <input type="text" id="hiddenInput" name="searchKeyWord" style="display: none;">
+
 
             <input type="submit" value="G O !" style="width: 8%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; font-family: BaeMinJua, system-ui; font-size: 1.1em; color: white; background-color: #D35400">
         </form>

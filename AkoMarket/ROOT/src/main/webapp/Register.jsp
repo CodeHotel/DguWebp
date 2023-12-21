@@ -206,7 +206,7 @@
           <td><input type="file" name="regPicture"></td>
         </tr>
         <tr><td><br></td></tr>
-        <tr><td><input type="submit" value="가입신청" style="width:clamp(1px, 10.0vw,150px); height:clamp(0.5px, 3.8vh, 100px); font-size:clamp(0.5px, 1.5vw,20px)" onclick="registerSubmit()" style="border-radius:0.5em;border:solid 1px gray;width:6em"></td></tr>
+        <tr><td><input type="submit" value="가입신청" style="width:clamp(1px, 10.0vw,150px); height:clamp(0.5px, 3.8vh, 100px); font-size:clamp(0.5px, 1.5vw,20px)" onclick="registerSubmit()"></td></tr>
       </table>
     </div>
   </form>
