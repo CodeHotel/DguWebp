@@ -305,7 +305,31 @@
 
   let globalChatData = [];
   let lastIdxMap = new Map();
+  function updateChatRooms() {
+    const chatRoomList = document.getElementById('chatRoomList');
 
+    globalChatData.forEach(chat => {
+      let chatDiv = document.getElementById('chat_' + chat.id);
+
+      if (!chatDiv) {
+        // Create new chat room div
+        chatDiv = document.createElement('div');
+        chatDiv.id = 'chat_' + chat.id;
+        chatDiv.setAttribute('data-room-id', chat.id); // Store room ID in a data attribute
+        chatDiv.className = 'chat-room'; // Assign a class for easier selection
+        chatDiv.style = "padding: 20px; cursor: pointer; border-bottom: 1px solid #ccc;";
+        chatRoomList.appendChild(chatDiv);
+
+        // Add click event listener
+        chatDiv.addEventListener('click', function() {
+          selectChatRoom(this, this.getAttribute('data-room-id'));
+        });
+      }
+
+      // Update chat room info
+      chatDiv.innerHTML = chat.userNickname + ' : ' + chat.last_msg + '  ' + chat.time + '    (' + (chat.last_idx-chat.user_read)+')';
+    });
+  }
   function fetchAndParseXML() {
     fetch('/chatpreview')
             .then(response => response.text())
@@ -332,10 +356,16 @@
                 };
 
                 // Check if the last_idx has changed
+                var selectedRoom = document.querySelector('.selectedRoom');
+                var selectedId = selectedRoom ? parseInt(selectedRoom.id.replace('chat_', '')) : null;
+
                 if (lastIdxMap.has(id) && lastIdxMap.get(id) !== last_idx) {
-                  // Trigger notification for this chatroom
+                  if(id === selectedId) {
+                    fetchAndDisplayMessages(id);
+                  }
                   notifyChatRoomUpdate(chatObj);
                 }
+
 
                 // Update lastIdxMap after checking for changes
                 lastIdxMap.set(id, last_idx);
@@ -371,31 +401,7 @@
   fetchAndParseXML();
   setInterval(fetchAndParseXML, 5000); // Adjust the interval as needed
 
-  function updateChatRooms() {
-    const chatRoomList = document.getElementById('chatRoomList');
 
-    globalChatData.forEach(chat => {
-      let chatDiv = document.getElementById('chat_' + chat.id);
-
-      if (!chatDiv) {
-        // Create new chat room div
-        chatDiv = document.createElement('div');
-        chatDiv.id = 'chat_' + chat.id;
-        chatDiv.setAttribute('data-room-id', chat.id); // Store room ID in a data attribute
-        chatDiv.className = 'chat-room'; // Assign a class for easier selection
-        chatDiv.style = "padding: 20px; cursor: pointer; border-bottom: 1px solid #ccc;";
-        chatRoomList.appendChild(chatDiv);
-
-        // Add click event listener
-        chatDiv.addEventListener('click', function() {
-          selectChatRoom(this, this.getAttribute('data-room-id'));
-        });
-      }
-
-      // Update chat room info
-      chatDiv.innerHTML = chat.userNickname + ' : ' + chat.last_msg + '  ' + chat.time + '    (' + (chat.last_idx-chat.user_read)+')';
-    });
-  }
 
 
 
