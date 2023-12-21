@@ -1,8 +1,8 @@
 package DataBeans;
 
 public class Wishlist {
-    Product product;
-    User user;
+    public Product product;
+    public User user;
 
     public Wishlist(Product product, User user, Progress progress) {
         this.product = product;
