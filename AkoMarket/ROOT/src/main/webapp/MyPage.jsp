@@ -190,6 +190,7 @@
                     <p style = "font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getDescription()%></p>
                     <p style = "font-family: BaeMinJua, system-ui;color:#4FC3F7; font-size:clamp(1px, 2vw,40px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=hashtagStr.toString() %></p>
                     <p style = "font-family: BaeMinJua, system-ui;font-size:clamp(1px, 2vw,40px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getPrice() %></p>
+                    <p style = "font-family: BaeMinJua, system-ui;font-size:clamp(1px, 1.5vw,30px); color:gray; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getProgress()== Progress.none? "거래가능" : (product.getProgress()==Progress.buyergot? "판매완료": "거래중") %></p>
                     <hr>
                 </td>
                 <%
@@ -216,5 +217,11 @@
     동국대학교
     Copyright © 2023 · All Rights Reserved
 </center>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("loginSubmit").addEventListener("click", loginSubmit);
+    });
+
+</script>
 </body>
 </html>

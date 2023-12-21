@@ -52,7 +52,7 @@
       <td style="width:calc(var(--topMenu-height)*0.8); height:calc(var(--topMenu-height)*0.8); padding:0px; margin:0px">
         <img style="width:auto;height:calc(var(--topMenu-height) * 0.8);display:block;margin:0;padding:0" src="resources/images/AkoFace.png">
       </td>
-      <td style="width:12%;margin:0;padding: 0;color:#4FC3F7; font-size:clamp(1px, 2.3vw,35px);" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
+      <td style="width:12%;margin:0;padding: 0;color:#4FC3F7; font-size:clamp(1px, 2.3vw,35px)" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
       <td style="width:10%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
       <td style="width:10%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
       <td></td>
@@ -85,6 +85,11 @@
               <tr style="width:90%">
                 <button id="chat" onclick="window.location.href = '${pageContext.request.contextPath}/Chat.jsp?<%=userId%>';" style="padding:0.2em; width:80%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white">
                   채 팅
+                </button>
+              </tr><br>
+              <tr style="width:90%">
+                <button id="WishList" onclick="window.location.href = '${pageContext.request.contextPath}/WishList.jsp';" style="padding:0.2em; width:80%;border-radius:0.5em;font-family: BaeMinHanna;border:solid 1px white;background-color:#D35400;color:white">
+                  장바구니
                 </button>
               </tr><br>
               <tr style="width:90%">
@@ -136,7 +141,7 @@
   if(success){
 %>
 <center>
-  <h1><%=PostgreInterface.getBriefUserData(Integer.parseInt(request.getParameter("id"))).getNickName()%>님,</h1>
+  <h1><%=PostgreInterface.getBriefUserData(Integer.parseInt(request.getParameter("id"))).user.getNickName()%>님,</h1>
   <h1>등록이 완료되었습니다.</h1>
   <h2>관리자 승인이 완료되면 이용하실 수 있습니다.</h2>
 </center>
@@ -155,5 +160,11 @@
   동국대학교
   Copyright © 2023 · All Rights Reserved
 </center>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("loginSubmit").addEventListener("click", loginSubmit);
+      });
+
+    </script>
 </body>
 </html>

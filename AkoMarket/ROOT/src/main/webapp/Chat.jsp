@@ -409,5 +409,11 @@
 
 
 </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("loginSubmit").addEventListener("click", loginSubmit);
+  });
+
+</script>
 </body>
 </html>

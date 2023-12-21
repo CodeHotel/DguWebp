@@ -157,6 +157,8 @@
                 <br>
                 <h3 style = "font-family: BaeMinHanna, system-ui;text-align: left;color:#4FC3F7; font-size:clamp(1px, 2.0vw,40px)"><%=hashtagStr.toString()%></h3>
                 <br>
+                <p style = "font-family: BaeMinJua, system-ui;font-size:clamp(1px, 2.0vw,40px); color:gray; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.prodcut.getProgress()== Progress.none? "거래가능" : (product.prodcut.getProgress()==Progress.buyergot? "판매완료": "거래중") %></p>
+                <br>
                 <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2.0vw,40px); text-align: left">
                     <%=product.prodcut.getDescription()%>
                 </p>
@@ -193,5 +195,11 @@
     동국대학교
     Copyright © 2023 · All Rights Reserved
 </center>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("loginSubmit").addEventListener("click", loginSubmit);
+    });
+
+</script>
 </body>
 </html>

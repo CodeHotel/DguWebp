@@ -204,5 +204,11 @@
   동국대학교
   Copyright © 2023 · All Rights Reserved
 </center>
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.getElementById("loginSubmit").addEventListener("click", loginSubmit);
+  });
+
+</script>
 </body>
 </html>

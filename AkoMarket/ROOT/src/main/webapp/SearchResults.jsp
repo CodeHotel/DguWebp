@@ -1,5 +1,8 @@
 <%@ page import="DataBeans.*"%>
-<%@ page import="java.util.ArrayList" %><%--
+<%@ page import="java.util.ArrayList" %>
+<%@ page import="java.util.Iterator" %>
+<%@ page import="java.util.Comparator" %>
+<%@ page import="java.util.Collections" %><%--
   Created by IntelliJ IDEA.
   User: mh7cp
   Date: 2023-12-18
@@ -137,9 +140,66 @@
     </div>
 </div>
 <%
+    // Retrieve form data with null-safe checks
+    String orderOption = request.getParameter("orderOption");
+    boolean seeAvailOnly = "on".equals(request.getParameter("seeAvailOnly"));
+    Double lowLimit = null;
+    Double highLimit = null;
+
+    try {
+        lowLimit = request.getParameter("lowLimit") != null ? Double.parseDouble(request.getParameter("lowLimit")) : null;
+        highLimit = request.getParameter("highLimit") != null ? Double.parseDouble(request.getParameter("highLimit")) : null;
+    } catch (NumberFormatException e) {
+        // Handle parsing error if necessary
+    }
+
+    // Set default value for orderOption if not provided
+    if (orderOption == null || orderOption.isEmpty()) {
+        orderOption = "relevance";
+    }
+
     ArrayList<ProductData> searchResults = PostgreInterface.search(1.0, 0.5, 1.0,
             PostgreInterface.parseHashtag(request.getParameter("searchKeyWord")), request.getParameter("searchKeyWord"));
+    if (seeAvailOnly) {
+        Iterator<ProductData> iterator = searchResults.iterator();
+        while (iterator.hasNext()) {
+            ProductData productData = iterator.next();
+            if (productData.prodcut.getProgress() == Progress.buyergot) {
+                iterator.remove();
+            }
+        }
+    }
+
+    final Double finalLowLimit = lowLimit;
+    final Double finalHighLimit = highLimit;
+
+    // Filter by price range
+    if (finalLowLimit != null && finalHighLimit != null) {
+        Iterator<ProductData> priceRangeIterator = searchResults.iterator();
+        while (priceRangeIterator.hasNext()) {
+            ProductData productData = priceRangeIterator.next();
+            if (productData.prodcut.getPrice() < finalLowLimit ||
+                    productData.prodcut.getPrice() > finalHighLimit) {
+                priceRangeIterator.remove();
+            }
+        }
+    }
+
+    final String finalOrderOption = orderOption;
+
+    Comparator<ProductData> comparator = new Comparator<ProductData>() {
+        public int compare(ProductData p1, ProductData p2) {
+            if ("highPrice".equals(finalOrderOption)) {
+                return Double.compare(p2.prodcut.getPrice(), p1.prodcut.getPrice());
+            } else if ("lowPrice".equals(finalOrderOption)) {
+                return Double.compare(p1.prodcut.getPrice(), p2.prodcut.getPrice());
+            }
+            return 0; // No sorting if it's not highPrice or lowPrice
+        }
+    };
+    Collections.sort(searchResults, comparator);
 %>
+
 <form id="searchForm" method="post" action="SearchResults.jsp?page=1" style="width: 100%; text-align: center;font-family: BaeMinHanna,system-ui">
     <div style="display: flex; justify-content: center; align-items: center; ">
     <div id="hashtagInput" contenteditable="true" style="padding-top: 1.0em; width: 55%; height: 1.9em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; background-color:#ffffff; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746;"></div>
@@ -148,14 +208,27 @@
     </div>
         <div style="width:100%">
         <br>
-        <input type="radio" name="orderOption" value="high">높은가격순
-        <input type="radio" name="orderOption" value="old">낮은가격순
-        <input type="radio" name="orderOption" value="new">최신등록순
+            <input type="radio" name="orderOption" value="relevance" <%= "relevance".equals(orderOption) ? "checked" : "" %>>연관순
+            <input type="radio" name="orderOption" value="highPrice" <%= "highPrice".equals(orderOption) ? "checked" : "" %>>높은가격순
+            <input type="radio" name="orderOption" value="lowPrice" <%= "lowPrice".equals(orderOption) ? "checked" : "" %>>낮은가격순
+
         <input type="checkbox" name="seeAvailOnly">거래가능 상품만 보기
         <br>
         가격범위 설정: <input type="number" name="lowLimit" style="border-radius:0.5em;border:solid 1px gray;width:6em"> ~ <input type="number" name="highLimit" style="border-radius:0.5em;border:solid 1px gray;width:6em">
     </div>
 </form>
+
+
+<script>
+    document.getElementById('hashtagInput').addEventListener('keydown', function(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Prevents adding a new line in contenteditable
+            document.getElementById('hiddenInput').value = this.innerText; // Sets the value of hiddenInput
+            document.getElementById('searchForm').submit(); // Submits the form
+        }
+    });
+</script>
+
 <br><br><br>
 <center>
     <%
@@ -188,6 +261,7 @@
                 <p style = "font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getDescription()%></p>
                 <p style = "font-family: BaeMinJua, system-ui;color:#4FC3F7; font-size:clamp(1px, 2vw,40px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=hashtagStr.toString() %></p>
                 <p style = "font-family: BaeMinJua, system-ui;font-size:clamp(1px, 2vw,40px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getPrice() %></p>
+                <p style = "font-family: BaeMinJua, system-ui;font-size:clamp(1px, 1.5vw,30px); color:gray; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getProgress()== Progress.none? "거래가능" : (product.getProgress()==Progress.buyergot? "판매완료": "거래중") %></p>
                 <hr>
                 <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" onclick="fetch('/buyrequest?productId=<%=product.getId()%>')">구매하기</a></p>
                 <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" onclick="fetch('/addwishlist?productId=<%=product.getId()%>')">장바구니</a></p>
@@ -250,15 +324,17 @@
     }
 %>
 <script>
+    const hashtagInput = document.getElementById('hashtagInput');
+    const hiddenInput = document.getElementById('hiddenInput');
     document.addEventListener('DOMContentLoaded', function() {
-        const hashtagInput = document.getElementById('hashtagInput');
         const searchKeyword = '<%= request.getParameter("searchKeyWord") %>';
 
         // Set the initial value retrieved from the server-side parameter
         hashtagInput.innerHTML = searchKeyword;
+        hiddenInput.value = searchKeyword;
+
     });
-    const hashtagInput = document.getElementById('hashtagInput');
-    const hiddenInput = document.getElementById('hiddenInput');
+
     let isComposing = false;
 
     hashtagInput.addEventListener('compositionstart', () => {
@@ -340,6 +416,100 @@
             sel.addRange(range);
         }
     }
+
+</script>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("loginSubmit").addEventListener("click", loginSubmit);
+    });
+
+    const hashtagInput = document.getElementById('hashtagInput');
+    const hiddenInput = document.getElementById('hiddenInput');
+    let isComposing = false;
+
+    hashtagInput.addEventListener('compositionstart', () => {
+        isComposing = true;
+    });
+
+    hashtagInput.addEventListener('compositionend', () => {
+        isComposing = false;
+        formatHashtags(); // Call formatHashtags after composition ends
+    });
+
+    hashtagInput.addEventListener('input', () => {
+        if (!isComposing) {
+            formatHashtags(); // Call formatHashtags only if not in the middle of composition
+        }
+    });
+
+    function formatHashtags() {
+        if (!isComposing) { // Check if not composing
+            const fullText = getTextFromDiv(hashtagInput);
+            const caretPos = getCaretPosition(hashtagInput);
+
+            // Set the value of the hidden input to the unformatted full text
+            hiddenInput.value = fullText;
+
+            hashtagInput.innerHTML = fullText.replace(/(#\S+)/g, '<span class="hashtag" style="color: lightblue;">$1</span>');
+            setCaretPosition(hashtagInput, caretPos);
+        }
+    }
+
+    function getTextFromDiv(div) {
+        return Array.from(div.childNodes).reduce((text, node) => {
+            return text + (node.nodeType === 3 ? node.nodeValue : node.innerText);
+        }, '');
+    }
+
+    function getCaretPosition(element) {
+        let position = 0;
+        const selection = window.getSelection();
+        if (selection.rangeCount !== 0) {
+            const range = selection.getRangeAt(0);
+            const preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(element);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            position = preCaretRange.toString().length;
+        }
+        return position;
+    }
+
+    function setCaretPosition(element, position) {
+        const range = document.createRange();
+        const sel = window.getSelection();
+        let currentPos = 0;
+        let found = false;
+
+        function setRange(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                if (currentPos + node.length >= position) {
+                    range.setStart(node, position - currentPos);
+                    range.collapse(true);
+                    found = true;
+                } else {
+                    currentPos += node.length;
+                }
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                for (const child of node.childNodes) {
+                    setRange(child);
+                    if (found) break;
+                }
+            }
+        }
+
+        for (const child of element.childNodes) {
+            setRange(child);
+            if (found) break;
+        }
+
+        if (found) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }
+
+    setTimeout(formatHashtags, 10000); // Delay function execution by 2000 milliseconds (2 seconds)
+
 
 </script>
 </body>

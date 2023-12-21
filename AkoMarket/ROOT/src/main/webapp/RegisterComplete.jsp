@@ -141,7 +141,7 @@
   if(success){
 %>
 <center>
-  <h1><%=PostgreInterface.getBriefUserData(Integer.parseInt(request.getParameter("id"))).getNickName()%>님,</h1>
+  <h1><%=PostgreInterface.getBriefUserData(Integer.parseInt(request.getParameter("id"))).user.getNickName()%>님,</h1>
   <h1>등록이 완료되었습니다.</h1>
   <h2>관리자 승인이 완료되면 이용하실 수 있습니다.</h2>
 </center>
@@ -160,5 +160,11 @@
   동국대학교
   Copyright © 2023 · All Rights Reserved
 </center>
+    <script>
+      document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("loginSubmit").addEventListener("click", loginSubmit);
+      });
+
+    </script>
 </body>
 </html>

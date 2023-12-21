@@ -1,7 +1,4 @@
-<%@ page import="DataBeans.PostgreInterface" %>
-<%@ page import="DataBeans.User" %>
-<%@ page import="DataBeans.ProductData" %>
-<%@ page import="DataBeans.ImageDB" %><%--
+<%@ page import="DataBeans.*" %><%--
   Created by IntelliJ IDEA.
   User: mh7cp
   Date: 2023-12-18
@@ -141,13 +138,22 @@
     <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; align-items: center;">
         <div style="font-family: BaeMinJua, system-ui; font-size:clamp(10px, 10.0vw, 250px);">아 코 마 켓</div><br>
         <div style="font-family: BaeMinJua, system-ui; font-size:clamp(3px, 3.0vw, 100px); color: #0000FF;">#멀리_찾지_말고 &nbsp;&nbsp;&nbsp;#학교에서_거래해</div><br>
-        <form method="post" action="SearchResults.jsp?page=1" style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center;">
+        <form id="searchForm" method="post" action="SearchResults.jsp?page=1" style="width: 100%; text-align: center; display: flex; align-items: center; justify-content: center;">
             <div id="hashtagInput" contenteditable="true" style="padding-top: 1.0em; width: 55%; height: 1.9em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; background-color:#ffffff; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746;"></div>
             <input type="text" id="hiddenInput" name="searchKeyWord" style="display: none;">
-
-
             <input type="submit" value="G O !" style="width: 8%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; font-family: BaeMinJua, system-ui; font-size: 1.1em; color: white; background-color: #D35400">
         </form>
+
+        <script>
+            document.getElementById('hashtagInput').addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault(); // Prevents adding a new line in contenteditable
+                    document.getElementById('hiddenInput').value = this.innerText; // Assuming you want to send the text of the div
+                    document.getElementById('searchForm').submit();
+                }
+            });
+        </script>
+
     </div>
 </div>
 <center>
@@ -179,7 +185,7 @@
                 <p style = "font-family: BaeMinJua, system-ui;font-size:clamp(1px, 2vw,40px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getPrice() %></p>
                 <hr>
                 <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" onclick="fetch('/buyrequest?productId=<%=product.getId()%>')">구매하기</a></p>
-                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
+                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" onclick="fetch('/addwishlist?productId=<%=product.getId()%>')">장바구니</a></p>
             </td>
             <td style="width: 30%; height:auto; display: inline-block; margin: 1.6%; border: 1px solid #ccc; padding: 1.6%; box-sizing: border-box; text-align: center;">
                 <%
@@ -199,7 +205,7 @@
                 <p style = "font-family: BaeMinJua, system-ui;font-size:clamp(1px, 2vw,40px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getPrice() %></p>
                 <hr>
                 <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" onclick="fetch('/buyrequest?productId=<%=product.getId()%>')">구매하기</a></p>
-                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
+                <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" onclick="fetch('/addwishlist?productId=<%=product.getId()%>')">장바구니</a></p>
             </td>
             <td style="width: 30%; height:auto; display: inline-block; margin: 1.6%; border: 1px solid #ccc; padding: 1.6%; box-sizing: border-box; text-align: center;">
                 <%
@@ -217,6 +223,7 @@
                 <p style = "font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getDescription()%></p>
                 <p style = "font-family: BaeMinJua, system-ui;color:#4FC3F7; font-size:clamp(1px, 2vw,40px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=hashtagStr.toString() %></p>
                 <p style = "font-family: BaeMinJua, system-ui;font-size:clamp(1px, 2vw,40px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getPrice() %></p>
+                <p style = "font-family: BaeMinJua, system-ui;font-size:clamp(1px, 1.5vw,30px); color:gray; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getProgress()== Progress.none? "거래가능" : (product.getProgress()==Progress.buyergot? "판매완료": "거래중") %></p>
                 <hr>
                 <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" onclick="fetch('/buyrequest?productId=<%=product.getId()%>')">구매하기</a></p>
                 <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" onclick="fetch('/addwishlist?productId=<%=product.getId()%>')">장바구니</a></p>
