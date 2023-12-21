@@ -699,11 +699,11 @@ public class PostgreInterface {
 
                     if (hashtagJson != null) {
                         hashtags = new String[hashtagJson.length()];
-                        for (int j = 0; j < hashtags.length; j++) {
-                            JSONObject hashtagObj = hashtagJson.getJSONObject(j);
-                            hashtags[j] = hashtagObj.toString();
+                        for (int j = 0; j < hashtagJson.length(); j++) {
+                            hashtags[j] = hashtagJson.getString(j);
                         }
                     }
+
 
 
                     Product product = new Product(
@@ -718,7 +718,8 @@ public class PostgreInterface {
                             Progress.valueOf(jsonObject.getString("progress"))
                     );
 
-                    JSONObject userJson = new JSONObject(jsonObject.getString("user_info"));
+                    JSONObject userJson = jsonObject.getJSONObject("user_info");
+
                     User user = new User(
                             userJson.getInt("id"),
                             null,
