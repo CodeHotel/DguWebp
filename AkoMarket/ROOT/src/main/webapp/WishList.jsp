@@ -1,5 +1,4 @@
-<%@ page import="DataBeans.User" %>
-<%@ page import="DataBeans.PostgreInterface" %><%--
+<%@ page import="DataBeans.*" %><%--
   Created by IntelliJ IDEA.
   User: mh7cp
   Date: 2023-12-19
@@ -132,43 +131,59 @@
   </div>
 </div>
 <h1 style="width: 100%; text-align:left;padding-left:1em; font-size:clamp(1px, 2.5vw,50px)"> 장바구니</h1>
-<table style="width: 80%; text-align: center;">
-  <tr>
-    <td style="width: 30%; height:auto; display: inline-block; margin: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; text-align: center;">
-      <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="resources/images/AkoFace.png" alt="상품 이미지" class="product-image">
-      <hr>
-      <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL">상품1</a></h2>
-      <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;">상품 설명이 여기에 들어갑니다. 상품 설명을 넣어 주세요.</p>
-      <p style = "font-family: BaeMinJua, system-ui;"> #1 #2 </p>
-      <p style = "font-family: BaeMinJua, system-ui;"> 가격 </p>
-      <hr>
-      <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
-      <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
-    </td>
-    <td style="width: 30%; height:auto; display: inline-block; margin: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; text-align: center;">
-      <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="resources/images/AkoFace.png" alt="상품 이미지" class="product-image">
-      <hr>
-      <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL">상품1</a></h2>
-      <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;">상품 설명이 여기에 들어갑니다. 상품 설명을 넣어 주세요.</p>
-      <p style = "font-family: BaeMinJua, system-ui;"> #1 #2 </p>
-      <p style = "font-family: BaeMinJua, system-ui;"> 가격 </p>
-      <hr>
-      <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
-      <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
-    </td>
-    <td style="width: 30%; height:auto; display: inline-block; margin: 10px; border: 1px solid #ccc; padding: 10px; box-sizing: border-box; text-align: center;">
-      <img style = "width: 70%; height: 30%; margin-bottom: 5px;" src="resources/images/AkoFace.png" alt="상품 이미지" class="product-image">
-      <hr>
-      <h2 style="font-family: BaeMinHanna, system-ui; font-size:20px"><a style = "text-decoration: none; color: black;" href="상품1_상세페이지_URL">상품1</a></h2>
-      <p style = "font-family: BaeMinJua, system-ui; white-space: nowrap; overflow: hidden; overflow: hidden;">상품 설명이 여기에 들어갑니다. 상품 설명을 넣어 주세요.</p>
-      <p style = "font-family: BaeMinJua, system-ui;"> #1 #2 </p>
-      <p style = "font-family: BaeMinJua, system-ui;"> 가격 </p>
-      <hr>
-      <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="구매_URL">구매하기</a></p>
-      <p style="font-family: BaeMinJua, system-ui; font-size:15px"><a style = "text-decoration: none; color: orangered;" href="장바구니_URL">장바구니</a></p>
-    </td>
-  </tr>
-</table>
+<%
+  Wishlist[] wishlist =  PostgreInterface.getWishList((int)session.getAttribute("userId"));
+
+%>
+<center>
+  <%
+    int pageLimit = 12;
+    if(wishlist.length!=0){
+  %>
+  <table style="width: 80%; text-align: center;">
+    <%
+      for(int f = 0; (f<(wishlist.length%3!=0?1:0) + wishlist.length/3); f++){
+    %>
+    <tr style="height:auto;">
+      <%
+        for(int pd = 0; pd<3; pd++){
+          if(3*f+pd>=wishlist.length) continue;
+          Product product = wishlist[3*f+pd].product;
+          StringBuilder hashtagStr = new StringBuilder();
+          for (String hashtag : product.getHashtags()) {
+            hashtagStr.append("#").append(hashtag).append("  ");
+          }
+      %>
+      <td style="width: 30%; height:auto; display: inline-block; margin: 1.6%; border: 1px solid #ccc; padding: 1.6%; box-sizing: border-box; text-align: center;">
+        <div style="width:100%;height:25vh">
+          <img style = "max-width: 100%; max-height: 100%; margin-bottom: 5px;" src="<%=ImageDB.getImageUrl(product.getImage())%>" alt="상품 이미지" class="product-image">
+        </div>
+        <hr>
+        <h2 style="font-family: BaeMinHanna, system-ui; font-size:clamp(1px, 2.5vw,50px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><a style = "text-decoration: none; color: black;" href="Product.jsp?product=<%=product.getId()%>"><%=product.getTitle()%></a></h2>
+        <p style = "font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px); max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getDescription()%></p>
+        <p style = "font-family: BaeMinJua, system-ui;color:#4FC3F7; font-size:clamp(1px, 2vw,40px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=hashtagStr.toString() %></p>
+        <p style = "font-family: BaeMinJua, system-ui;font-size:clamp(1px, 2vw,40px);max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%=product.getPrice() %></p>
+        <hr>
+        <p style="font-family: BaeMinJua, system-ui; font-size:clamp(1px, 2vw,40px);"><a style = "text-decoration: none; color: orangered;" onclick="fetch('/buyrequest?productId=<%=product.getId()%>')">구매하기</a></p>
+      </td>
+      <%
+        }
+      %>
+    </tr>
+    <%
+      }
+    %>
+  </table>
+  <%
+  }
+  else{
+  %>
+  <br><br><br><br>
+  <h1 style="width: 100%; text-align:center;"> 장바구니 상품이 없습니다. </h1>
+  <%
+    }
+  %>
+</center>
 <center>
   <br><br>
   <hr>

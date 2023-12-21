@@ -398,7 +398,7 @@
   updateChatRooms();
 
   // Optional: set up polling to keep globalChatData updated
-  setInterval(updateChatRooms, 300); // Adjust the interval as needed
+  setInterval(updateChatRooms, 100); // Adjust the interval as needed
 
 
 
