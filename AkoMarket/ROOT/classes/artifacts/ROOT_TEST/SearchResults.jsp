@@ -53,11 +53,11 @@
             <td style="width:calc(var(--topMenu-height)*0.8); height:calc(var(--topMenu-height)*0.8); padding:0px; margin:0px">
                 <img style="width:auto;height:calc(var(--topMenu-height) * 0.8);display:block;margin:0;padding:0" src="resources/images/AkoFace.png">
             </td>
-            <td style="width:12%;margin:0;padding: 0;color:#4FC3F7;" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
-            <td style="width:10%;margin:0;padding: 0" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
-            <td style="width:10%;margin:0;padding: 0"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
+            <td style="width:12%;margin:0;padding: 0;color:#4FC3F7; font-size:clamp(1px, 2.3vw,35px);" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';"> &nbsp;#아코마켓</td>
+            <td style="width:10%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);" onclick="window.location.href = '${pageContext.request.contextPath}/Title.jsp';">중고구매</td>
+            <td style="width:10%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);"onclick="window.location.href = '${pageContext.request.contextPath}/NewProduct.jsp';">중고판매</td>
             <td></td>
-            <td id="loginCell" style="width:7%;margin:0;padding: 0" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
+            <td id="loginCell" style="width:7%;margin:0;padding: 0; font-size:clamp(1px, 2.0vw,35px);" onmouseenter=" document.getElementById('loginMenu').style.display = 'block';"
                 onmouseleave=" document.getElementById('loginMenu').style.display = 'none';">
                 <%
                     // Check if the user is logged in by looking for a session attribute
@@ -136,9 +136,12 @@
             PostgreInterface.parseHashtag(request.getParameter("searchKeyWord")), request.getParameter("searchKeyWord"));
 %>
 <form id="searchForm" method="post" action="SearchResults.jsp?page=1" style="width: 100%; text-align: center;font-family: BaeMinHanna,system-ui">
-    <input type="text" name="searchKeyWord" style="width: 55%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746" placeholder="#교과서 #공대 #겨울옷" value="<%=request.getParameter("searchKeyWord")%>">
+    <div style="display: flex; justify-content: center; align-items: center; ">
+    <div id="hashtagInput" contenteditable="true" style="padding-top: 1.0em; width: 55%; height: 1.9em; border-radius: 1.5em; border: solid 1px #717D7E; padding-left: 2em; background-color:#ffffff; font-family: BaeMinJua, system-ui; font-size: 1em; color: #273746;"></div>
+    <input type="text" id="hiddenInput" name="searchKeyWord" style="display: none;">
     <input type="submit" value="G O !" style="width: 8%; height: 3em; border-radius: 1.5em; border: solid 1px #717D7E; font-family: BaeMinJua, system-ui; font-size: 1.1em; color: white; background-color: #D35400">
-    <div style="width:100%">
+    </div>
+        <div style="width:100%">
         <br>
         <input type="radio" name="orderOption" value="high">높은가격순
         <input type="radio" name="orderOption" value="old">낮은가격순
@@ -241,5 +244,98 @@
 <%
     }
 %>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const hashtagInput = document.getElementById('hashtagInput');
+        const searchKeyword = '<%= request.getParameter("searchKeyWord") %>';
+
+        // Set the initial value retrieved from the server-side parameter
+        hashtagInput.innerHTML = searchKeyword;
+    });
+    const hashtagInput = document.getElementById('hashtagInput');
+    const hiddenInput = document.getElementById('hiddenInput');
+    let isComposing = false;
+
+    hashtagInput.addEventListener('compositionstart', () => {
+        isComposing = true;
+    });
+
+    hashtagInput.addEventListener('compositionend', () => {
+        isComposing = false;
+        formatHashtags(); // Call formatHashtags after composition ends
+    });
+
+    hashtagInput.addEventListener('input', () => {
+        if (!isComposing) {
+            formatHashtags(); // Call formatHashtags only if not in the middle of composition
+        }
+    });
+
+    function formatHashtags() {
+        if (!isComposing) { // Check if not composing
+            const fullText = getTextFromDiv(hashtagInput);
+            const caretPos = getCaretPosition(hashtagInput);
+
+            // Set the value of the hidden input to the unformatted full text
+            hiddenInput.value = fullText;
+
+            hashtagInput.innerHTML = fullText.replace(/(#\S+)/g, '<span class="hashtag" style="color: lightblue;">$1</span>');
+            setCaretPosition(hashtagInput, caretPos);
+        }
+    }
+
+    function getTextFromDiv(div) {
+        return Array.from(div.childNodes).reduce((text, node) => {
+            return text + (node.nodeType === 3 ? node.nodeValue : node.innerText);
+        }, '');
+    }
+    function getCaretPosition(element) {
+        let position = 0;
+        const selection = window.getSelection();
+        if (selection.rangeCount !== 0) {
+            const range = selection.getRangeAt(0);
+            const preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(element);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            position = preCaretRange.toString().length;
+        }
+        return position;
+    }
+
+    function setCaretPosition(element, position) {
+        const range = document.createRange();
+        const sel = window.getSelection();
+        let currentPos = 0;
+        let found = false;
+
+        function setRange(node) {
+            if (node.nodeType === Node.TEXT_NODE) {
+                if (currentPos + node.length >= position) {
+                    range.setStart(node, position - currentPos);
+                    range.collapse(true);
+                    found = true;
+                } else {
+                    currentPos += node.length;
+                }
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                for (const child of node.childNodes) {
+                    setRange(child);
+                    if (found) break;
+                }
+            }
+        }
+
+        for (const child of element.childNodes) {
+            setRange(child);
+            if (found) break;
+        }
+
+        if (found) {
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+    }
+
+</script>
 </body>
 </html>
